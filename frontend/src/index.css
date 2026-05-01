@@ -17,6 +17,7 @@
   --dojo-border: #DCD9CF;
   --dojo-input-bg: #FFFFFF;
   --dojo-card: #FFFFFF;
+  --dojo-nav-bg: rgba(251, 250, 246, 0.88);
 
   --background: 50 30% 97%;
   --foreground: 0 0% 6%;
@@ -53,6 +54,7 @@
   --dojo-border: #2A2D2B;
   --dojo-input-bg: #1B1F1D;
   --dojo-card: #161A18;
+  --dojo-nav-bg: rgba(14, 17, 16, 0.96);
 
   --background: 150 8% 6%;
   --foreground: 50 20% 90%;

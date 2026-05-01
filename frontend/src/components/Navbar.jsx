@@ -28,7 +28,7 @@ export default function Navbar() {
     <header
       data-testid="site-navbar"
       className="sticky top-0 z-50 border-b border-[var(--dojo-border)] backdrop-blur-xl"
-      style={{ background: "rgba(251, 250, 246, 0.88)" }}
+      style={{ background: "var(--dojo-nav-bg)" }}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group" data-testid="nav-home-link">

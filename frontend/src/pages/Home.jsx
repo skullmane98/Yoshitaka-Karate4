@@ -24,9 +24,9 @@ export default function Home() {
       <section className="relative overflow-hidden" data-testid="home-hero">
         <div className="absolute inset-0">
           <img src={HERO_IMG} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-[var(--dojo-ink)]/55" />
+          <div className="absolute inset-0 bg-black/55" />
         </div>
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-10 py-32 md:py-44 grid md:grid-cols-12 gap-8 text-[var(--dojo-paper)]">
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-10 py-32 md:py-44 grid md:grid-cols-12 gap-8 text-[#FBFAF6]">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -40,7 +40,7 @@ export default function Home() {
             <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl font-medium tracking-tight leading-[0.95] mb-8 max-w-4xl">
               {c.hero_headline || "Forge Character. Refine Spirit."}
             </h1>
-            <p className="text-lg md:text-xl max-w-2xl text-[var(--dojo-paper)]/80 font-light leading-relaxed">
+            <p className="text-lg md:text-xl max-w-2xl text-[#FBFAF6]/80 font-light leading-relaxed">
               {c.hero_sub || "A dojo devoted to the enduring practice of Shotokan karate."}
             </p>
             <div className="flex flex-wrap gap-4 mt-10">
@@ -50,7 +50,7 @@ export default function Home() {
               <Link
                 to="/register"
                 className="btn-outline"
-                style={{ color: "var(--dojo-paper)", borderColor: "var(--dojo-paper)" }}
+                style={{ color: "#FBFAF6", borderColor: "#FBFAF6" }}
                 data-testid="home-cta-enroll"
               >
                 Enroll Now

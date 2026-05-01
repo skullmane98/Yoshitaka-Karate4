@@ -5,27 +5,26 @@
 @tailwind utilities;
 
 :root {
-  /* Yoshitaka emblem palette: white, deep green, hinomaru red, black */
   --dojo-paper: #FBFAF6;
   --dojo-paper-alt: #F1EEE5;
   --dojo-ink: #0F0F0F;
   --dojo-ink-soft: #4A4A4A;
-  --dojo-green: #1A7A3D;        /* primary emblem green */
-  --dojo-green-dark: #105C2C;   /* hover / deeper */
-  --dojo-green-soft: #E6F1EA;   /* tint backgrounds */
-  --dojo-hinomaru: #D7263D;     /* red disc */
+  --dojo-green: #1A7A3D;
+  --dojo-green-dark: #105C2C;
+  --dojo-green-soft: #E6F1EA;
+  --dojo-hinomaru: #D7263D;
   --dojo-hinomaru-dark: #A91C30;
   --dojo-border: #DCD9CF;
-  --dojo-gold: #B87F17;
+  --dojo-input-bg: #FFFFFF;
+  --dojo-card: #FFFFFF;
 
-  /* Shadcn mapped to greens */
   --background: 50 30% 97%;
   --foreground: 0 0% 6%;
-  --card: 50 30% 98%;
+  --card: 0 0% 100%;
   --card-foreground: 0 0% 6%;
-  --popover: 50 30% 98%;
+  --popover: 0 0% 100%;
   --popover-foreground: 0 0% 6%;
-  --primary: 142 64% 29%;        /* dojo green */
+  --primary: 142 64% 29%;
   --primary-foreground: 0 0% 100%;
   --secondary: 50 18% 92%;
   --secondary-foreground: 0 0% 6%;
@@ -41,6 +40,41 @@
   --radius: 0.125rem;
 }
 
+.dark {
+  --dojo-paper: #0E1110;
+  --dojo-paper-alt: #161A18;
+  --dojo-ink: #F0EDDE;
+  --dojo-ink-soft: #A8A89C;
+  --dojo-green: #2C9F55;
+  --dojo-green-dark: #228446;
+  --dojo-green-soft: #112418;
+  --dojo-hinomaru: #E5394E;
+  --dojo-hinomaru-dark: #B72A3D;
+  --dojo-border: #2A2D2B;
+  --dojo-input-bg: #1B1F1D;
+  --dojo-card: #161A18;
+
+  --background: 150 8% 6%;
+  --foreground: 50 20% 90%;
+  --card: 150 8% 9%;
+  --card-foreground: 50 20% 90%;
+  --popover: 150 8% 9%;
+  --popover-foreground: 50 20% 90%;
+  --primary: 142 56% 40%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 150 6% 14%;
+  --secondary-foreground: 50 20% 90%;
+  --muted: 150 6% 14%;
+  --muted-foreground: 50 8% 60%;
+  --accent: 142 30% 14%;
+  --accent-foreground: 142 56% 75%;
+  --destructive: 351 78% 56%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 150 6% 18%;
+  --input: 150 6% 18%;
+  --ring: 142 56% 45%;
+}
+
 * { border-color: hsl(var(--border)); }
 
 html, body {
@@ -52,6 +86,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: 0.005em;
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 .font-serif, h1, h2, h3, h4, .heading {
@@ -75,11 +110,13 @@ html, body {
     radial-gradient(at 12% 8%, rgba(26, 122, 61, 0.045) 0px, transparent 55%),
     radial-gradient(at 88% 92%, rgba(215, 38, 61, 0.04) 0px, transparent 55%);
 }
-
-.ink-underline {
-  position: relative;
-  display: inline-block;
+.dark .paper-texture {
+  background-image:
+    radial-gradient(at 12% 8%, rgba(44, 159, 85, 0.07) 0px, transparent 55%),
+    radial-gradient(at 88% 92%, rgba(229, 57, 78, 0.05) 0px, transparent 55%);
 }
+
+.ink-underline { position: relative; display: inline-block; }
 .ink-underline::after {
   content: '';
   position: absolute;
@@ -112,11 +149,9 @@ html, body {
   border: 1px solid var(--dojo-green);
   cursor: pointer;
 }
-.btn-primary:hover {
-  background: var(--dojo-green-dark);
-  border-color: var(--dojo-green-dark);
-}
+.btn-primary:hover { background: var(--dojo-green-dark); border-color: var(--dojo-green-dark); }
 .btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-outline {
   background: transparent;
@@ -131,10 +166,8 @@ html, body {
   transition: all 200ms ease;
   cursor: pointer;
 }
-.btn-outline:hover {
-  background: var(--dojo-ink);
-  color: var(--dojo-paper);
-}
+.btn-outline:hover { background: var(--dojo-ink); color: var(--dojo-paper); }
+.btn-outline:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-accent {
   background: var(--dojo-hinomaru);
@@ -152,13 +185,19 @@ html, body {
 .btn-accent:hover { background: var(--dojo-hinomaru-dark); border-color: var(--dojo-hinomaru-dark); }
 
 .id-card {
-  background: #FFFFFF;
+  background: var(--dojo-card);
   background-image:
     repeating-linear-gradient(45deg, rgba(26, 122, 61, 0.02) 0 2px, transparent 2px 8px),
     radial-gradient(circle at 50% 100%, rgba(26, 122, 61, 0.06), transparent 70%);
   border: 1px solid var(--dojo-border);
   box-shadow: 0 22px 44px -14px rgba(0, 0, 0, 0.18), 0 6px 10px -4px rgba(0, 0, 0, 0.06);
   position: relative;
+}
+.dark .id-card {
+  background-image:
+    repeating-linear-gradient(45deg, rgba(44, 159, 85, 0.05) 0 2px, transparent 2px 8px),
+    radial-gradient(circle at 50% 100%, rgba(44, 159, 85, 0.1), transparent 70%);
+  box-shadow: 0 22px 44px -14px rgba(0, 0, 0, 0.55), 0 6px 10px -4px rgba(0, 0, 0, 0.3);
 }
 .id-card::before, .id-card::after {
   content: '';
@@ -182,6 +221,12 @@ html, body {
 }
 .fade-up { animation: fade-up 800ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+@keyframes scan-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.scan-pulse { animation: scan-pulse 1.4s ease-in-out infinite; }
+
 .brush-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent 0%, var(--dojo-green) 20%, var(--dojo-green) 80%, transparent 100%);
@@ -191,11 +236,16 @@ html, body {
 .input {
   width: 100%;
   border: 1px solid var(--dojo-border);
-  background: #fff;
+  background: var(--dojo-input-bg);
   padding: 0.65rem 0.85rem;
   color: var(--dojo-ink);
   font-family: 'Outfit', sans-serif;
   font-size: 0.875rem;
-  transition: border-color 180ms ease;
+  transition: border-color 180ms ease, background-color 180ms ease;
 }
 .input:focus { outline: none; border-color: var(--dojo-green); }
+
+/* Tailwind typography overrides for dark */
+.dark .prose { color: var(--dojo-ink-soft); }
+.dark .prose strong, .dark .prose h1, .dark .prose h2, .dark .prose h3, .dark .prose h4, .dark .prose blockquote { color: var(--dojo-ink); }
+.dark .prose a { color: var(--dojo-green); }

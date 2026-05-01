@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Menu, X } from "lucide-react";
 import { LOGO_URL } from "@/lib/brand";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const NAV = [
   { to: "/", label: "Home" },
@@ -26,7 +27,7 @@ export default function Navbar() {
   return (
     <header
       data-testid="site-navbar"
-      className="sticky top-0 z-50 border-b border-[#DCD9CF] backdrop-blur-xl"
+      className="sticky top-0 z-50 border-b border-[var(--dojo-border)] backdrop-blur-xl"
       style={{ background: "rgba(251, 250, 246, 0.88)" }}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
@@ -34,7 +35,7 @@ export default function Navbar() {
           <img src={LOGO_URL} alt="Yoshitaka Karate-Do" className="h-12 w-12 object-contain" />
           <span className="font-serif text-2xl font-medium tracking-tight leading-none hidden sm:inline">
             Yoshitaka
-            <span className="font-kanji text-[#1A7A3D] ml-2 text-xl">空手道</span>
+            <span className="font-kanji text-[var(--dojo-green)] ml-2 text-xl">空手道</span>
           </span>
         </Link>
 
@@ -47,7 +48,7 @@ export default function Navbar() {
               data-testid={`nav-${n.label.toLowerCase()}-link`}
               className={({ isActive }) =>
                 `text-xs uppercase tracking-[0.18em] font-medium transition-colors ${
-                  isActive ? "text-[#1A7A3D]" : "text-[#0F0F0F] hover:text-[#1A7A3D]"
+                  isActive ? "text-[var(--dojo-green)]" : "text-[var(--dojo-ink)] hover:text-[var(--dojo-green)]"
                 }`
               }
             >
@@ -56,7 +57,8 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden lg:flex items-center gap-4">
+        <div className="hidden lg:flex items-center gap-3">
+          <ThemeToggle compact />
           {user ? (
             <>
               <Link to={dashHref} className="btn-outline" data-testid="nav-dashboard-btn">
@@ -89,7 +91,7 @@ export default function Navbar() {
       </div>
 
       {open && (
-        <div className="lg:hidden border-t border-[#DCD9CF] bg-[#FBFAF6]" data-testid="nav-mobile-menu">
+        <div className="lg:hidden border-t border-[var(--dojo-border)] bg-[var(--dojo-paper)]" data-testid="nav-mobile-menu">
           <div className="px-6 py-6 flex flex-col gap-5">
             {NAV.map((n) => (
               <NavLink

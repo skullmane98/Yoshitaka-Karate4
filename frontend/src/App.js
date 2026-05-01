@@ -1,6 +1,7 @@
 import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -20,15 +21,16 @@ import SuperAdminDashboard from "@/pages/dashboard/SuperAdminDashboard";
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
+      <AuthProvider>
+        <BrowserRouter>
         <Toaster
           position="top-right"
           toastOptions={{
             style: {
-              background: "#FBFAF6",
-              border: "1px solid #DCD9CF",
-              color: "#0F0F0F",
+              background: "var(--dojo-paper)",
+              border: "1px solid var(--dojo-border)",
+              color: "var(--dojo-ink)",
               borderRadius: "2px",
               fontFamily: "Outfit, sans-serif",
             },
@@ -71,7 +73,8 @@ export default function App() {
             }
           />
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

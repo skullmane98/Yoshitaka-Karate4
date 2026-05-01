@@ -36,50 +36,50 @@ export default function Register() {
         <div className="text-center mb-10">
           <span className="hinomaru-dot inline-block mb-4" />
           <h1 className="font-serif text-5xl tracking-tight">Enroll</h1>
-          <p className="text-[#4A4A4A] mt-2 text-sm">
+          <p className="text-[var(--dojo-ink-soft)] mt-2 text-sm">
             Complete registration with the access code issued by your dojo.
           </p>
         </div>
-        <form onSubmit={submit} className="space-y-5 border border-[#DCD9CF] bg-[#FBFAF6] p-8">
+        <form onSubmit={submit} className="space-y-5 border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-8">
           <div>
-            <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Access Code</label>
+            <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Access Code</label>
             <input
               required
               value={form.access_code}
               onChange={set("access_code")}
               placeholder="XXXX-XXXX"
               data-testid="register-code-input"
-              className="w-full border border-[#D7263D] bg-white px-4 py-3 font-mono-accent tracking-widest uppercase focus:outline-none"
+              className="w-full border border-[var(--dojo-hinomaru)] bg-[var(--dojo-input-bg)] px-4 py-3 font-mono-accent tracking-widest uppercase focus:outline-none"
             />
           </div>
           <div className="grid md:grid-cols-2 gap-5">
             <div>
-              <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Name</label>
+              <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Name</label>
               <input required value={form.name} onChange={set("name")} data-testid="register-name-input"
-                className="w-full border border-[#DCD9CF] bg-white px-4 py-3 focus:outline-none focus:border-[#0F0F0F]" />
+                className="w-full border border-[var(--dojo-border)] bg-[var(--dojo-input-bg)] px-4 py-3 focus:outline-none focus:border-[var(--dojo-ink)]" />
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Phone</label>
+              <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Phone</label>
               <input value={form.phone} onChange={set("phone")} data-testid="register-phone-input"
-                className="w-full border border-[#DCD9CF] bg-white px-4 py-3 focus:outline-none focus:border-[#0F0F0F]" />
+                className="w-full border border-[var(--dojo-border)] bg-[var(--dojo-input-bg)] px-4 py-3 focus:outline-none focus:border-[var(--dojo-ink)]" />
             </div>
           </div>
           <div>
-            <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Email</label>
+            <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Email</label>
             <input type="email" required value={form.email} onChange={set("email")} data-testid="register-email-input"
-              className="w-full border border-[#DCD9CF] bg-white px-4 py-3 focus:outline-none focus:border-[#0F0F0F]" />
+              className="w-full border border-[var(--dojo-border)] bg-[var(--dojo-input-bg)] px-4 py-3 focus:outline-none focus:border-[var(--dojo-ink)]" />
           </div>
           <div>
-            <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Password</label>
+            <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Password</label>
             <input type="password" minLength={6} required value={form.password} onChange={set("password")} data-testid="register-password-input"
-              className="w-full border border-[#DCD9CF] bg-white px-4 py-3 focus:outline-none focus:border-[#0F0F0F]" />
+              className="w-full border border-[var(--dojo-border)] bg-[var(--dojo-input-bg)] px-4 py-3 focus:outline-none focus:border-[var(--dojo-ink)]" />
           </div>
-          {err && <div className="text-[#D7263D] text-sm" data-testid="register-error">{err}</div>}
+          {err && <div className="text-[var(--dojo-hinomaru)] text-sm" data-testid="register-error">{err}</div>}
           <button type="submit" className="btn-primary w-full" disabled={loading} data-testid="register-submit-btn">
             {loading ? "Enrolling…" : "Begin Practice"}
           </button>
-          <div className="text-sm text-[#4A4A4A] text-center pt-2">
-            Already enrolled? <Link to="/login" className="ink-underline text-[#0F0F0F]">Login</Link>
+          <div className="text-sm text-[var(--dojo-ink-soft)] text-center pt-2">
+            Already enrolled? <Link to="/login" className="ink-underline text-[var(--dojo-ink)]">Login</Link>
           </div>
         </form>
       </section>

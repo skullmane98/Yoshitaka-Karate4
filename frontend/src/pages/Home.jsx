@@ -24,9 +24,9 @@ export default function Home() {
       <section className="relative overflow-hidden" data-testid="home-hero">
         <div className="absolute inset-0">
           <img src={HERO_IMG} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-[#0F0F0F]/55" />
+          <div className="absolute inset-0 bg-[var(--dojo-ink)]/55" />
         </div>
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-10 py-32 md:py-44 grid md:grid-cols-12 gap-8 text-[#FBFAF6]">
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-10 py-32 md:py-44 grid md:grid-cols-12 gap-8 text-[var(--dojo-paper)]">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -40,7 +40,7 @@ export default function Home() {
             <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl font-medium tracking-tight leading-[0.95] mb-8 max-w-4xl">
               {c.hero_headline || "Forge Character. Refine Spirit."}
             </h1>
-            <p className="text-lg md:text-xl max-w-2xl text-[#FBFAF6]/80 font-light leading-relaxed">
+            <p className="text-lg md:text-xl max-w-2xl text-[var(--dojo-paper)]/80 font-light leading-relaxed">
               {c.hero_sub || "A dojo devoted to the enduring practice of Shotokan karate."}
             </p>
             <div className="flex flex-wrap gap-4 mt-10">
@@ -50,7 +50,7 @@ export default function Home() {
               <Link
                 to="/register"
                 className="btn-outline"
-                style={{ color: "#FBFAF6", borderColor: "#FBFAF6" }}
+                style={{ color: "var(--dojo-paper)", borderColor: "var(--dojo-paper)" }}
                 data-testid="home-cta-enroll"
               >
                 Enroll Now
@@ -64,7 +64,7 @@ export default function Home() {
             transition={{ duration: 1.2, delay: 0.3 }}
             className="md:col-span-3 flex md:justify-end items-start md:items-end"
           >
-            <div className="font-kanji text-7xl md:text-8xl lg:text-9xl text-[#1A7A3D] leading-none" aria-hidden>
+            <div className="font-kanji text-7xl md:text-8xl lg:text-9xl text-[var(--dojo-green)] leading-none" aria-hidden>
               {c.kanji || "空手道"}
             </div>
           </motion.div>
@@ -74,15 +74,15 @@ export default function Home() {
       {/* Intro / Philosophy */}
       <section className="max-w-7xl mx-auto px-6 lg:px-10 py-24 md:py-32 grid md:grid-cols-12 gap-10 items-start">
         <div className="md:col-span-5">
-          <div className="text-[10px] uppercase tracking-[0.32em] text-[#4A4A4A] mb-6">義 · Righteousness</div>
+          <div className="text-[10px] uppercase tracking-[0.32em] text-[var(--dojo-ink-soft)] mb-6">義 · Righteousness</div>
           <h2 className="font-serif text-4xl md:text-5xl tracking-tight leading-tight mb-6">
             The dojo is a mirror.
           </h2>
           <div className="brush-divider mb-6 max-w-xs" />
           {/^\s*</.test(c.intro || "") ? (
-            <RichContent html={c.intro} className="text-base md:text-lg text-[#4A4A4A] [&_p]:leading-relaxed [&_p]:font-light" />
+            <RichContent html={c.intro} className="text-base md:text-lg text-[var(--dojo-ink-soft)] [&_p]:leading-relaxed [&_p]:font-light" />
           ) : (
-            <p className="text-base md:text-lg text-[#4A4A4A] leading-relaxed font-light">
+            <p className="text-base md:text-lg text-[var(--dojo-ink-soft)] leading-relaxed font-light">
               {c.intro || "Every class is a return to fundamentals — stance, breath, and intent."}
             </p>
           )}
@@ -94,7 +94,7 @@ export default function Home() {
 
       {/* Three pillars bento */}
       <section className="max-w-7xl mx-auto px-6 lg:px-10 pb-24 md:pb-32">
-        <div className="grid md:grid-cols-3 gap-0 border border-[#DCD9CF]">
+        <div className="grid md:grid-cols-3 gap-0 border border-[var(--dojo-border)]">
           {[
             { kanji: "基本", title: "Kihon", desc: "Fundamentals. Stance, strike, block — practiced until they become breath." },
             { kanji: "型", title: "Kata", desc: "Forms. Choreographed sequences encoding the wisdom of masters." },
@@ -106,26 +106,26 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
-              className={`p-10 ${i < 2 ? "md:border-r border-[#DCD9CF]" : ""} ${i > 0 ? "border-t md:border-t-0 border-[#DCD9CF]" : ""}`}
+              className={`p-10 ${i < 2 ? "md:border-r border-[var(--dojo-border)]" : ""} ${i > 0 ? "border-t md:border-t-0 border-[var(--dojo-border)]" : ""}`}
             >
-              <div className="font-kanji text-5xl text-[#1A7A3D] mb-4">{p.kanji}</div>
-              <div className="text-[10px] uppercase tracking-[0.32em] text-[#4A4A4A] mb-2">Pillar · 0{i + 1}</div>
+              <div className="font-kanji text-5xl text-[var(--dojo-green)] mb-4">{p.kanji}</div>
+              <div className="text-[10px] uppercase tracking-[0.32em] text-[var(--dojo-ink-soft)] mb-2">Pillar · 0{i + 1}</div>
               <h3 className="font-serif text-3xl mb-3">{p.title}</h3>
-              <p className="text-sm text-[#4A4A4A] leading-relaxed">{p.desc}</p>
+              <p className="text-sm text-[var(--dojo-ink-soft)] leading-relaxed">{p.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* CTA strip */}
-      <section className="bg-[#0F0F0F] text-[#FBFAF6]">
+      <section className="bg-[var(--dojo-ink)] text-[var(--dojo-paper)]">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 py-20 md:py-24 grid md:grid-cols-[1fr_auto] gap-8 items-center">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.32em] text-[#FBFAF6]/60 mb-3">Begin your practice</div>
+            <div className="text-[10px] uppercase tracking-[0.32em] text-[var(--dojo-paper)]/60 mb-3">Begin your practice</div>
             <h2 className="font-serif text-4xl md:text-5xl tracking-tight">Step onto the tatami.</h2>
           </div>
           <div className="flex gap-4">
-            <Link to="/contact" className="btn-outline" style={{ color: "#FBFAF6", borderColor: "#FBFAF6" }} data-testid="home-cta-contact">
+            <Link to="/contact" className="btn-outline" style={{ color: "var(--dojo-paper)", borderColor: "var(--dojo-paper)" }} data-testid="home-cta-contact">
               Visit Dojo
             </Link>
             <Link to="/register" className="btn-primary" data-testid="home-cta-register2">

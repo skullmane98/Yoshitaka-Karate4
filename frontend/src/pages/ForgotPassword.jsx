@@ -28,22 +28,22 @@ export default function ForgotPassword() {
         <div className="text-center mb-10">
           <span className="hinomaru-dot inline-block mb-4" />
           <h1 className="font-serif text-5xl tracking-tight">Reset Password</h1>
-          <p className="text-[#4A4A4A] mt-2 text-sm">We will issue a reset link.</p>
+          <p className="text-[var(--dojo-ink-soft)] mt-2 text-sm">We will issue a reset link.</p>
         </div>
 
         {sent ? (
-          <div className="border border-[#DCD9CF] bg-[#FBFAF6] p-8 text-center" data-testid="forgot-success">
-            <div className="font-kanji text-3xl text-[#1A7A3D] mb-4">押忍</div>
-            <p className="text-sm text-[#0F0F0F] mb-2">If that email is registered, a reset link has been issued.</p>
-            <p className="text-xs text-[#4A4A4A]">
+          <div className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-8 text-center" data-testid="forgot-success">
+            <div className="font-kanji text-3xl text-[var(--dojo-green)] mb-4">押忍</div>
+            <p className="text-sm text-[var(--dojo-ink)] mb-2">If that email is registered, a reset link has been issued.</p>
+            <p className="text-xs text-[var(--dojo-ink-soft)]">
               Email delivery is not yet configured — your dojo administrator will share the reset link with you, or check the backend console.
             </p>
             <Link to="/login" className="btn-outline inline-block mt-6">Back to Login</Link>
           </div>
         ) : (
-          <form onSubmit={submit} className="space-y-5 border border-[#DCD9CF] bg-[#FBFAF6] p-8">
+          <form onSubmit={submit} className="space-y-5 border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-8">
             <div>
-              <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Email</label>
+              <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Email</label>
               <input
                 type="email"
                 required
@@ -53,12 +53,12 @@ export default function ForgotPassword() {
                 className="input"
               />
             </div>
-            {err && <div className="text-[#D7263D] text-sm" data-testid="forgot-error">{err}</div>}
+            {err && <div className="text-[var(--dojo-hinomaru)] text-sm" data-testid="forgot-error">{err}</div>}
             <button type="submit" className="btn-primary w-full" disabled={loading} data-testid="forgot-submit-btn">
               {loading ? "Issuing…" : "Issue Reset Link"}
             </button>
-            <div className="text-sm text-[#4A4A4A] text-center pt-2">
-              Remember it? <Link to="/login" className="ink-underline text-[#0F0F0F]">Login</Link>
+            <div className="text-sm text-[var(--dojo-ink-soft)] text-center pt-2">
+              Remember it? <Link to="/login" className="ink-underline text-[var(--dojo-ink)]">Login</Link>
             </div>
           </form>
         )}

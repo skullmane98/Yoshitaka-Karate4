@@ -11,22 +11,22 @@ export default function Programs() {
   return (
     <PublicLayout>
       <section className="max-w-7xl mx-auto px-6 lg:px-10 py-20 md:py-28" data-testid="programs-page">
-        <div className="text-[10px] uppercase tracking-[0.32em] text-[#4A4A4A] mb-4">Programs</div>
+        <div className="text-[10px] uppercase tracking-[0.32em] text-[var(--dojo-ink-soft)] mb-4">Programs</div>
         <h1 className="font-serif text-5xl md:text-7xl tracking-tight leading-[0.95] mb-16 max-w-3xl">
           A curriculum shaped by patience.
         </h1>
-        <div className="grid md:grid-cols-2 gap-0 border border-[#DCD9CF]">
+        <div className="grid md:grid-cols-2 gap-0 border border-[var(--dojo-border)]">
           {programs.map((p, i) => (
             <div
               key={i}
-              className={`p-10 ${i % 2 === 0 ? "md:border-r border-[#DCD9CF]" : ""} ${i >= 2 ? "border-t border-[#DCD9CF]" : ""} ${i > 0 && i % 2 === 1 ? "border-t md:border-t-0" : ""}`}
+              className={`p-10 ${i % 2 === 0 ? "md:border-r border-[var(--dojo-border)]" : ""} ${i >= 2 ? "border-t border-[var(--dojo-border)]" : ""} ${i > 0 && i % 2 === 1 ? "border-t md:border-t-0" : ""}`}
             >
-              <div className="text-[10px] uppercase tracking-[0.3em] text-[#1A7A3D] mb-3">Program · 0{i + 1}</div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-[var(--dojo-green)] mb-3">Program · 0{i + 1}</div>
               <h3 className="font-serif text-3xl md:text-4xl mb-4 tracking-tight">{p.name}</h3>
               {/^\s*</.test(p.desc || "") ? (
-                <RichContent html={p.desc} className="text-[#4A4A4A] [&_p]:leading-relaxed" />
+                <RichContent html={p.desc} className="text-[var(--dojo-ink-soft)] [&_p]:leading-relaxed" />
               ) : (
-                <p className="text-[#4A4A4A] leading-relaxed">{p.desc}</p>
+                <p className="text-[var(--dojo-ink-soft)] leading-relaxed">{p.desc}</p>
               )}
             </div>
           ))}

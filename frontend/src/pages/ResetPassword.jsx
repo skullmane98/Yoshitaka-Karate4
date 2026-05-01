@@ -39,14 +39,14 @@ export default function ResetPassword() {
         </div>
 
         {done ? (
-          <div className="border border-[#DCD9CF] bg-[#FBFAF6] p-8 text-center" data-testid="reset-success">
-            <div className="font-kanji text-3xl text-[#1A7A3D] mb-4">完</div>
-            <p className="text-sm text-[#0F0F0F]">Password updated. Redirecting to login…</p>
+          <div className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-8 text-center" data-testid="reset-success">
+            <div className="font-kanji text-3xl text-[var(--dojo-green)] mb-4">完</div>
+            <p className="text-sm text-[var(--dojo-ink)]">Password updated. Redirecting to login…</p>
           </div>
         ) : (
-          <form onSubmit={submit} className="space-y-5 border border-[#DCD9CF] bg-[#FBFAF6] p-8">
+          <form onSubmit={submit} className="space-y-5 border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-8">
             <div>
-              <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Reset Token</label>
+              <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Reset Token</label>
               <input
                 required
                 value={token}
@@ -57,7 +57,7 @@ export default function ResetPassword() {
               />
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">New Password</label>
+              <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">New Password</label>
               <input
                 type="password"
                 required
@@ -69,7 +69,7 @@ export default function ResetPassword() {
               />
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Confirm Password</label>
+              <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Confirm Password</label>
               <input
                 type="password"
                 required
@@ -80,12 +80,12 @@ export default function ResetPassword() {
                 className="input"
               />
             </div>
-            {err && <div className="text-[#D7263D] text-sm" data-testid="reset-error">{err}</div>}
+            {err && <div className="text-[var(--dojo-hinomaru)] text-sm" data-testid="reset-error">{err}</div>}
             <button type="submit" className="btn-primary w-full" disabled={loading} data-testid="reset-submit-btn">
               {loading ? "Saving…" : "Set Password"}
             </button>
-            <div className="text-sm text-[#4A4A4A] text-center pt-2">
-              <Link to="/login" className="ink-underline text-[#0F0F0F]">Back to Login</Link>
+            <div className="text-sm text-[var(--dojo-ink-soft)] text-center pt-2">
+              <Link to="/login" className="ink-underline text-[var(--dojo-ink)]">Back to Login</Link>
             </div>
           </form>
         )}

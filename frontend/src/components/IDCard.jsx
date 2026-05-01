@@ -69,11 +69,11 @@ export default function IDCard({ user }) {
           <div className="flex items-center gap-4">
             <img src={LOGO_URL} alt="" className="h-16 w-16 object-contain" />
             <div>
-              <div className="text-[10px] uppercase tracking-[0.28em] text-[#4A4A4A] mb-1">Yoshitaka Karate-Do</div>
+              <div className="text-[10px] uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)] mb-1">Yoshitaka Karate-Do</div>
               <div className="font-serif text-3xl md:text-4xl font-medium tracking-tight leading-none">Member Certificate</div>
             </div>
           </div>
-          <span className="font-kanji text-4xl text-[#D7263D] leading-none">空手道</span>
+          <span className="font-kanji text-4xl text-[var(--dojo-hinomaru)] leading-none">空手道</span>
         </div>
 
         <div className="brush-divider mb-6" />
@@ -81,21 +81,21 @@ export default function IDCard({ user }) {
         <div className="grid md:grid-cols-[1fr_auto] gap-8 items-center">
           <div className="space-y-4">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A]">Member</div>
+              <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Member</div>
               <div className="font-serif text-2xl font-medium" data-testid="idcard-name">{user.name}</div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <div className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A]">Role</div>
+                <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Role</div>
                 <div className="text-sm font-medium capitalize">{user.role.replace("_", " ")}</div>
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A]">Rank</div>
+                <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Rank</div>
                 <div className="text-sm font-medium">{user.belt_rank || "—"}</div>
               </div>
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A]">Member No.</div>
+              <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Member No.</div>
               <div className="font-mono-accent text-base tracking-widest" data-testid="idcard-member-number">
                 {user.member_number}
               </div>
@@ -113,23 +113,23 @@ export default function IDCard({ user }) {
           </div>
 
           <div className="flex flex-col items-center gap-2">
-            <div className="p-3 bg-white border border-[#DCD9CF]">
+            <div className="p-3 bg-[var(--dojo-input-bg)] border border-[var(--dojo-border)]">
               {loading || !data ? (
                 <div className="w-36 h-36 flex items-center justify-center">
-                  <Loader2 className="animate-spin text-[#4A4A4A]" />
+                  <Loader2 className="animate-spin text-[var(--dojo-ink-soft)]" />
                 </div>
               ) : (
                 <img src={data.qr_png} alt="QR code" className="w-36 h-36" data-testid="idcard-qr" />
               )}
             </div>
-            <div className="text-[9px] uppercase tracking-[0.3em] text-[#4A4A4A]">Scan to verify</div>
+            <div className="text-[9px] uppercase tracking-[0.3em] text-[var(--dojo-ink-soft)]">Scan to verify</div>
           </div>
         </div>
 
         <div className="brush-divider my-6" />
-        <div className="flex justify-between items-end text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A]">
+        <div className="flex justify-between items-end text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">
           <span>Issued · Yoshitaka Dojo</span>
-          <span className="font-kanji text-sm text-[#0F0F0F]">義孝</span>
+          <span className="font-kanji text-sm text-[var(--dojo-ink)]">義孝</span>
         </div>
       </div>
 

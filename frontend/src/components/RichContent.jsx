@@ -7,7 +7,7 @@ export default function RichContent({ html, className = "" }) {
   if (!html) return null;
   return (
     <div
-      className={`prose prose-neutral max-w-none prose-headings:font-serif prose-headings:tracking-tight prose-p:leading-relaxed prose-a:text-[#1A7A3D] prose-strong:text-inherit ${className}`}
+      className={`prose prose-neutral max-w-none prose-headings:font-serif prose-headings:tracking-tight prose-p:leading-relaxed prose-a:text-[var(--dojo-green)] prose-strong:text-inherit ${className}`}
       // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: html }}
     />

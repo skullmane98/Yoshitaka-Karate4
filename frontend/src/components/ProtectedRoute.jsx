@@ -6,7 +6,7 @@ export default function ProtectedRoute({ children, roles }) {
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="font-serif text-2xl tracking-tight text-[#4A4A4A]">Loading…</div>
+        <div className="font-serif text-2xl tracking-tight text-[var(--dojo-ink-soft)]">Loading…</div>
       </div>
     );
   }

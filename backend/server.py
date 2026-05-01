@@ -629,6 +629,267 @@ async def delete_payment(payment_id: str, current: dict = Depends(require_role("
 
 
 # -----------------------------------------------------------------------------
+# Email (SMTP) helper
+# -----------------------------------------------------------------------------
+import aiosmtplib
+from email.message import EmailMessage
+
+
+async def send_email(to_email: str, subject: str, html: str, text: str) -> dict:
+    """Send email via SMTP. Falls back to console logging if SMTP is not configured.
+    Returns {sent: bool, mode: 'smtp'|'console', detail: str}.
+    """
+    host = os.environ.get("SMTP_HOST", "").strip()
+    port = int(os.environ.get("SMTP_PORT", "587") or "587")
+    user = os.environ.get("SMTP_USER", "").strip()
+    password = os.environ.get("SMTP_PASSWORD", "").strip()
+    sender = os.environ.get("SMTP_FROM", user or "no-reply@yoshitaka.com").strip()
+    use_tls = (os.environ.get("SMTP_USE_TLS", "true").lower() == "true")
+    use_ssl = (os.environ.get("SMTP_USE_SSL", "false").lower() == "true")
+
+    if not host:
+        # Console fallback
+        logger.info("=" * 60)
+        logger.info(f"EMAIL (no SMTP configured) -> {to_email}")
+        logger.info(f"Subject: {subject}")
+        logger.info(f"--- Body ---\n{text}")
+        logger.info("=" * 60)
+        return {"sent": True, "mode": "console", "detail": "Logged to backend console (configure SMTP_HOST/USER/PASSWORD/FROM env vars to send real emails)"}
+
+    msg = EmailMessage()
+    msg["From"] = sender
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.set_content(text)
+    msg.add_alternative(html, subtype="html")
+
+    try:
+        await aiosmtplib.send(
+            msg,
+            hostname=host,
+            port=port,
+            username=user or None,
+            password=password or None,
+            start_tls=use_tls and not use_ssl,
+            use_tls=use_ssl,
+            timeout=15,
+        )
+        return {"sent": True, "mode": "smtp", "detail": f"Sent via {host}:{port}"}
+    except Exception as e:
+        logger.error(f"SMTP send failed to {to_email}: {e}")
+        return {"sent": False, "mode": "smtp", "detail": f"SMTP error: {e}"}
+
+
+def _payment_email_template(payment: dict, user: dict) -> tuple[str, str, str]:
+    """Returns (subject, html, text) for a payment reminder."""
+    amount = f"${payment['amount']:.2f}"
+    due = "soon"
+    if payment.get("due_date"):
+        try:
+            d = datetime.fromisoformat(payment["due_date"])
+            due = d.strftime("%B %d, %Y")
+        except Exception:
+            pass
+    overdue = payment.get("status") == "overdue"
+    headline = "Payment Overdue" if overdue else "Payment Reminder"
+    color = "#D7263D" if overdue else "#1A7A3D"
+    subject = f"[Yoshitaka Karate-Do] {headline}: {payment['description']} — {amount}"
+    text = (
+        f"Hello {user['name']},\n\n"
+        f"This is a friendly reminder that your account has an outstanding balance at Yoshitaka Karate-Do.\n\n"
+        f"  Description: {payment['description']}\n"
+        f"  Amount:      {amount}\n"
+        f"  Due:         {due}\n"
+        f"  Status:      {payment['status'].upper()}\n\n"
+        f"Please complete this payment at your earliest convenience or contact the dojo if you have any questions.\n\n"
+        f"Thank you,\nYoshitaka Karate-Do"
+    )
+    html = f"""
+    <div style="font-family:'Helvetica Neue',Arial,sans-serif;background:#FBFAF6;padding:32px;color:#0F0F0F;">
+      <table align="center" width="560" style="background:#fff;border:1px solid #DCD9CF;border-collapse:collapse;">
+        <tr><td style="padding:32px 32px 0 32px;">
+          <div style="font-size:11px;letter-spacing:0.28em;text-transform:uppercase;color:#4A4A4A;margin-bottom:8px;">Yoshitaka Karate-Do</div>
+          <h1 style="font-family:Georgia,serif;font-weight:500;font-size:28px;margin:0 0 12px 0;color:#0F0F0F;">{headline}</h1>
+          <div style="width:80px;height:2px;background:{color};margin-bottom:24px;"></div>
+        </td></tr>
+        <tr><td style="padding:0 32px;">
+          <p style="margin:0 0 16px 0;color:#0F0F0F;line-height:1.55;">Hello <strong>{user['name']}</strong>,</p>
+          <p style="margin:0 0 24px 0;color:#4A4A4A;line-height:1.6;">This is a friendly reminder that your account has an outstanding balance at Yoshitaka Karate-Do.</p>
+          <table width="100%" style="border-top:1px solid #DCD9CF;border-bottom:1px solid #DCD9CF;border-collapse:collapse;">
+            <tr><td style="padding:14px 0;width:130px;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#4A4A4A;">Description</td><td style="padding:14px 0;color:#0F0F0F;">{payment['description']}</td></tr>
+            <tr><td style="padding:14px 0;border-top:1px solid #DCD9CF;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#4A4A4A;">Amount</td><td style="padding:14px 0;border-top:1px solid #DCD9CF;font-family:monospace;color:#0F0F0F;font-size:18px;">{amount}</td></tr>
+            <tr><td style="padding:14px 0;border-top:1px solid #DCD9CF;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#4A4A4A;">Due</td><td style="padding:14px 0;border-top:1px solid #DCD9CF;color:#0F0F0F;">{due}</td></tr>
+            <tr><td style="padding:14px 0;border-top:1px solid #DCD9CF;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#4A4A4A;">Status</td><td style="padding:14px 0;border-top:1px solid #DCD9CF;"><span style="display:inline-block;padding:4px 10px;border:1px solid {color};color:{color};font-size:11px;letter-spacing:0.2em;text-transform:uppercase;">{payment['status']}</span></td></tr>
+          </table>
+          <p style="margin:24px 0;color:#4A4A4A;line-height:1.6;">Please complete this payment at your earliest convenience, or reach out to the dojo if you have any questions.</p>
+        </td></tr>
+        <tr><td style="padding:24px 32px 32px 32px;border-top:1px solid #DCD9CF;">
+          <div style="font-size:11px;color:#4A4A4A;letter-spacing:0.1em;">Thank you,<br/><strong style="color:#0F0F0F;">Yoshitaka Karate-Do</strong></div>
+        </td></tr>
+      </table>
+    </div>
+    """
+    return subject, html, text
+
+
+@api_router.post("/payments/{payment_id}/remind")
+async def send_payment_reminder(
+    payment_id: str,
+    current: dict = Depends(require_role("admin", "super_admin")),
+):
+    p = await db.payments.find_one({"id": payment_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    if p.get("status") == "paid":
+        raise HTTPException(status_code=400, detail="Payment is already paid")
+    user = await db.users.find_one({"id": p["user_id"]}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Payment user not found")
+
+    subject, html, text = _payment_email_template(p, user)
+    result = await send_email(user["email"], subject, html, text)
+
+    # Record reminder
+    await db.payments.update_one(
+        {"id": payment_id},
+        {"$push": {"reminders": {
+            "sent_at": datetime.now(timezone.utc).isoformat(),
+            "sent_by": current["id"],
+            "to": user["email"],
+            "mode": result["mode"],
+            "ok": result["sent"],
+        }}, "$set": {"last_reminder_at": datetime.now(timezone.utc).isoformat()}},
+    )
+
+    if not result["sent"]:
+        raise HTTPException(status_code=500, detail=result["detail"])
+    return {"ok": True, **result, "to": user["email"]}
+
+
+# -----------------------------------------------------------------------------
+# Attendance (USB scanner sign-in)
+# -----------------------------------------------------------------------------
+class AttendanceScanRequest(BaseModel):
+    code: str
+    note: Optional[str] = None
+
+
+class AttendancePublic(BaseModel):
+    id: str
+    user_id: str
+    user_name: str
+    member_number: str
+    role: str
+    belt_rank: Optional[str] = None
+    scanned_at: datetime
+    method: str
+    note: Optional[str] = None
+    scanned_by: Optional[str] = None
+
+
+def _parse_scan_code(raw: str) -> str:
+    """Return the member_number contained in the scanned text.
+    Accepts:
+      - 'YOSHITAKA|MEMBER|UUID' (QR payload)
+      - 'MEMBER' (barcode payload, e.g. 'YK12345678')
+      - whitespace-padded variations
+    """
+    s = (raw or "").strip()
+    if not s:
+        return ""
+    if s.upper().startswith("YOSHITAKA|"):
+        parts = s.split("|")
+        if len(parts) >= 2:
+            return parts[1].strip()
+    return s
+
+
+@api_router.post("/attendance/scan", response_model=AttendancePublic)
+async def attendance_scan(
+    payload: AttendanceScanRequest,
+    current: dict = Depends(require_role("admin", "super_admin")),
+):
+    member_number = _parse_scan_code(payload.code)
+    if not member_number:
+        raise HTTPException(status_code=400, detail="Empty scan")
+
+    user = await db.users.find_one({"member_number": member_number}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail=f"No member found for {member_number}")
+    if not user.get("active", True):
+        raise HTTPException(status_code=403, detail="Member is inactive")
+
+    method = "qr" if payload.code.upper().startswith("YOSHITAKA|") else "barcode"
+    rec = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "user_name": user["name"],
+        "member_number": user["member_number"],
+        "role": user["role"],
+        "belt_rank": user.get("belt_rank"),
+        "scanned_at": datetime.now(timezone.utc).isoformat(),
+        "method": method,
+        "note": payload.note,
+        "scanned_by": current["id"],
+    }
+    await db.attendance.insert_one(rec)
+    return AttendancePublic(
+        id=rec["id"],
+        user_id=rec["user_id"],
+        user_name=rec["user_name"],
+        member_number=rec["member_number"],
+        role=rec["role"],
+        belt_rank=rec.get("belt_rank"),
+        scanned_at=datetime.fromisoformat(rec["scanned_at"]),
+        method=rec["method"],
+        note=rec.get("note"),
+        scanned_by=rec.get("scanned_by"),
+    )
+
+
+@api_router.get("/attendance", response_model=List[AttendancePublic])
+async def list_attendance(
+    user_id: Optional[str] = None,
+    days: Optional[int] = None,
+    limit: int = 200,
+    current: dict = Depends(get_current_user),
+):
+    query: dict = {}
+    if current["role"] == "student":
+        query["user_id"] = current["id"]
+    elif user_id:
+        query["user_id"] = user_id
+    if days and days > 0:
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        query["scanned_at"] = {"$gte": cutoff}
+
+    rows = await db.attendance.find(query, {"_id": 0}).sort("scanned_at", -1).to_list(max(1, min(limit, 1000)))
+    out = []
+    for r in rows:
+        out.append(AttendancePublic(
+            id=r["id"],
+            user_id=r["user_id"],
+            user_name=r["user_name"],
+            member_number=r["member_number"],
+            role=r["role"],
+            belt_rank=r.get("belt_rank"),
+            scanned_at=datetime.fromisoformat(r["scanned_at"]) if isinstance(r["scanned_at"], str) else r["scanned_at"],
+            method=r["method"],
+            note=r.get("note"),
+            scanned_by=r.get("scanned_by"),
+        ))
+    return out
+
+
+@api_router.delete("/attendance/{rec_id}")
+async def delete_attendance(rec_id: str, current: dict = Depends(require_role("admin", "super_admin"))):
+    res = await db.attendance.delete_one({"id": rec_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Record not found")
+    return {"ok": True}
+
+
+# -----------------------------------------------------------------------------
 # CMS Pages
 # -----------------------------------------------------------------------------
 DEFAULT_PAGES = {
@@ -770,10 +1031,13 @@ async def stats(current: dict = Depends(require_role("admin", "super_admin"))):
 async def on_startup():
     await db.users.create_index("email", unique=True)
     await db.users.create_index("id", unique=True)
+    await db.users.create_index("member_number", unique=True)
     await db.access_codes.create_index("code", unique=True)
     await db.access_codes.create_index("id", unique=True)
     await db.payments.create_index("id", unique=True)
     await db.cms_pages.create_index("slug", unique=True)
+    await db.attendance.create_index("id", unique=True)
+    await db.attendance.create_index([("user_id", 1), ("scanned_at", -1)])
 
     # Seed super admin
     sa_email = os.environ.get("SUPER_ADMIN_EMAIL", "superadmin@yoshitaka.com").lower()

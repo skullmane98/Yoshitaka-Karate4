@@ -10,9 +10,9 @@ import { Plus, Trash2, GripVertical } from "lucide-react";
 function Field({ label, hint, children }) {
   return (
     <div>
-      <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">{label}</label>
+      <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">{label}</label>
       {children}
-      {hint && <div className="text-xs text-[#4A4A4A] mt-1.5">{hint}</div>}
+      {hint && <div className="text-xs text-[var(--dojo-ink-soft)] mt-1.5">{hint}</div>}
     </div>
   );
 }
@@ -20,11 +20,11 @@ function Field({ label, hint, children }) {
 function ArrayHeader({ label, onAdd, count }) {
   return (
     <div className="flex items-center justify-between mb-3">
-      <div className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A]">{label} · {count}</div>
+      <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{label} · {count}</div>
       <button
         type="button"
         onClick={onAdd}
-        className="inline-flex items-center gap-1 px-3 py-1 border border-[#0F0F0F] text-xs uppercase tracking-widest hover:bg-[#0F0F0F] hover:text-white transition-colors"
+        className="inline-flex items-center gap-1 px-3 py-1 border border-[var(--dojo-ink)] text-xs uppercase tracking-widest hover:bg-[var(--dojo-ink)] hover:text-white transition-colors"
         data-testid={`rte-add-${label.toLowerCase().replace(/\s+/g, "-")}`}
       >
         <Plus size={12} /> Add
@@ -35,17 +35,17 @@ function ArrayHeader({ label, onAdd, count }) {
 
 function RowShell({ index, onRemove, onMoveUp, onMoveDown, children }) {
   return (
-    <div className="border border-[#DCD9CF] bg-white p-4 relative">
+    <div className="border border-[var(--dojo-border)] bg-[var(--dojo-input-bg)] p-4 relative">
       <div className="flex items-start gap-3">
-        <div className="flex flex-col items-center text-[#4A4A4A] pt-1">
+        <div className="flex flex-col items-center text-[var(--dojo-ink-soft)] pt-1">
           <GripVertical size={14} />
           <span className="text-[10px] mt-1">{index + 1}</span>
         </div>
         <div className="flex-1 space-y-3">{children}</div>
         <div className="flex flex-col gap-1">
-          <button type="button" onClick={onMoveUp} className="text-[10px] text-[#4A4A4A] hover:text-[#0F0F0F]" data-testid={`row-up-${index}`}>↑</button>
-          <button type="button" onClick={onMoveDown} className="text-[10px] text-[#4A4A4A] hover:text-[#0F0F0F]" data-testid={`row-down-${index}`}>↓</button>
-          <button type="button" onClick={onRemove} className="text-[#D7263D] hover:text-[#A91C30]" data-testid={`row-remove-${index}`}><Trash2 size={14} /></button>
+          <button type="button" onClick={onMoveUp} className="text-[10px] text-[var(--dojo-ink-soft)] hover:text-[var(--dojo-ink)]" data-testid={`row-up-${index}`}>↑</button>
+          <button type="button" onClick={onMoveDown} className="text-[10px] text-[var(--dojo-ink-soft)] hover:text-[var(--dojo-ink)]" data-testid={`row-down-${index}`}>↓</button>
+          <button type="button" onClick={onRemove} className="text-[var(--dojo-hinomaru)] hover:text-[var(--dojo-hinomaru-dark)]" data-testid={`row-remove-${index}`}><Trash2 size={14} /></button>
         </div>
       </div>
     </div>
@@ -141,7 +141,7 @@ export function ProgramsEditor({ value, onChange, title, onTitleChange }) {
             <RichTextEditor value={p.desc || ""} onChange={(v) => update(i, { desc: v })} testid={`cms-program-desc-${i}`} minHeight={120} />
           </RowShell>
         ))}
-        {programs.length === 0 && <div className="text-sm text-[#4A4A4A]">No programs yet. Click Add.</div>}
+        {programs.length === 0 && <div className="text-sm text-[var(--dojo-ink-soft)]">No programs yet. Click Add.</div>}
       </div>
     </div>
   );
@@ -180,7 +180,7 @@ export function ScheduleEditor({ value, onChange, title, onTitleChange }) {
             </div>
           </RowShell>
         ))}
-        {classes.length === 0 && <div className="text-sm text-[#4A4A4A]">No classes yet. Click Add.</div>}
+        {classes.length === 0 && <div className="text-sm text-[var(--dojo-ink-soft)]">No classes yet. Click Add.</div>}
       </div>
     </div>
   );
@@ -215,7 +215,7 @@ export function NewsEditor({ value, onChange, title, onTitleChange }) {
             <RichTextEditor value={p.body || ""} onChange={(v) => update(i, { body: v })} testid={`cms-news-body-${i}`} minHeight={140} />
           </RowShell>
         ))}
-        {posts.length === 0 && <div className="text-sm text-[#4A4A4A]">No posts yet. Click Add.</div>}
+        {posts.length === 0 && <div className="text-sm text-[var(--dojo-ink-soft)]">No posts yet. Click Add.</div>}
       </div>
     </div>
   );

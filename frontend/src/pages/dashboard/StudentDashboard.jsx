@@ -6,10 +6,10 @@ import { useAuth } from "@/context/AuthContext";
 
 function StatCard({ label, value, sub }) {
   return (
-    <div className="border border-[#DCD9CF] p-6 bg-[#FBFAF6]">
-      <div className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] mb-2">{label}</div>
+    <div className="border border-[var(--dojo-border)] p-6 bg-[var(--dojo-paper)]">
+      <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] mb-2">{label}</div>
       <div className="font-serif text-4xl tracking-tight">{value}</div>
-      {sub && <div className="text-xs text-[#4A4A4A] mt-1">{sub}</div>}
+      {sub && <div className="text-xs text-[var(--dojo-ink-soft)] mt-1">{sub}</div>}
     </div>
   );
 }
@@ -38,20 +38,20 @@ export default function StudentDashboard() {
             <StatCard label="Rank" value={user?.belt_rank || "—"} />
           </div>
 
-          <section className="border border-[#DCD9CF] bg-[#FBFAF6]">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#DCD9CF]">
+          <section className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--dojo-border)]">
               <h2 className="font-serif text-2xl">Payments</h2>
-              <span className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A]">Account Ledger</span>
+              <span className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Account Ledger</span>
             </div>
-            <div className="divide-y divide-[#DCD9CF]">
+            <div className="divide-y divide-[var(--dojo-border)]">
               {payments.length === 0 && (
-                <div className="px-6 py-8 text-sm text-[#4A4A4A]">No payments recorded.</div>
+                <div className="px-6 py-8 text-sm text-[var(--dojo-ink-soft)]">No payments recorded.</div>
               )}
               {payments.map((p) => (
                 <div key={p.id} className="px-6 py-4 grid grid-cols-[1fr_auto_auto] gap-6 items-center" data-testid={`payment-row-${p.id}`}>
                   <div>
                     <div className="font-medium text-sm">{p.description}</div>
-                    <div className="text-xs text-[#4A4A4A] mt-0.5">
+                    <div className="text-xs text-[var(--dojo-ink-soft)] mt-0.5">
                       {p.due_date ? `Due ${new Date(p.due_date).toLocaleDateString()}` : "No due date"}
                       {p.paid_date && ` · Paid ${new Date(p.paid_date).toLocaleDateString()}`}
                     </div>
@@ -59,7 +59,7 @@ export default function StudentDashboard() {
                   <div className="font-mono-accent tracking-widest text-sm">${p.amount.toFixed(2)}</div>
                   <span className={`text-[10px] uppercase tracking-[0.2em] px-3 py-1 border ${
                     p.status === "paid" ? "border-[#2E4E3F] text-[#2E4E3F]" :
-                    p.status === "overdue" ? "border-[#D7263D] text-[#D7263D]" :
+                    p.status === "overdue" ? "border-[var(--dojo-hinomaru)] text-[var(--dojo-hinomaru)]" :
                     "border-[#B87F17] text-[#B87F17]"
                   }`}>{p.status}</span>
                 </div>
@@ -67,16 +67,16 @@ export default function StudentDashboard() {
             </div>
           </section>
 
-          <section className="border border-[#DCD9CF] bg-[#FBFAF6]">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#DCD9CF]">
+          <section className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--dojo-border)]">
               <h2 className="font-serif text-2xl">Your Classes</h2>
-              <span className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A]">Weekly Schedule</span>
+              <span className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Weekly Schedule</span>
             </div>
-            <div className="divide-y divide-[#DCD9CF]">
+            <div className="divide-y divide-[var(--dojo-border)]">
               {schedule.map((s, i) => (
                 <div key={i} className="px-6 py-3 flex items-center justify-between">
                   <div className="text-sm"><span className="font-medium">{s.day}</span> · {s.class}</div>
-                  <div className="font-mono-accent text-xs text-[#4A4A4A]">{s.time}</div>
+                  <div className="font-mono-accent text-xs text-[var(--dojo-ink-soft)]">{s.time}</div>
                 </div>
               ))}
             </div>

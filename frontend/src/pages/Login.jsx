@@ -36,36 +36,36 @@ export default function Login() {
         <div className="text-center mb-10">
           <span className="hinomaru-dot inline-block mb-4" />
           <h1 className="font-serif text-5xl tracking-tight">Login</h1>
-          <p className="text-[#4A4A4A] mt-2 text-sm">Enter the dojo.</p>
+          <p className="text-[var(--dojo-ink-soft)] mt-2 text-sm">Enter the dojo.</p>
         </div>
-        <form onSubmit={submit} className="space-y-5 border border-[#DCD9CF] bg-[#FBFAF6] p-8">
+        <form onSubmit={submit} className="space-y-5 border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-8">
           <div>
-            <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Email</label>
+            <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Email</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               data-testid="login-email-input"
-              className="w-full border border-[#DCD9CF] bg-white px-4 py-3 focus:outline-none focus:border-[#0F0F0F] transition-colors"
+              className="w-full border border-[var(--dojo-border)] bg-[var(--dojo-input-bg)] px-4 py-3 focus:outline-none focus:border-[var(--dojo-ink)] transition-colors"
             />
           </div>
           <div>
-            <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Password</label>
+            <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Password</label>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               data-testid="login-password-input"
-              className="w-full border border-[#DCD9CF] bg-white px-4 py-3 focus:outline-none focus:border-[#0F0F0F] transition-colors"
+              className="w-full border border-[var(--dojo-border)] bg-[var(--dojo-input-bg)] px-4 py-3 focus:outline-none focus:border-[var(--dojo-ink)] transition-colors"
             />
           </div>
-          {err && <div className="text-[#D7263D] text-sm" data-testid="login-error">{err}</div>}
+          {err && <div className="text-[var(--dojo-hinomaru)] text-sm" data-testid="login-error">{err}</div>}
           <button type="submit" className="btn-primary w-full" disabled={loading} data-testid="login-submit-btn">
             {loading ? "Entering…" : "Enter Dojo"}
           </button>
-          <div className="flex justify-between text-sm text-[#4A4A4A] pt-2">
+          <div className="flex justify-between text-sm text-[var(--dojo-ink-soft)] pt-2">
             <Link to="/forgot-password" className="ink-underline" data-testid="login-forgot-link">Forgot password?</Link>
             <Link to="/register" className="ink-underline">Enroll</Link>
           </div>

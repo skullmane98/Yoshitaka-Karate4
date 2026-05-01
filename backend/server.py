@@ -422,8 +422,8 @@ async def update_user(
     if "role" in update and update["role"] != target["role"]:
         # Safety: prevent demoting the last super admin
         if target["role"] == "super_admin" and update["role"] != "super_admin":
-            sa_count = await db.users.count_documents({"role": "super_admin", "active": True})
-            if sa_count <= 1:
+            other_sa = await db.users.count_documents({"role": "super_admin", "active": True, "id": {"$ne": user_id}})
+            if other_sa < 1:
                 raise HTTPException(status_code=400, detail="Cannot demote the last super admin")
         # Reset belt_rank when leaving student role; assign default when becoming student
         if update["role"] == "student" and not target.get("belt_rank"):

@@ -274,8 +274,8 @@ def main():
     else:
         log_test("7", False, f"Failed to PATCH super admin's own role: {result}")
 
-    # Scenario 8: Cannot demote the last super admin
-    print("\n[Scenario 8] Cannot demote the last active super admin")
+    # Scenario 8: Demoting one of two super_admins should succeed (leaving 1)
+    print("\n[Scenario 8] Demoting one of two super_admins should succeed (leaving 1)")
     # First, create a second super admin by promoting test_admin
     result = patch_user(sa_token, test_admin["id"], {"role": "super_admin"})
     if result and result["status"] == 200:
@@ -290,23 +290,17 @@ def main():
                 print(f"    - {sa['email']} (id={sa['id'][:8]}...)")
         
         # Now try to demote the second super_admin using the first super_admin's token
-        # This should fail with 400 because demoting them would leave only 1 super_admin
+        # This should SUCCEED (200) because demoting them would leave 1 super_admin (the requester)
+        # The safety check only fires when other_sa < 1 (i.e., would leave 0 super_admins)
         result2 = patch_user(sa_token, test_admin["id"], {"role": "admin"})
-        if result2 and result2["status"] == 400:
-            if "last super admin" in result2["text"].lower():
-                log_test("8", True, f"Cannot demote when it would leave only 1 super_admin (400 error as expected): {result2['text']}")
+        if result2 and result2["status"] == 200:
+            updated_user = result2["data"]
+            if updated_user["role"] == "admin":
+                log_test("8", True, f"Successfully demoted one of two super_admins (leaving 1 super_admin as expected): role={updated_user['role']}")
             else:
-                log_test("8", False, f"Got 400 but wrong error message: {result2['text']}")
+                log_test("8", False, f"Demotion succeeded but role not changed: {updated_user['role']}")
         else:
-            log_test("8", False, f"Expected 400 error when demoting would leave only 1 super_admin, got: {result2}")
-        
-        # Cleanup: Demote test_admin back to admin (this will succeed now because the previous attempt failed)
-        # Actually, if the previous attempt failed, test_admin is still super_admin, so we need to demote them
-        # But we can't because it would leave only 1 super_admin. So we need to create a third super_admin first.
-        # For simplicity, just leave test_admin as super_admin and demote them in the cleanup section.
-        result3 = patch_user(sa_token, test_admin["id"], {"role": "admin"})
-        if result3 and result3["status"] == 200:
-            print(f"  Demoted test_admin back to admin for cleanup")
+            log_test("8", False, f"Expected 200 when demoting one of two super_admins, got: {result2}")
     else:
         log_test("8", False, f"Failed to promote test_admin to super_admin: {result}")
 

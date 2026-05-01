@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 
 function StatCard({ label, value, sub }) {
   return (
-    <div className="border border-[#E0DCD0] p-6 bg-[#F7F5F0]">
+    <div className="border border-[#DCD9CF] p-6 bg-[#FBFAF6]">
       <div className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] mb-2">{label}</div>
       <div className="font-serif text-4xl tracking-tight">{value}</div>
       {sub && <div className="text-xs text-[#4A4A4A] mt-1">{sub}</div>}
@@ -38,12 +38,12 @@ export default function StudentDashboard() {
             <StatCard label="Rank" value={user?.belt_rank || "—"} />
           </div>
 
-          <section className="border border-[#E0DCD0] bg-[#F7F5F0]">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E0DCD0]">
+          <section className="border border-[#DCD9CF] bg-[#FBFAF6]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#DCD9CF]">
               <h2 className="font-serif text-2xl">Payments</h2>
               <span className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A]">Account Ledger</span>
             </div>
-            <div className="divide-y divide-[#E0DCD0]">
+            <div className="divide-y divide-[#DCD9CF]">
               {payments.length === 0 && (
                 <div className="px-6 py-8 text-sm text-[#4A4A4A]">No payments recorded.</div>
               )}
@@ -59,7 +59,7 @@ export default function StudentDashboard() {
                   <div className="font-mono-accent tracking-widest text-sm">${p.amount.toFixed(2)}</div>
                   <span className={`text-[10px] uppercase tracking-[0.2em] px-3 py-1 border ${
                     p.status === "paid" ? "border-[#2E4E3F] text-[#2E4E3F]" :
-                    p.status === "overdue" ? "border-[#C1121F] text-[#C1121F]" :
+                    p.status === "overdue" ? "border-[#D7263D] text-[#D7263D]" :
                     "border-[#B87F17] text-[#B87F17]"
                   }`}>{p.status}</span>
                 </div>
@@ -67,12 +67,12 @@ export default function StudentDashboard() {
             </div>
           </section>
 
-          <section className="border border-[#E0DCD0] bg-[#F7F5F0]">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E0DCD0]">
+          <section className="border border-[#DCD9CF] bg-[#FBFAF6]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#DCD9CF]">
               <h2 className="font-serif text-2xl">Your Classes</h2>
               <span className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A]">Weekly Schedule</span>
             </div>
-            <div className="divide-y divide-[#E0DCD0]">
+            <div className="divide-y divide-[#DCD9CF]">
               {schedule.map((s, i) => (
                 <div key={i} className="px-6 py-3 flex items-center justify-between">
                   <div className="text-sm"><span className="font-medium">{s.day}</span> · {s.class}</div>

@@ -12,9 +12,9 @@ export default function News() {
       <section className="max-w-5xl mx-auto px-6 lg:px-10 py-20 md:py-28" data-testid="news-page">
         <div className="text-[10px] uppercase tracking-[0.32em] text-[#4A4A4A] mb-4">News & Events</div>
         <h1 className="font-serif text-5xl md:text-7xl tracking-tight leading-[0.95] mb-16">From the dojo.</h1>
-        <div className="space-y-0 border-t border-[#E0DCD0]">
+        <div className="space-y-0 border-t border-[#DCD9CF]">
           {posts.map((p, i) => (
-            <article key={i} className="py-10 border-b border-[#E0DCD0] grid md:grid-cols-[180px_1fr] gap-6">
+            <article key={i} className="py-10 border-b border-[#DCD9CF] grid md:grid-cols-[180px_1fr] gap-6">
               <div className="font-mono-accent text-xs tracking-widest text-[#4A4A4A] pt-2">
                 {new Date(p.date).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
               </div>

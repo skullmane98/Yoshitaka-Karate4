@@ -19,15 +19,15 @@ export default function About() {
             <img src={IMG} alt="Sensei portrait" className="w-full aspect-[3/4] object-cover" />
             <div className="mt-4 flex justify-between items-center text-xs uppercase tracking-[0.24em] text-[#4A4A4A]">
               <span>{c.rank || "7th Dan, Shotokan"}</span>
-              <span className="font-kanji text-base text-[#C1121F]">義孝</span>
+              <span className="font-kanji text-base text-[#1A7A3D]">義孝</span>
             </div>
           </div>
           <div className="md:col-span-7">
-            <p className="text-lg md:text-xl leading-relaxed text-[#1A1A1A] mb-8 font-light">
+            <p className="text-lg md:text-xl leading-relaxed text-[#0F0F0F] mb-8 font-light">
               {c.sensei_bio || ""}
             </p>
             <div className="brush-divider my-8" />
-            <blockquote className="font-serif text-2xl md:text-3xl italic leading-snug text-[#1A1A1A] max-w-2xl">
+            <blockquote className="font-serif text-2xl md:text-3xl italic leading-snug text-[#0F0F0F] max-w-2xl">
               “{c.philosophy || "Karate begins and ends with respect."}”
             </blockquote>
           </div>

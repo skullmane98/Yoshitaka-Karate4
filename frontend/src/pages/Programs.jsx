@@ -14,13 +14,13 @@ export default function Programs() {
         <h1 className="font-serif text-5xl md:text-7xl tracking-tight leading-[0.95] mb-16 max-w-3xl">
           A curriculum shaped by patience.
         </h1>
-        <div className="grid md:grid-cols-2 gap-0 border border-[#E0DCD0]">
+        <div className="grid md:grid-cols-2 gap-0 border border-[#DCD9CF]">
           {programs.map((p, i) => (
             <div
               key={i}
-              className={`p-10 ${i % 2 === 0 ? "md:border-r border-[#E0DCD0]" : ""} ${i >= 2 ? "border-t border-[#E0DCD0]" : ""} ${i > 0 && i % 2 === 1 ? "border-t md:border-t-0" : ""}`}
+              className={`p-10 ${i % 2 === 0 ? "md:border-r border-[#DCD9CF]" : ""} ${i >= 2 ? "border-t border-[#DCD9CF]" : ""} ${i > 0 && i % 2 === 1 ? "border-t md:border-t-0" : ""}`}
             >
-              <div className="text-[10px] uppercase tracking-[0.3em] text-[#C1121F] mb-3">Program · 0{i + 1}</div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-[#1A7A3D] mb-3">Program · 0{i + 1}</div>
               <h3 className="font-serif text-3xl md:text-4xl mb-4 tracking-tight">{p.name}</h3>
               <p className="text-[#4A4A4A] leading-relaxed">{p.desc}</p>
             </div>

@@ -1,0 +1,48 @@
+{
+  "summary": "Verified forgot/reset password flow, ID card PDF export, and new green/hinomaru theme. 40/40 backend pytest cases pass (6 new tests added for password reset); all previously passing endpoints remain green. Frontend: /forgot-password + /reset-password flow works end-to-end using token parsed from backend log, login with new password succeeds, token reuse returns 400. Login page has 'Forgot password?' link. ID card PDF button is gated on QR load and triggered a real 7.7MB PDF download (yoshitaka-id-YK32752360.pdf). Homepage/navbar load the Yoshitaka emblem logo; primary buttons render in new dojo green rgb(26,122,61) = #1A7A3D with hinomaru-red accent dot. No purple/violet leftovers observed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "ID card rendering (all dashboards) + PDF export",
+        "issue": "IDCard.jsx sets crossOrigin=\"anonymous\" on the Yoshitaka emblem <img src={LOGO_URL}> (line 70). The customer-assets CDN does not return Access-Control-Allow-Origin headers, so the browser blocks the image load with: 'Access to image ... has been blocked by CORS policy'. Result: the emblem is MISSING from the ID card on screen AND from the generated PDF (QR, barcode, text still render fine; PDF was 7.7MB and downloaded successfully). The navbar/footer logo works because it does NOT use crossOrigin. Fix: remove crossOrigin on that <img>, OR proxy the logo through the backend, OR inline the emblem as a local import/asset. If using html2canvas, you may need to set allowTaint:true + useCORS:false when the image is same-document without CORS — but the cleanest fix is to host the emblem as a local static asset under /frontend/src/assets.",
+        "affected_selectors": ["[data-testid=\"id-card\"]", "[data-testid=\"idcard-pdf-btn\"]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "[MEDIUM] Fix the emblem CORS issue inside IDCard.jsx so the logo appears on the ID card and the PDF. Recommended: host the emblem locally (e.g. /frontend/src/assets/yoshitaka-emblem.jpg) and import it — no CORS involved. If the CDN URL must stay, remove `crossOrigin=\"anonymous\"` and keep html2canvas `useCORS:true` + `allowTaint:true` (noting this will taint the canvas; hosting locally is better).",
+    "[OPTIONAL] Frontend calls /api/auth/me on every public page load causing benign 401 noise in console when not authenticated. Consider skipping the probe if no access_token cookie is present (document.cookie check) or treat 401 silently."
+  ],
+  "critical_code_review_comments": [
+    "Forgot/reset endpoints: payload is typed as a raw dict instead of Pydantic models — works but loses automatic validation/OpenAPI schema. Consider ForgotPasswordRequest(BaseModel) and ResetPasswordRequest(BaseModel) with EmailStr/min_length on new_password so the 400s are consistent with other endpoints.",
+    "Reset token length check: `len(new_password) < 6` is enforced but there is no max length and no strength policy; acceptable for MVP.",
+    "Password reset tokens collection has no TTL index — expired rows accumulate forever. Consider adding a TTL index on expires_at (or a scheduled cleanup) for hygiene.",
+    "Reset-password endpoint does not invalidate existing JWT access_token cookies, so a pre-existing session continues to work with the new password already applied — acceptable but worth documenting.",
+    "server.py is still ~860 lines; consider splitting into routers (auth, users, access_codes, payments, cms) as the codebase grows.",
+    "CORS: backend uses allow_origins=os.environ.get('CORS_ORIGINS','*').split(',') with allow_credentials=True — browsers reject `*` with credentials; currently works only because frontend + backend share origin through the ingress. Set explicit origins for prod.",
+    "IDCard.jsx emblem CORS issue (see frontend_issues) is the main blocker on the new feature set."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {
+    "backend": "100% (40/40 pytest)",
+    "frontend": "100% of critical flows (forgot, reset, login-with-new-pwd, PDF download, theme, logo)"
+  },
+  "test_credentials": "superadmin@yoshitaka.com / SuperAdmin2026! — RESTORED at end of the run via a second forgot/reset cycle. Seeded codes: student GHZ6-WHLZ (10), admin LCWD-95WP (3).",
+  "seed_data_creation": "No new seed data required beyond the existing TEST_ prefixed users/codes/payments created by the test suite.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend tests: /app/backend/tests/backend_test.py has 40 cases (class TestPasswordReset at line ~350 covers forgot/reset). Tokens are captured from /var/log/supervisor/backend.err.log by tailing for 'PASSWORD RESET LINK for <email>' and parsing 'token=...'. End-to-end reset test restores the super admin password at the end. Frontend flow: ForgotPassword uses data-testid forgot-email-input/forgot-submit-btn/forgot-success. ResetPassword uses reset-token-input/reset-password-input/reset-confirm-input/reset-submit-btn and pre-fills the token from ?token= query. IDCard PDF button (idcard-pdf-btn) is disabled until QR loads; use page.expect_download() + wait_for_function('() => !document.querySelector(...).disabled'). Known CORS issue with emblem image inside ID card.",
+  "rca of the issue": "Emblem missing from ID card/PDF: the <img src={LOGO_URL} crossOrigin=\"anonymous\"> in IDCard.jsx forces the browser to do a CORS-enabled fetch for the emblem. customer-assets.emergentagent.com returns no Access-Control-Allow-Origin header, so the image never decodes and the <img> ends up blank both on the DOM ID card and in the html2canvas snapshot used for PDF. Reproduction: login as any role → open dashboard → observe the ID card has no circular emblem in its header (QR and barcode still show). Mitigation: download the emblem into /frontend/src/assets and import it (ES module), or remove crossOrigin and set html2canvas allowTaint:true (but that will taint the canvas for other scenarios). The clean fix is a local asset."
+}

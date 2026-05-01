@@ -59,14 +59,14 @@ export default function AdminDashboard({ isSuper = false }) {
       title={isSuper ? "Super Admin Control" : "Admin Portal"}
       subtitle={isSuper ? "Dojo Administration" : "Student Administration"}
     >
-      <div className="flex gap-2 mb-8 border-b border-[#E0DCD0] overflow-x-auto">
+      <div className="flex gap-2 mb-8 border-b border-[#DCD9CF] overflow-x-auto">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             data-testid={`tab-${t.id}`}
             className={`px-5 py-3 text-[11px] uppercase tracking-[0.2em] border-b-2 whitespace-nowrap transition-colors ${
-              tab === t.id ? "border-[#C1121F] text-[#1A1A1A]" : "border-transparent text-[#4A4A4A] hover:text-[#1A1A1A]"
+              tab === t.id ? "border-[#1A7A3D] text-[#0F0F0F]" : "border-transparent text-[#4A4A4A] hover:text-[#0F0F0F]"
             }`}
           >
             {t.label}
@@ -81,9 +81,9 @@ export default function AdminDashboard({ isSuper = false }) {
             {isSuper && <Stat label="Admins" value={stats?.admins ?? "—"} />}
             <Stat label="Payments Due" value={`$${(stats?.payments_due_total ?? 0).toFixed(2)}`} sub={`${stats?.payments_due_count ?? 0} open`} />
             <Stat label="Active Codes" value={codes.filter((c) => c.active).length} />
-            <div className="col-span-2 border border-[#E0DCD0] bg-[#F7F5F0] p-6">
+            <div className="col-span-2 border border-[#DCD9CF] bg-[#FBFAF6] p-6">
               <div className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] mb-3">Latest Payments</div>
-              <div className="divide-y divide-[#E0DCD0]">
+              <div className="divide-y divide-[#DCD9CF]">
                 {payments.slice(0, 5).map((p) => (
                   <div key={p.id} className="py-2 flex justify-between text-sm">
                     <span>{p.user_name} · {p.description}</span>
@@ -137,7 +137,7 @@ export default function AdminDashboard({ isSuper = false }) {
 
 function Stat({ label, value, sub }) {
   return (
-    <div className="border border-[#E0DCD0] p-6 bg-[#F7F5F0]">
+    <div className="border border-[#DCD9CF] p-6 bg-[#FBFAF6]">
       <div className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] mb-2">{label}</div>
       <div className="font-serif text-4xl tracking-tight">{value}</div>
       {sub && <div className="text-xs text-[#4A4A4A] mt-1">{sub}</div>}
@@ -152,14 +152,14 @@ function UsersPanel({ users, onEdit, onReload, onBill, isSuper }) {
     catch (e) { toast.error(formatApiError(e)); }
   };
   return (
-    <div className="border border-[#E0DCD0] bg-[#F7F5F0]" data-testid="users-panel">
-      <div className="px-6 py-4 border-b border-[#E0DCD0] flex justify-between items-center">
+    <div className="border border-[#DCD9CF] bg-[#FBFAF6]" data-testid="users-panel">
+      <div className="px-6 py-4 border-b border-[#DCD9CF] flex justify-between items-center">
         <h2 className="font-serif text-2xl">{isSuper ? "All Users" : "Students"}</h2>
         <span className="text-xs text-[#4A4A4A]">{users.length} records</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-[#EFECE5] text-[10px] uppercase tracking-[0.2em] text-[#4A4A4A]">
+          <thead className="bg-[#F1EEE5] text-[10px] uppercase tracking-[0.2em] text-[#4A4A4A]">
             <tr>
               <th className="text-left px-6 py-3">Name</th>
               <th className="text-left px-6 py-3">Email</th>
@@ -172,7 +172,7 @@ function UsersPanel({ users, onEdit, onReload, onBill, isSuper }) {
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} className="border-t border-[#E0DCD0]" data-testid={`user-row-${u.id}`}>
+              <tr key={u.id} className="border-t border-[#DCD9CF]" data-testid={`user-row-${u.id}`}>
                 <td className="px-6 py-3 font-medium">{u.name}</td>
                 <td className="px-6 py-3 text-[#4A4A4A]">{u.email}</td>
                 <td className="px-6 py-3 capitalize">{u.role.replace("_", " ")}</td>
@@ -180,7 +180,7 @@ function UsersPanel({ users, onEdit, onReload, onBill, isSuper }) {
                 <td className="px-6 py-3 font-mono-accent text-xs">{u.member_number}</td>
                 <td className="px-6 py-3">
                   <span className={`text-[10px] uppercase tracking-[0.2em] px-2 py-1 border ${
-                    u.active ? "border-[#2E4E3F] text-[#2E4E3F]" : "border-[#C1121F] text-[#C1121F]"
+                    u.active ? "border-[#2E4E3F] text-[#2E4E3F]" : "border-[#D7263D] text-[#D7263D]"
                   }`}>{u.active ? "Active" : "Disabled"}</span>
                 </td>
                 <td className="px-6 py-3 text-right whitespace-nowrap">
@@ -189,7 +189,7 @@ function UsersPanel({ users, onEdit, onReload, onBill, isSuper }) {
                     <button className="text-xs underline mr-3" onClick={() => onBill(u)} data-testid={`bill-user-${u.id}`}>Bill</button>
                   )}
                   {isSuper && (
-                    <button className="text-xs text-[#C1121F] underline" onClick={() => del(u)} data-testid={`delete-user-${u.id}`}>Delete</button>
+                    <button className="text-xs text-[#D7263D] underline" onClick={() => del(u)} data-testid={`delete-user-${u.id}`}>Delete</button>
                   )}
                 </td>
               </tr>
@@ -230,30 +230,30 @@ function CodesPanel({ codes, allowedRoles, onReload }) {
 
   return (
     <div className="space-y-6" data-testid="codes-panel">
-      <form onSubmit={create} className="border border-[#E0DCD0] bg-[#F7F5F0] p-6 grid md:grid-cols-[1fr_1fr_2fr_auto] gap-4 items-end">
+      <form onSubmit={create} className="border border-[#DCD9CF] bg-[#FBFAF6] p-6 grid md:grid-cols-[1fr_1fr_2fr_auto] gap-4 items-end">
         <div>
           <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Role</label>
-          <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full border border-[#E0DCD0] bg-white px-3 py-2" data-testid="code-role-select">
+          <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full border border-[#DCD9CF] bg-white px-3 py-2" data-testid="code-role-select">
             {allowedRoles.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
         <div>
           <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Max Uses</label>
-          <input type="number" min={1} value={maxUses} onChange={(e) => setMaxUses(e.target.value)} className="w-full border border-[#E0DCD0] bg-white px-3 py-2" data-testid="code-maxuses-input" />
+          <input type="number" min={1} value={maxUses} onChange={(e) => setMaxUses(e.target.value)} className="w-full border border-[#DCD9CF] bg-white px-3 py-2" data-testid="code-maxuses-input" />
         </div>
         <div>
           <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Note</label>
-          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="optional" className="w-full border border-[#E0DCD0] bg-white px-3 py-2" data-testid="code-note-input" />
+          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="optional" className="w-full border border-[#DCD9CF] bg-white px-3 py-2" data-testid="code-note-input" />
         </div>
         <button className="btn-primary flex items-center gap-2" disabled={creating} data-testid="code-create-btn">
           <Plus size={14} /> {creating ? "…" : "Create"}
         </button>
       </form>
 
-      <div className="border border-[#E0DCD0] bg-[#F7F5F0]">
+      <div className="border border-[#DCD9CF] bg-[#FBFAF6]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-[#EFECE5] text-[10px] uppercase tracking-[0.2em] text-[#4A4A4A]">
+            <thead className="bg-[#F1EEE5] text-[10px] uppercase tracking-[0.2em] text-[#4A4A4A]">
               <tr>
                 <th className="text-left px-6 py-3">Code</th>
                 <th className="text-left px-6 py-3">Role</th>
@@ -265,7 +265,7 @@ function CodesPanel({ codes, allowedRoles, onReload }) {
             </thead>
             <tbody>
               {codes.map((c) => (
-                <tr key={c.id} className="border-t border-[#E0DCD0]" data-testid={`code-row-${c.id}`}>
+                <tr key={c.id} className="border-t border-[#DCD9CF]" data-testid={`code-row-${c.id}`}>
                   <td className="px-6 py-3 font-mono-accent tracking-widest">{c.code}</td>
                   <td className="px-6 py-3 capitalize">{c.role}</td>
                   <td className="px-6 py-3 text-[#4A4A4A]">{c.used_count} / {c.max_uses}</td>
@@ -277,7 +277,7 @@ function CodesPanel({ codes, allowedRoles, onReload }) {
                   <td className="px-6 py-3 text-[#4A4A4A]">{c.note || "—"}</td>
                   <td className="px-6 py-3 text-right whitespace-nowrap">
                     <button className="text-xs inline-flex items-center gap-1 mr-3" onClick={() => copy(c.code)} data-testid={`copy-code-${c.id}`}><Copy size={12} /> Copy</button>
-                    {c.active && <button className="text-xs text-[#C1121F] underline" onClick={() => deactivate(c)} data-testid={`deactivate-code-${c.id}`}>Deactivate</button>}
+                    {c.active && <button className="text-xs text-[#D7263D] underline" onClick={() => deactivate(c)} data-testid={`deactivate-code-${c.id}`}>Deactivate</button>}
                   </td>
                 </tr>
               ))}
@@ -307,10 +307,10 @@ function PaymentsPanel({ payments, onReload, users, onNew }) {
 
   return (
     <div className="space-y-6" data-testid="payments-panel">
-      <div className="border border-[#E0DCD0] bg-[#F7F5F0] p-6 flex gap-4 items-end">
+      <div className="border border-[#DCD9CF] bg-[#FBFAF6] p-6 flex gap-4 items-end">
         <div className="flex-1">
           <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Bill Student</label>
-          <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} className="w-full border border-[#E0DCD0] bg-white px-3 py-2" data-testid="payment-user-select">
+          <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} className="w-full border border-[#DCD9CF] bg-white px-3 py-2" data-testid="payment-user-select">
             <option value="">Select student…</option>
             {students.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
           </select>
@@ -323,10 +323,10 @@ function PaymentsPanel({ payments, onReload, users, onNew }) {
         >New Invoice</button>
       </div>
 
-      <div className="border border-[#E0DCD0] bg-[#F7F5F0]">
+      <div className="border border-[#DCD9CF] bg-[#FBFAF6]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-[#EFECE5] text-[10px] uppercase tracking-[0.2em] text-[#4A4A4A]">
+            <thead className="bg-[#F1EEE5] text-[10px] uppercase tracking-[0.2em] text-[#4A4A4A]">
               <tr>
                 <th className="text-left px-6 py-3">Student</th>
                 <th className="text-left px-6 py-3">Description</th>
@@ -338,7 +338,7 @@ function PaymentsPanel({ payments, onReload, users, onNew }) {
             </thead>
             <tbody>
               {payments.map((p) => (
-                <tr key={p.id} className="border-t border-[#E0DCD0]" data-testid={`adm-payment-row-${p.id}`}>
+                <tr key={p.id} className="border-t border-[#DCD9CF]" data-testid={`adm-payment-row-${p.id}`}>
                   <td className="px-6 py-3 font-medium">{p.user_name}</td>
                   <td className="px-6 py-3 text-[#4A4A4A]">{p.description}</td>
                   <td className="px-6 py-3 font-mono-accent">${p.amount.toFixed(2)}</td>
@@ -346,7 +346,7 @@ function PaymentsPanel({ payments, onReload, users, onNew }) {
                   <td className="px-6 py-3">
                     <span className={`text-[10px] uppercase tracking-[0.2em] px-2 py-1 border ${
                       p.status === "paid" ? "border-[#2E4E3F] text-[#2E4E3F]" :
-                      p.status === "overdue" ? "border-[#C1121F] text-[#C1121F]" :
+                      p.status === "overdue" ? "border-[#D7263D] text-[#D7263D]" :
                       "border-[#B87F17] text-[#B87F17]"
                     }`}>{p.status}</span>
                   </td>
@@ -354,7 +354,7 @@ function PaymentsPanel({ payments, onReload, users, onNew }) {
                     {p.status !== "paid" && <button className="text-xs underline mr-3" onClick={() => setStatus(p, "paid")} data-testid={`mark-paid-${p.id}`}>Mark Paid</button>}
                     {p.status === "paid" && <button className="text-xs underline mr-3" onClick={() => setStatus(p, "due")} data-testid={`mark-due-${p.id}`}>Reopen</button>}
                     {p.status === "due" && <button className="text-xs underline mr-3" onClick={() => setStatus(p, "overdue")} data-testid={`mark-overdue-${p.id}`}>Overdue</button>}
-                    <button className="text-xs text-[#C1121F] underline" onClick={() => del(p)} data-testid={`delete-payment-${p.id}`}><Trash2 size={12} className="inline" /></button>
+                    <button className="text-xs text-[#D7263D] underline" onClick={() => del(p)} data-testid={`delete-payment-${p.id}`}><Trash2 size={12} className="inline" /></button>
                   </td>
                 </tr>
               ))}
@@ -371,7 +371,7 @@ function CMSPanel({ pages, onEdit }) {
   return (
     <div className="grid md:grid-cols-2 gap-4" data-testid="cms-panel">
       {pages.map((p) => (
-        <div key={p.slug} className="border border-[#E0DCD0] bg-[#F7F5F0] p-6 flex flex-col" data-testid={`cms-page-${p.slug}`}>
+        <div key={p.slug} className="border border-[#DCD9CF] bg-[#FBFAF6] p-6 flex flex-col" data-testid={`cms-page-${p.slug}`}>
           <div className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] mb-2">/{p.slug}</div>
           <h3 className="font-serif text-2xl mb-2">{p.title}</h3>
           <div className="text-xs text-[#4A4A4A] mb-4">Last updated {new Date(p.updated_at).toLocaleString()}</div>
@@ -510,7 +510,7 @@ function EditPageModal({ page, onClose, onSaved }) {
             data-testid="edit-page-json"
           />
         </Field>
-        {err && <div className="text-[#C1121F] text-sm" data-testid="edit-page-error">{err}</div>}
+        {err && <div className="text-[#D7263D] text-sm" data-testid="edit-page-error">{err}</div>}
         <div className="flex gap-3">
           <button type="submit" className="btn-primary flex-1" disabled={busy} data-testid="edit-page-save">{busy ? "Saving…" : "Save Page"}</button>
           <button type="button" className="btn-outline" onClick={onClose}>Cancel</button>
@@ -533,12 +533,12 @@ function Modal({ title, children, onClose, wide }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose} data-testid="modal-overlay">
       <div
-        className={`bg-[#F7F5F0] border border-[#E0DCD0] w-full ${wide ? "max-w-3xl" : "max-w-lg"} max-h-[90vh] overflow-y-auto`}
+        className={`bg-[#FBFAF6] border border-[#DCD9CF] w-full ${wide ? "max-w-3xl" : "max-w-lg"} max-h-[90vh] overflow-y-auto`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center px-6 py-4 border-b border-[#E0DCD0]">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-[#DCD9CF]">
           <h3 className="font-serif text-2xl tracking-tight">{title}</h3>
-          <button onClick={onClose} className="p-1 hover:text-[#C1121F]" data-testid="modal-close"><X size={18} /></button>
+          <button onClick={onClose} className="p-1 hover:text-[#D7263D]" data-testid="modal-close"><X size={18} /></button>
         </div>
         <div className="p-6">
           {children}

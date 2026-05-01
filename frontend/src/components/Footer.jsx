@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
+import { LOGO_URL } from "@/lib/brand";
 
 export default function Footer() {
   return (
-    <footer className="mt-24 border-t border-[#E0DCD0] bg-[#EFECE5]" data-testid="site-footer">
+    <footer className="mt-24 border-t border-[#DCD9CF] bg-[#F1EEE5]" data-testid="site-footer">
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16 grid md:grid-cols-4 gap-10">
         <div className="md:col-span-2">
           <div className="flex items-center gap-3 mb-4">
-            <span className="hinomaru-dot" />
-            <span className="font-serif text-2xl font-medium">Yoshitaka <span className="font-kanji text-[#C1121F]">空手道</span></span>
+            <img src={LOGO_URL} alt="Yoshitaka Karate-Do" className="h-12 w-12 object-contain" />
+            <span className="font-serif text-2xl font-medium">Yoshitaka <span className="font-kanji text-[#1A7A3D]">空手道</span></span>
           </div>
           <p className="text-sm text-[#4A4A4A] max-w-sm leading-relaxed">
             A traditional Shotokan karate dojo devoted to the quiet discipline of kihon, kata, and kumite.

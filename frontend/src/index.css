@@ -5,43 +5,43 @@
 @tailwind utilities;
 
 :root {
-  /* Dojo palette */
-  --dojo-paper: #F7F5F0;
-  --dojo-paper-alt: #EFECE5;
-  --dojo-ink: #1A1A1A;
+  /* Yoshitaka emblem palette: white, deep green, hinomaru red, black */
+  --dojo-paper: #FBFAF6;
+  --dojo-paper-alt: #F1EEE5;
+  --dojo-ink: #0F0F0F;
   --dojo-ink-soft: #4A4A4A;
-  --dojo-hinomaru: #C1121F;
-  --dojo-hinomaru-dark: #A10F1A;
-  --dojo-border: #E0DCD0;
-  --dojo-moss: #2E4E3F;
+  --dojo-green: #1A7A3D;        /* primary emblem green */
+  --dojo-green-dark: #105C2C;   /* hover / deeper */
+  --dojo-green-soft: #E6F1EA;   /* tint backgrounds */
+  --dojo-hinomaru: #D7263D;     /* red disc */
+  --dojo-hinomaru-dark: #A91C30;
+  --dojo-border: #DCD9CF;
   --dojo-gold: #B87F17;
 
-  /* Shadcn */
-  --background: 42 25% 95%;
-  --foreground: 0 0% 10%;
-  --card: 42 25% 97%;
-  --card-foreground: 0 0% 10%;
-  --popover: 42 25% 97%;
-  --popover-foreground: 0 0% 10%;
-  --primary: 356 83% 41%;
+  /* Shadcn mapped to greens */
+  --background: 50 30% 97%;
+  --foreground: 0 0% 6%;
+  --card: 50 30% 98%;
+  --card-foreground: 0 0% 6%;
+  --popover: 50 30% 98%;
+  --popover-foreground: 0 0% 6%;
+  --primary: 142 64% 29%;        /* dojo green */
   --primary-foreground: 0 0% 100%;
-  --secondary: 42 18% 90%;
-  --secondary-foreground: 0 0% 10%;
-  --muted: 42 18% 92%;
-  --muted-foreground: 0 0% 40%;
-  --accent: 42 18% 90%;
-  --accent-foreground: 0 0% 10%;
-  --destructive: 356 83% 41%;
+  --secondary: 50 18% 92%;
+  --secondary-foreground: 0 0% 6%;
+  --muted: 50 18% 94%;
+  --muted-foreground: 0 0% 35%;
+  --accent: 142 50% 92%;
+  --accent-foreground: 142 64% 25%;
+  --destructive: 351 73% 50%;
   --destructive-foreground: 0 0% 100%;
-  --border: 42 15% 85%;
-  --input: 42 15% 85%;
-  --ring: 0 0% 10%;
+  --border: 48 18% 86%;
+  --input: 48 18% 86%;
+  --ring: 142 64% 29%;
   --radius: 0.125rem;
 }
 
-* {
-  border-color: hsl(var(--border));
-}
+* { border-color: hsl(var(--border)); }
 
 html, body {
   margin: 0;
@@ -69,12 +69,11 @@ html, body {
   letter-spacing: 0.02em;
 }
 
-/* Paper texture subtle */
 .paper-texture {
   background-color: var(--dojo-paper);
   background-image:
-    radial-gradient(at 15% 10%, rgba(193, 18, 31, 0.04) 0px, transparent 50%),
-    radial-gradient(at 85% 90%, rgba(0, 0, 0, 0.03) 0px, transparent 50%);
+    radial-gradient(at 12% 8%, rgba(26, 122, 61, 0.045) 0px, transparent 55%),
+    radial-gradient(at 88% 92%, rgba(215, 38, 61, 0.04) 0px, transparent 55%);
 }
 
 .ink-underline {
@@ -84,31 +83,25 @@ html, body {
 .ink-underline::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -4px;
+  left: 0; right: 0; bottom: -4px;
   height: 2px;
-  background: var(--dojo-ink);
+  background: var(--dojo-green);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.ink-underline:hover::after {
-  transform: scaleX(1);
-}
+.ink-underline:hover::after { transform: scaleX(1); }
 
 .hinomaru-dot {
-  width: 10px;
-  height: 10px;
+  width: 10px; height: 10px;
   background: var(--dojo-hinomaru);
   border-radius: 9999px;
   display: inline-block;
 }
 
-/* Button reset - sharp corners */
 .btn-primary {
-  background: var(--dojo-ink);
-  color: var(--dojo-paper);
+  background: var(--dojo-green);
+  color: #fff;
   padding: 0.85rem 2rem;
   font-family: 'Outfit', sans-serif;
   font-weight: 500;
@@ -116,16 +109,14 @@ html, body {
   text-transform: uppercase;
   font-size: 0.75rem;
   transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid var(--dojo-ink);
+  border: 1px solid var(--dojo-green);
   cursor: pointer;
 }
 .btn-primary:hover {
-  background: var(--dojo-hinomaru);
-  border-color: var(--dojo-hinomaru);
+  background: var(--dojo-green-dark);
+  border-color: var(--dojo-green-dark);
 }
-.btn-primary:active {
-  transform: scale(0.98);
-}
+.btn-primary:active { transform: scale(0.98); }
 
 .btn-outline {
   background: transparent;
@@ -145,52 +136,58 @@ html, body {
   color: var(--dojo-paper);
 }
 
-/* Certificate-style ID card */
+.btn-accent {
+  background: var(--dojo-hinomaru);
+  color: #fff;
+  padding: 0.85rem 2rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  border: 1px solid var(--dojo-hinomaru);
+  transition: all 200ms ease;
+  cursor: pointer;
+}
+.btn-accent:hover { background: var(--dojo-hinomaru-dark); border-color: var(--dojo-hinomaru-dark); }
+
 .id-card {
-  background: var(--dojo-paper);
+  background: #FFFFFF;
   background-image:
-    repeating-linear-gradient(45deg, rgba(193, 18, 31, 0.015) 0 2px, transparent 2px 8px),
-    radial-gradient(circle at 50% 100%, rgba(193, 18, 31, 0.06), transparent 70%);
+    repeating-linear-gradient(45deg, rgba(26, 122, 61, 0.02) 0 2px, transparent 2px 8px),
+    radial-gradient(circle at 50% 100%, rgba(26, 122, 61, 0.06), transparent 70%);
   border: 1px solid var(--dojo-border);
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.18), 0 6px 10px -4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 22px 44px -14px rgba(0, 0, 0, 0.18), 0 6px 10px -4px rgba(0, 0, 0, 0.06);
   position: relative;
 }
 .id-card::before, .id-card::after {
   content: '';
   position: absolute;
-  width: 24px;
-  height: 24px;
-  border-color: var(--dojo-hinomaru);
+  width: 24px; height: 24px;
+  border-color: var(--dojo-green);
   border-style: solid;
 }
-.id-card::before {
-  top: 10px; left: 10px;
-  border-width: 1px 0 0 1px;
-}
-.id-card::after {
-  bottom: 10px; right: 10px;
-  border-width: 0 1px 1px 0;
-}
+.id-card::before { top: 10px; left: 10px; border-width: 1px 0 0 1px; }
+.id-card::after  { bottom: 10px; right: 10px; border-width: 0 1px 1px 0; }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--dojo-paper); }
 ::-webkit-scrollbar-thumb { background: var(--dojo-border); }
 ::-webkit-scrollbar-thumb:hover { background: var(--dojo-ink-soft); }
+::selection { background: var(--dojo-green); color: #fff; }
 
-/* Selection */
-::selection { background: var(--dojo-ink); color: var(--dojo-paper); }
-
-/* Reveal animation */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.fade-up {
-  animation: fade-up 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+.fade-up { animation: fade-up 800ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.brush-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--dojo-green) 20%, var(--dojo-green) 80%, transparent 100%);
+  opacity: 0.55;
 }
 
-/* Form input utility */
 .input {
   width: 100%;
   border: 1px solid var(--dojo-border);
@@ -201,14 +198,4 @@ html, body {
   font-size: 0.875rem;
   transition: border-color 180ms ease;
 }
-.input:focus {
-  outline: none;
-  border-color: var(--dojo-ink);
-}
-
-/* Subtle brush divider */
-.brush-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--dojo-ink) 20%, var(--dojo-ink) 80%, transparent 100%);
-  opacity: 0.6;
-}
+.input:focus { outline: none; border-color: var(--dojo-green); }

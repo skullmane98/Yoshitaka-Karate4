@@ -299,6 +299,56 @@ async def logout(response: Response):
     return {"ok": True}
 
 
+@api_router.post("/auth/forgot-password")
+async def forgot_password(payload: dict):
+    """Generate a password reset token. Always returns ok to avoid leaking which emails exist.
+    The reset link is logged to the backend console."""
+    email = (payload.get("email") or "").lower().strip()
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    user = await db.users.find_one({"email": email}, {"_id": 0})
+    if user:
+        token = secrets.token_urlsafe(32)
+        await db.password_reset_tokens.insert_one({
+            "token": token,
+            "user_id": user["id"],
+            "email": email,
+            "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "used": False,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        # Log link to console (no email provider configured yet).
+        frontend = os.environ.get("FRONTEND_URL", "")
+        link = f"{frontend}/reset-password?token={token}" if frontend else f"/reset-password?token={token}"
+        logger.info("=" * 60)
+        logger.info(f"PASSWORD RESET LINK for {email}: {link}")
+        logger.info(f"  Token: {token}")
+        logger.info("=" * 60)
+    return {"ok": True, "message": "If that email exists, a reset link has been issued."}
+
+
+@api_router.post("/auth/reset-password")
+async def reset_password(payload: dict):
+    token = (payload.get("token") or "").strip()
+    new_password = payload.get("new_password") or ""
+    if not token or len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Invalid token or password too short")
+    record = await db.password_reset_tokens.find_one({"token": token, "used": False}, {"_id": 0})
+    if not record:
+        raise HTTPException(status_code=400, detail="Invalid or already-used token")
+    if datetime.fromisoformat(record["expires_at"]) < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Token has expired")
+    await db.users.update_one(
+        {"id": record["user_id"]},
+        {"$set": {"password_hash": hash_password(new_password)}},
+    )
+    await db.password_reset_tokens.update_one(
+        {"token": token},
+        {"$set": {"used": True, "used_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    return {"ok": True}
+
+
 @api_router.get("/auth/me", response_model=UserPublic)
 async def me(user: dict = Depends(get_current_user)):
     return user_to_public(user)

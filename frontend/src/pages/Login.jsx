@@ -38,7 +38,7 @@ export default function Login() {
           <h1 className="font-serif text-5xl tracking-tight">Login</h1>
           <p className="text-[#4A4A4A] mt-2 text-sm">Enter the dojo.</p>
         </div>
-        <form onSubmit={submit} className="space-y-5 border border-[#E0DCD0] bg-[#F7F5F0] p-8">
+        <form onSubmit={submit} className="space-y-5 border border-[#DCD9CF] bg-[#FBFAF6] p-8">
           <div>
             <label className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] block mb-2">Email</label>
             <input
@@ -47,7 +47,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               data-testid="login-email-input"
-              className="w-full border border-[#E0DCD0] bg-white px-4 py-3 focus:outline-none focus:border-[#1A1A1A] transition-colors"
+              className="w-full border border-[#DCD9CF] bg-white px-4 py-3 focus:outline-none focus:border-[#0F0F0F] transition-colors"
             />
           </div>
           <div>
@@ -58,15 +58,16 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               data-testid="login-password-input"
-              className="w-full border border-[#E0DCD0] bg-white px-4 py-3 focus:outline-none focus:border-[#1A1A1A] transition-colors"
+              className="w-full border border-[#DCD9CF] bg-white px-4 py-3 focus:outline-none focus:border-[#0F0F0F] transition-colors"
             />
           </div>
-          {err && <div className="text-[#C1121F] text-sm" data-testid="login-error">{err}</div>}
+          {err && <div className="text-[#D7263D] text-sm" data-testid="login-error">{err}</div>}
           <button type="submit" className="btn-primary w-full" disabled={loading} data-testid="login-submit-btn">
             {loading ? "Entering…" : "Enter Dojo"}
           </button>
-          <div className="text-sm text-[#4A4A4A] text-center pt-2">
-            Have an access code? <Link to="/register" className="ink-underline text-[#1A1A1A]">Enroll here</Link>
+          <div className="flex justify-between text-sm text-[#4A4A4A] pt-2">
+            <Link to="/forgot-password" className="ink-underline" data-testid="login-forgot-link">Forgot password?</Link>
+            <Link to="/register" className="ink-underline">Enroll</Link>
           </div>
         </form>
       </section>

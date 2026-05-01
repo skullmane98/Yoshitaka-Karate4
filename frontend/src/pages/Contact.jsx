@@ -24,7 +24,7 @@ export default function Contact() {
           <div className="space-y-8">
             {rows.map((r) => (
               <div key={r.label} className="flex gap-5 items-start">
-                <div className="p-3 border border-[#E0DCD0]"><r.icon size={16} /></div>
+                <div className="p-3 border border-[#DCD9CF]"><r.icon size={16} /></div>
                 <div>
                   <div className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] mb-1">{r.label}</div>
                   <div className="text-lg font-serif">{r.value}</div>
@@ -32,8 +32,8 @@ export default function Contact() {
               </div>
             ))}
           </div>
-          <div className="bg-[#EFECE5] border border-[#E0DCD0] p-8 md:p-10">
-            <div className="font-kanji text-4xl text-[#C1121F] mb-4">押忍</div>
+          <div className="bg-[#F1EEE5] border border-[#DCD9CF] p-8 md:p-10">
+            <div className="font-kanji text-4xl text-[#1A7A3D] mb-4">押忍</div>
             <p className="text-[#4A4A4A] leading-relaxed mb-6">
               New students are welcome to observe a class before enrolling. Please call or email ahead so we can greet you properly.
             </p>

@@ -2,6 +2,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Menu, X } from "lucide-react";
+import { LOGO_URL } from "@/lib/brand";
 
 const NAV = [
   { to: "/", label: "Home" },
@@ -25,15 +26,15 @@ export default function Navbar() {
   return (
     <header
       data-testid="site-navbar"
-      className="sticky top-0 z-50 border-b border-[#E0DCD0] backdrop-blur-xl"
-      style={{ background: "rgba(247, 245, 240, 0.85)" }}
+      className="sticky top-0 z-50 border-b border-[#DCD9CF] backdrop-blur-xl"
+      style={{ background: "rgba(251, 250, 246, 0.88)" }}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group" data-testid="nav-home-link">
-          <span className="hinomaru-dot" aria-hidden />
-          <span className="font-serif text-2xl font-medium tracking-tight leading-none">
+          <img src={LOGO_URL} alt="Yoshitaka Karate-Do" className="h-12 w-12 object-contain" />
+          <span className="font-serif text-2xl font-medium tracking-tight leading-none hidden sm:inline">
             Yoshitaka
-            <span className="font-kanji text-[#C1121F] ml-2 text-xl">空手道</span>
+            <span className="font-kanji text-[#1A7A3D] ml-2 text-xl">空手道</span>
           </span>
         </Link>
 
@@ -46,7 +47,7 @@ export default function Navbar() {
               data-testid={`nav-${n.label.toLowerCase()}-link`}
               className={({ isActive }) =>
                 `text-xs uppercase tracking-[0.18em] font-medium transition-colors ${
-                  isActive ? "text-[#C1121F]" : "text-[#1A1A1A] hover:text-[#C1121F]"
+                  isActive ? "text-[#1A7A3D]" : "text-[#0F0F0F] hover:text-[#1A7A3D]"
                 }`
               }
             >
@@ -88,7 +89,7 @@ export default function Navbar() {
       </div>
 
       {open && (
-        <div className="lg:hidden border-t border-[#E0DCD0] bg-[#F7F5F0]" data-testid="nav-mobile-menu">
+        <div className="lg:hidden border-t border-[#DCD9CF] bg-[#FBFAF6]" data-testid="nav-mobile-menu">
           <div className="px-6 py-6 flex flex-col gap-5">
             {NAV.map((n) => (
               <NavLink

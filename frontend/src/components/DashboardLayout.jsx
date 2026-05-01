@@ -8,24 +8,24 @@ export default function DashboardLayout({ title, subtitle, nav, children }) {
 
   return (
     <div className="min-h-screen paper-texture flex flex-col">
-      <header className="border-b border-[#E0DCD0]" style={{ background: "rgba(247, 245, 240, 0.9)" }}>
+      <header className="border-b border-[#DCD9CF]" style={{ background: "rgba(247, 245, 240, 0.9)" }}>
         <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <span className="hinomaru-dot" />
             <div>
-              <div className="font-serif text-xl leading-none">Yoshitaka <span className="font-kanji text-[#C1121F]">空手道</span></div>
+              <div className="font-serif text-xl leading-none">Yoshitaka <span className="font-kanji text-[#1A7A3D]">空手道</span></div>
               <div className="text-[10px] uppercase tracking-[0.24em] text-[#4A4A4A] mt-1">{title}</div>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden md:flex items-center gap-2 text-xs text-[#4A4A4A]">
               <span>{user?.name}</span>
-              <span className="text-[#E0DCD0]">/</span>
+              <span className="text-[#DCD9CF]">/</span>
               <span className="uppercase tracking-widest">{user?.role?.replace("_", " ")}</span>
             </span>
             <button
               onClick={() => navigate("/")}
-              className="p-2 border border-[#E0DCD0] hover:border-[#1A1A1A] transition-colors"
+              className="p-2 border border-[#DCD9CF] hover:border-[#0F0F0F] transition-colors"
               data-testid="dashboard-public-btn"
               title="Public site"
             >
@@ -33,7 +33,7 @@ export default function DashboardLayout({ title, subtitle, nav, children }) {
             </button>
             <button
               onClick={async () => { await logout(); navigate("/"); }}
-              className="p-2 border border-[#E0DCD0] hover:border-[#C1121F] hover:text-[#C1121F] transition-colors"
+              className="p-2 border border-[#DCD9CF] hover:border-[#1A7A3D] hover:text-[#1A7A3D] transition-colors"
               data-testid="dashboard-logout-btn"
               title="Logout"
             >
@@ -50,7 +50,7 @@ export default function DashboardLayout({ title, subtitle, nav, children }) {
                 end={n.end}
                 className={({ isActive }) =>
                   `text-[11px] uppercase tracking-[0.2em] py-3 border-b-2 transition-colors whitespace-nowrap ${
-                    isActive ? "border-[#C1121F] text-[#1A1A1A]" : "border-transparent text-[#4A4A4A] hover:text-[#1A1A1A]"
+                    isActive ? "border-[#1A7A3D] text-[#0F0F0F]" : "border-transparent text-[#4A4A4A] hover:text-[#0F0F0F]"
                   }`
                 }
                 data-testid={`dashnav-${n.label.toLowerCase().replace(/\s+/g, "-")}`}

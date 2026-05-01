@@ -346,6 +346,103 @@ class TestStats:
         assert r.status_code == 403
 
 
+# -------- FORGOT / RESET PASSWORD --------
+class TestPasswordReset:
+    """Tests for /api/auth/forgot-password and /api/auth/reset-password."""
+
+    LOG_PATH = "/var/log/supervisor/backend.err.log"
+
+    def _grab_token_for_email(self, email: str) -> str:
+        """Tail the backend log and parse out the most recent token for given email."""
+        import subprocess
+        try:
+            out = subprocess.run(
+                ["tail", "-n", "500", self.LOG_PATH],
+                capture_output=True, text=True, timeout=5,
+            ).stdout
+        except Exception:
+            return ""
+        tokens = []
+        for line in out.splitlines():
+            if f"PASSWORD RESET LINK for {email}" in line and "token=" in line:
+                tokens.append(line.split("token=")[-1].strip())
+        return tokens[-1] if tokens else ""
+
+    def test_forgot_password_existing_email_ok(self):
+        r = _sess().post(f"{API}/auth/forgot-password", json={"email": SUPER_EMAIL})
+        assert r.status_code == 200
+        assert r.json().get("ok") is True
+        # give log a moment to flush
+        import time; time.sleep(0.3)
+        token = self._grab_token_for_email(SUPER_EMAIL)
+        assert token, "Expected a reset token line in backend log for existing user"
+
+    def test_forgot_password_nonexistent_email_no_enumeration(self):
+        r = _sess().post(f"{API}/auth/forgot-password",
+                         json={"email": "does-not-exist-xyz@nowhere.com"})
+        assert r.status_code == 200
+        assert r.json().get("ok") is True
+
+    def test_forgot_password_missing_email_returns_400(self):
+        r = _sess().post(f"{API}/auth/forgot-password", json={})
+        assert r.status_code == 400
+
+    def test_reset_password_bad_token(self):
+        r = _sess().post(f"{API}/auth/reset-password",
+                         json={"token": "not-a-real-token", "new_password": "NewPass1!"})
+        assert r.status_code == 400
+
+    def test_reset_password_short_password(self):
+        r = _sess().post(f"{API}/auth/reset-password",
+                         json={"token": "whatever", "new_password": "123"})
+        assert r.status_code == 400
+
+    def test_reset_password_end_to_end_and_token_reuse_blocked(self):
+        """Full flow: forgot -> grab token -> reset -> login with new pwd.
+        Then verify token cannot be reused. Finally restore original password."""
+        import time
+        # 1. issue token
+        r = _sess().post(f"{API}/auth/forgot-password", json={"email": SUPER_EMAIL})
+        assert r.status_code == 200
+        time.sleep(0.4)
+        token = self._grab_token_for_email(SUPER_EMAIL)
+        assert token, "No reset token captured from log"
+
+        new_pass = "ResetTmp2026!"
+        # 2. reset to new password
+        r2 = _sess().post(f"{API}/auth/reset-password",
+                          json={"token": token, "new_password": new_pass})
+        assert r2.status_code == 200, r2.text
+
+        # 3. login with new password works
+        s = _sess()
+        login = s.post(f"{API}/auth/login", json={"email": SUPER_EMAIL, "password": new_pass})
+        assert login.status_code == 200, f"Login with reset password failed: {login.text}"
+
+        # 4. token reuse is blocked
+        r3 = _sess().post(f"{API}/auth/reset-password",
+                          json={"token": token, "new_password": "AnotherPass1!"})
+        assert r3.status_code == 400
+
+        # 5. old password must no longer work
+        bad = _sess().post(f"{API}/auth/login",
+                           json={"email": SUPER_EMAIL, "password": SUPER_PASS})
+        assert bad.status_code == 401
+
+        # 6. restore original password via a second forgot/reset cycle
+        _sess().post(f"{API}/auth/forgot-password", json={"email": SUPER_EMAIL})
+        time.sleep(0.4)
+        token2 = self._grab_token_for_email(SUPER_EMAIL)
+        assert token2 and token2 != token
+        restore = _sess().post(f"{API}/auth/reset-password",
+                               json={"token": token2, "new_password": SUPER_PASS})
+        assert restore.status_code == 200
+        # sanity: original creds work again
+        final = _sess().post(f"{API}/auth/login",
+                             json={"email": SUPER_EMAIL, "password": SUPER_PASS})
+        assert final.status_code == 200
+
+
 # -------- LOGOUT --------
 class TestLogout:
     def test_logout_clears_cookie(self):

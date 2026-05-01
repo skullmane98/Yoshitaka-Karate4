@@ -12,6 +12,8 @@ import News from "@/pages/News";
 import Contact from "@/pages/Contact";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import StudentDashboard from "@/pages/dashboard/StudentDashboard";
 import AdminDashboard from "@/pages/dashboard/AdminDashboard";
 import SuperAdminDashboard from "@/pages/dashboard/SuperAdminDashboard";
@@ -24,9 +26,9 @@ export default function App() {
           position="top-right"
           toastOptions={{
             style: {
-              background: "#F7F5F0",
-              border: "1px solid #E0DCD0",
-              color: "#1A1A1A",
+              background: "#FBFAF6",
+              border: "1px solid #DCD9CF",
+              color: "#0F0F0F",
               borderRadius: "2px",
               fontFamily: "Outfit, sans-serif",
             },
@@ -41,6 +43,8 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route
             path="/dashboard/student"

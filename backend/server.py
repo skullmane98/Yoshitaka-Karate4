@@ -17,6 +17,7 @@ import jwt
 import bcrypt
 import qrcode
 import barcode
+import certifi
 from barcode.writer import ImageWriter
 
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
@@ -29,7 +30,12 @@ from pydantic import BaseModel, Field, EmailStr, ConfigDict
 # Setup
 # -----------------------------------------------------------------------------
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
+_mongo_kwargs = {"serverSelectionTimeoutMS": 10000}
+# For Atlas (mongodb+srv://...), explicitly pass certifi's CA bundle.
+# Railway's/Ubuntu's default CA bundle can be stale and causes TLSV1_ALERT_INTERNAL_ERROR.
+if mongo_url.startswith("mongodb+srv://") or "mongodb.net" in mongo_url:
+    _mongo_kwargs["tlsCAFile"] = certifi.where()
+client = AsyncIOMotorClient(mongo_url, **_mongo_kwargs)
 db = client[os.environ['DB_NAME']]
 
 # Log boot-time info (password masked) so Railway runtime logs show what happened

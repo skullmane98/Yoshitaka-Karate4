@@ -3,29 +3,25 @@
 DATABASE_URL format (async):
   mysql+aiomysql://user:pass@host:port/dbname
 
-Hardened for Hostinger shared MySQL which aggressively closes idle connections
-(typically after ~60-300s) and occasionally drops mid-query.
+Configured with NullPool to avoid the aiomysql "TCPTransport closed" bug, which
+fires when a pooled connection survives across asyncio event loops (common on
+Render free tier and any environment that may dispose the loop). NullPool opens
+a fresh connection per request — slightly slower, fully reliable on Hostinger
+shared MySQL.
 """
 import os
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 from sqlmodel import SQLModel
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 
-# Aggressive resilience for Hostinger shared MySQL:
-# - pool_pre_ping: test every connection before using it (catches dropped sockets)
-# - pool_recycle=280: recycle BEFORE Hostinger's typical 300s wait_timeout
-# - pool_size=5, max_overflow=5: small pool — Hostinger limits concurrent connections
-# - connect timeout: don't hang forever if MySQL is slow to handshake
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
-    pool_pre_ping=True,
-    pool_recycle=280,
-    pool_size=5,
-    max_overflow=5,
+    poolclass=NullPool,
     connect_args={"connect_timeout": 10},
 )
 

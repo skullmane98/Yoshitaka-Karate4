@@ -240,6 +240,96 @@ export function ContactEditor({ value, onChange, title, onTitleChange }) {
   );
 }
 
+// ----------------------------------------------------------------- ID CARD --
+// Customize the member certificate. Editable by admin AND super_admin.
+export function IDCardEditor({ value, onChange, title, onTitleChange }) {
+  const c = value || {};
+  const set = (k, v) => onChange({ ...c, [k]: v });
+  const handleImage = (key) => async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 1.5 * 1024 * 1024) {
+      alert("Image must be under 1.5 MB. Please compress it first.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => set(key, reader.result);
+    reader.readAsDataURL(file);
+  };
+  return (
+    <div className="space-y-5">
+      <Field label="Page Title (admin label)">
+        <input className="input" value={title} onChange={(e) => onTitleChange(e.target.value)} data-testid="cms-title" />
+      </Field>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Field label="Dojo Name (top of card)">
+          <input className="input" value={c.dojo_name || ""} onChange={(e) => set("dojo_name", e.target.value)} data-testid="idcard-dojo-name" />
+        </Field>
+        <Field label="Certificate Title">
+          <input className="input" value={c.certificate_title || ""} onChange={(e) => set("certificate_title", e.target.value)} data-testid="idcard-cert-title" />
+        </Field>
+      </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Field label="Kanji (top right)" hint="Japanese characters above the divider.">
+          <input className="input" value={c.kanji_top || ""} onChange={(e) => set("kanji_top", e.target.value)} data-testid="idcard-kanji-top" />
+        </Field>
+        <Field label="Kanji (bottom right)">
+          <input className="input" value={c.kanji_bottom || ""} onChange={(e) => set("kanji_bottom", e.target.value)} data-testid="idcard-kanji-bottom" />
+        </Field>
+      </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Field label="Issued footer text">
+          <input className="input" value={c.issued_text || ""} onChange={(e) => set("issued_text", e.target.value)} data-testid="idcard-issued" />
+        </Field>
+        <Field label="Scan caption">
+          <input className="input" value={c.scan_text || ""} onChange={(e) => set("scan_text", e.target.value)} data-testid="idcard-scan-text" />
+        </Field>
+      </div>
+      <div className="grid md:grid-cols-4 gap-4">
+        <Field label="Member label"><input className="input" value={c.name_label || ""} onChange={(e) => set("name_label", e.target.value)} /></Field>
+        <Field label="Role label"><input className="input" value={c.role_label || ""} onChange={(e) => set("role_label", e.target.value)} /></Field>
+        <Field label="Rank label"><input className="input" value={c.rank_label || ""} onChange={(e) => set("rank_label", e.target.value)} /></Field>
+        <Field label="Member No. label"><input className="input" value={c.footer_label || ""} onChange={(e) => set("footer_label", e.target.value)} /></Field>
+      </div>
+      <Field label="Accent color (kanji + dot)" hint="Hex color, e.g. #D7263D for traditional red.">
+        <div className="flex items-center gap-3">
+          <input
+            type="color"
+            value={c.accent_color || "#D7263D"}
+            onChange={(e) => set("accent_color", e.target.value)}
+            className="h-10 w-16 border border-[var(--dojo-border)] cursor-pointer"
+            data-testid="idcard-accent"
+          />
+          <input
+            className="input"
+            value={c.accent_color || ""}
+            onChange={(e) => set("accent_color", e.target.value)}
+            placeholder="#D7263D"
+          />
+        </div>
+      </Field>
+      <Field label="Logo image" hint="Replace the dojo logo. Upload a PNG/JPG (under 1.5 MB). Leave empty to use default.">
+        <div className="flex items-center gap-4">
+          {c.logo_url && <img src={c.logo_url} alt="Logo preview" className="h-16 w-16 object-contain border border-[var(--dojo-border)]" />}
+          <input type="file" accept="image/*" onChange={handleImage("logo_url")} className="text-sm" data-testid="idcard-logo-upload" />
+          {c.logo_url && (
+            <button type="button" onClick={() => set("logo_url", "")} className="text-xs text-[var(--dojo-hinomaru)] underline">Remove</button>
+          )}
+        </div>
+      </Field>
+      <Field label="Background image" hint="Optional watermark behind the card content. Subtle works best (under 1.5 MB).">
+        <div className="flex items-center gap-4">
+          {c.background_url && <img src={c.background_url} alt="Background preview" className="h-16 w-24 object-cover border border-[var(--dojo-border)]" />}
+          <input type="file" accept="image/*" onChange={handleImage("background_url")} className="text-sm" data-testid="idcard-bg-upload" />
+          {c.background_url && (
+            <button type="button" onClick={() => set("background_url", "")} className="text-xs text-[var(--dojo-hinomaru)] underline">Remove</button>
+          )}
+        </div>
+      </Field>
+    </div>
+  );
+}
+
 const EDITORS = {
   home: HomeEditor,
   about: AboutEditor,
@@ -247,6 +337,7 @@ const EDITORS = {
   schedule: ScheduleEditor,
   news: NewsEditor,
   contact: ContactEditor,
+  idcard: IDCardEditor,
 };
 
 export function getEditorForSlug(slug) {

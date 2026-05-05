@@ -344,7 +344,7 @@ async def register(
         name=payload.name,
         role=code_doc.role,
         phone=payload.phone,
-        belt_rank="White Belt" if code_doc.role == "student" else None,
+        belt_rank="White" if code_doc.role == "student" else None,
         member_number=generate_member_number(),
         active=True,
         registered_with_code=code_doc.code,
@@ -529,7 +529,7 @@ async def update_user(
             if (count_res.scalar() or 0) < 1:
                 raise HTTPException(status_code=400, detail="Cannot demote the last super admin")
         if data["role"] == "student" and not target.belt_rank:
-            data["belt_rank"] = "White Belt"
+            data["belt_rank"] = "White"
         elif data["role"] != "student":
             data["belt_rank"] = None
 
@@ -1093,14 +1093,15 @@ DEFAULT_PAGES = {
         "title": "Weekly Schedule",
         "content": {
             "classes": [
-                {"day": "Monday", "time": "5:30 PM – 6:30 PM", "class": "Little Samurai"},
-                {"day": "Monday", "time": "6:45 PM – 8:00 PM", "class": "Youth Karate"},
-                {"day": "Tuesday", "time": "7:00 PM – 8:30 PM", "class": "Adult Karate-Do"},
-                {"day": "Wednesday", "time": "5:30 PM – 6:30 PM", "class": "Little Samurai"},
-                {"day": "Wednesday", "time": "6:45 PM – 8:00 PM", "class": "Youth Karate"},
-                {"day": "Thursday", "time": "7:00 PM – 8:30 PM", "class": "Adult Karate-Do"},
-                {"day": "Saturday", "time": "9:00 AM – 10:30 AM", "class": "All Belts Open Training"},
-                {"day": "Saturday", "time": "10:45 AM – 12:00 PM", "class": "Black Belt Society"},
+                {"day": "Monday", "time": "7:00 PM – 8:00 PM", "class": "Teen"},
+                {"day": "Monday", "time": "8:00 PM – 9:00 PM", "class": "Adult"},
+                {"day": "Tuesday", "time": "4:00 PM – 5:00 PM", "class": "Child"},
+                {"day": "Wednesday", "time": "7:00 PM – 8:00 PM", "class": "Teen"},
+                {"day": "Wednesday", "time": "8:00 PM – 9:00 PM", "class": "Adult"},
+                {"day": "Thursday", "time": "4:00 PM – 5:00 PM", "class": "Child"},
+                {"day": "Friday", "time": "7:00 PM – 8:00 PM", "class": "Teen"},
+                {"day": "Friday", "time": "8:00 PM – 9:00 PM", "class": "Adult"},
+                {"day": "Saturday", "time": "4:00 PM – 5:00 PM", "class": "Child"},
             ]
         },
     },
@@ -1121,6 +1122,24 @@ DEFAULT_PAGES = {
             "phone": "(555) 123-4567",
             "email": "info@yoshitaka.com",
             "hours": "Monday–Saturday, see class schedule",
+        },
+    },
+    "idcard": {
+        "title": "Member ID Card",
+        "content": {
+            "dojo_name": "Yoshitaka Karate-Do",
+            "certificate_title": "Member Certificate",
+            "kanji_top": "空手道",
+            "kanji_bottom": "義孝",
+            "issued_text": "Issued · Yoshitaka Dojo",
+            "scan_text": "Scan to verify",
+            "footer_label": "Member No.",
+            "rank_label": "Rank",
+            "role_label": "Role",
+            "name_label": "Member",
+            "accent_color": "#D7263D",
+            "logo_url": "",
+            "background_url": "",
         },
     },
 }
@@ -1154,9 +1173,17 @@ async def get_cms_page(slug: str, session: AsyncSession = Depends(get_session)):
 async def update_cms_page(
     slug: str,
     payload: CMSPageUpdate,
-    current: User = Depends(require_role("super_admin")),
+    current: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
+    # ID card design is a shared admin/super_admin concern.
+    # All other public pages stay super_admin only.
+    if slug == "idcard":
+        if current.role not in ("admin", "super_admin"):
+            raise HTTPException(status_code=403, detail="Insufficient privileges")
+    else:
+        if current.role != "super_admin":
+            raise HTTPException(status_code=403, detail="Insufficient privileges")
     res = await session.execute(select(CMSPage).where(CMSPage.slug == slug))
     p = res.scalar_one_or_none()
     now = _strip_tz(datetime.now(timezone.utc))
@@ -1297,6 +1324,10 @@ async def health_check():
 
 
 app.include_router(api_router)
+
+# Social sign-in (Google + Microsoft)
+from oauth import oauth_router  # noqa: E402
+app.include_router(oauth_router)
 
 
 _cors_origins = [o.strip() for o in os.environ.get('CORS_ORIGINS', '*').split(',') if o.strip()]

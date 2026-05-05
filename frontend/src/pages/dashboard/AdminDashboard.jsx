@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import IDCard from "@/components/IDCard";
 import { getEditorForSlug } from "@/components/CMSEditors";
 import AttendancePanel from "@/components/AttendancePanel";
+import { BELT_NAMES } from "@/lib/belts";
 
 const ROLES_FOR = {
   admin: ["student"],
@@ -56,6 +57,7 @@ export default function AdminDashboard({ isSuper = false }) {
         { id: "codes", label: "Access Codes" },
         { id: "payments", label: "Payments" },
         { id: "attendance", label: "Attendance" },
+        { id: "idcard", label: "ID Card" },
       ];
 
   return (
@@ -127,6 +129,30 @@ export default function AdminDashboard({ isSuper = false }) {
       {tab === "cms" && isSuper && (
         <CMSPanel pages={pages} onEdit={setEditingPage} />
       )}
+
+      {tab === "idcard" && !isSuper && (() => {
+        const idcardPage = pages.find((p) => p.slug === "idcard") || {
+          slug: "idcard",
+          title: "Member ID Card",
+          content: {},
+          updated_at: new Date().toISOString(),
+        };
+        return (
+          <div className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-6 max-w-3xl">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Customize</div>
+                <h2 className="font-serif text-2xl">Member ID Card Design</h2>
+              </div>
+              <button onClick={() => setEditingPage(idcardPage)} className="btn-primary" data-testid="open-idcard-editor">Edit Design</button>
+            </div>
+            <p className="text-sm text-[var(--dojo-ink-soft)]">
+              Edit the labels, kanji, accent color, dojo logo, and background image used on every member's certificate.
+              Changes apply instantly to every student's dashboard.
+            </p>
+          </div>
+        );
+      })()}
 
       {editingUser && (
         <EditUserModal user={editingUser} isSuper={isSuper} onClose={() => setEditingUser(null)} onSaved={reload} />
@@ -468,7 +494,7 @@ function EditUserModal({ user, isSuper, onClose, onSaved }) {
           <Field label="Belt Rank">
             <select value={form.belt_rank || ""} onChange={(e) => setForm({ ...form, belt_rank: e.target.value })} className="input" data-testid="edit-user-belt">
               <option value="">—</option>
-              {["White Belt", "Yellow Belt", "Orange Belt", "Green Belt", "Blue Belt", "Purple Belt", "Brown Belt", "Black Belt (1st Dan)", "Black Belt (2nd Dan)", "Black Belt (3rd Dan)"].map((b) => <option key={b} value={b}>{b}</option>)}
+              {BELT_NAMES.map((b) => <option key={b} value={b}>{b}</option>)}
             </select>
           </Field>
         )}

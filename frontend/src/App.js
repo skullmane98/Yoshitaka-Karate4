@@ -15,6 +15,8 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
+import OAuthComplete from "@/pages/OAuthComplete";
+import OAuthDone from "@/pages/OAuthDone";
 import StudentDashboard from "@/pages/dashboard/StudentDashboard";
 import AdminDashboard from "@/pages/dashboard/AdminDashboard";
 import SuperAdminDashboard from "@/pages/dashboard/SuperAdminDashboard";
@@ -47,6 +49,8 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/oauth/complete" element={<OAuthComplete />} />
+          <Route path="/oauth/done" element={<OAuthDone />} />
 
           <Route
             path="/dashboard/student"

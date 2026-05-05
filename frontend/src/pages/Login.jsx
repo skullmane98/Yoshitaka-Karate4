@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import PublicLayout from "@/components/PublicLayout";
 import { useAuth } from "@/context/AuthContext";
 import { formatApiError } from "@/lib/api";
+import OAuthButtons from "@/components/OAuthButtons";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,6 +13,22 @@ export default function Login() {
   const { login } = useAuth();
   const nav = useNavigate();
   const loc = useLocation();
+  const [search] = useSearchParams();
+
+  useEffect(() => {
+    const oauthErr = search.get("oauth_error");
+    if (oauthErr) {
+      const map = {
+        state_mismatch: "Sign-in session was invalid. Please try again.",
+        token_exchange_failed: "Provider did not accept the sign-in. Please try again.",
+        no_email: "Sign-in provider did not return an email address.",
+        account_disabled: "This account has been disabled.",
+        missing_token: "Sign-in completed but no token was received.",
+        token_invalid: "Sign-in token was invalid. Please try again.",
+      };
+      setErr(map[oauthErr] || `Sign-in failed (${oauthErr}).`);
+    }
+  }, [search]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -65,6 +82,7 @@ export default function Login() {
           <button type="submit" className="btn-primary w-full" disabled={loading} data-testid="login-submit-btn">
             {loading ? "Entering…" : "Enter Dojo"}
           </button>
+          <OAuthButtons />
           <div className="flex justify-between text-sm text-[var(--dojo-ink-soft)] pt-2">
             <Link to="/forgot-password" className="ink-underline" data-testid="login-forgot-link">Forgot password?</Link>
             <Link to="/register" className="ink-underline">Enroll</Link>

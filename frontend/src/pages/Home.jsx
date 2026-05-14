@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import PublicLayout from "@/components/PublicLayout";
 import RichContent from "@/components/RichContent";
 import api from "@/lib/api";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { LOGO_URL } from "@/lib/brand";
 
 const HERO_IMG = "https://images.unsplash.com/photo-1773017825177-25acaa271258?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwxfHx0cmFkaXRpb25hbCUyMHNob3Rva2FuJTIwa2FyYXRlJTIwZG9qbyUyMGludGVyaW9yfGVufDB8fHx8MTc3NzYxMTM4NXww&ixlib=rb-4.1.0&q=85";
-const DOJO_IMG = "https://images.unsplash.com/photo-1776090188738-148faec54948?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwzfHx0cmFkaXRpb25hbCUyMHNob3Rva2FuJTIwa2FyYXRlJTIwZG9qbyUyMGludGVyaW9yfGVufDB8fHx8MTc3NzYxMTM4NXww&ixlib=rb-4.1.0&q=85";
+
+// External marketing site — the dojo's primary public-facing URL.
+const EXTERNAL_HOME = "https://yoshitakakaratedo.com";
+const EXTERNAL_CONTACT = "https://yoshitakakaratedo.com/contact";
 
 export default function Home() {
   const [page, setPage] = useState(null);
@@ -44,17 +47,25 @@ export default function Home() {
               {c.hero_sub || "A dojo devoted to the enduring practice of Shotokan karate."}
             </p>
             <div className="flex flex-wrap gap-4 mt-10">
-              <Link to="/programs" className="btn-primary" data-testid="home-cta-programs">
-                Explore Programs <ArrowRight size={14} className="inline ml-2" />
-              </Link>
-              <Link
-                to="/contact"
+              <a
+                href={EXTERNAL_HOME}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary"
+                data-testid="home-cta-programs"
+              >
+                Learn More <ArrowRight size={14} className="inline ml-2" />
+              </a>
+              <a
+                href={EXTERNAL_CONTACT}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="btn-outline"
                 style={{ color: "#FBFAF6", borderColor: "#FBFAF6" }}
                 data-testid="home-cta-contact"
               >
                 Contact Us
-              </Link>
+              </a>
             </div>
           </motion.div>
 
@@ -87,8 +98,13 @@ export default function Home() {
             </p>
           )}
         </div>
-        <div className="md:col-span-7">
-          <img src={DOJO_IMG} alt="Dojo interior" className="w-full aspect-[4/3] object-cover" />
+        <div className="md:col-span-7 flex items-center justify-center">
+          <img
+            src={LOGO_URL}
+            alt="Yoshitaka Karate-Do emblem"
+            className="w-full max-w-md aspect-square object-contain"
+            data-testid="home-logo-image"
+          />
         </div>
       </section>
 
@@ -125,9 +141,16 @@ export default function Home() {
             <h2 className="font-serif text-4xl md:text-5xl tracking-tight">Step onto the tatami.</h2>
           </div>
           <div className="flex gap-4">
-            <Link to="/contact" className="btn-outline" style={{ color: "var(--dojo-paper)", borderColor: "var(--dojo-paper)" }} data-testid="home-cta-visit">
+            <a
+              href={EXTERNAL_HOME}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-outline"
+              style={{ color: "var(--dojo-paper)", borderColor: "var(--dojo-paper)" }}
+              data-testid="home-cta-visit"
+            >
               Visit Dojo
-            </Link>
+            </a>
           </div>
         </div>
       </section>

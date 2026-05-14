@@ -1,4 +1,4 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Menu, X } from "lucide-react";
@@ -20,6 +20,10 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const nav = useNavigate();
+  const loc = useLocation();
+  // On the public homepage, hide all navbar elements except the logo so the
+  // hero acts as a clean landing page that redirects to the external dojo site.
+  const isHome = loc.pathname === "/";
 
   const dashHref =
     user?.role === "super_admin" ? "/dashboard/super-admin" :
@@ -42,7 +46,7 @@ export default function Navbar() {
         </Link>
 
         <nav className="hidden lg:flex items-center gap-10">
-          {NAV.map((n) => (
+          {!isHome && NAV.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
@@ -60,9 +64,9 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden lg:flex items-center gap-3">
-          <ThemeToggle compact />
-          {user && <NotificationBell />}
-          {user ? (
+          {!isHome && <ThemeToggle compact />}
+          {!isHome && user && <NotificationBell />}
+          {!isHome && (user ? (
             <>
               <Link to={dashHref} className="btn-outline" data-testid="nav-dashboard-btn">
                 Dashboard
@@ -77,20 +81,22 @@ export default function Navbar() {
             </>
           ) : (
             <Link to="/login" className="btn-primary" data-testid="nav-login-btn">Login</Link>
-          )}
+          ))}
         </div>
 
-        <button
-          className="lg:hidden p-2"
-          onClick={() => setOpen((o) => !o)}
-          data-testid="nav-mobile-toggle"
-          aria-label="toggle menu"
-        >
-          {open ? <X /> : <Menu />}
-        </button>
+        {!isHome && (
+          <button
+            className="lg:hidden p-2"
+            onClick={() => setOpen((o) => !o)}
+            data-testid="nav-mobile-toggle"
+            aria-label="toggle menu"
+          >
+            {open ? <X /> : <Menu />}
+          </button>
+        )}
       </div>
 
-      {open && (
+      {!isHome && open && (
         <div className="lg:hidden border-t border-[var(--dojo-border)] bg-[var(--dojo-paper)]" data-testid="nav-mobile-menu">
           <div className="px-6 py-6 flex flex-col gap-5">
             {NAV.map((n) => (

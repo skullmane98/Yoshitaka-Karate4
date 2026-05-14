@@ -4,7 +4,7 @@ import { LOGO_URL } from "@/lib/brand";
 export default function Footer() {
   return (
     <footer className="mt-24 border-t border-[var(--dojo-border)] bg-[var(--dojo-paper-alt)]" data-testid="site-footer">
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16 grid md:grid-cols-4 gap-10">
+      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16 grid md:grid-cols-3 gap-10">
         <div className="md:col-span-2">
           <div className="flex items-center gap-3 mb-4">
             <img src={LOGO_URL} alt="Yoshitaka Karate-Do" className="h-12 w-12 object-contain" />
@@ -15,18 +15,8 @@ export default function Footer() {
           </p>
         </div>
         <div>
-          <h4 className="font-serif text-lg mb-3">Dojo</h4>
-          <ul className="space-y-2 text-sm text-[var(--dojo-ink-soft)]">
-            <li><Link to="/about" className="ink-underline">About Sensei</Link></li>
-            <li><Link to="/programs" className="ink-underline">Programs</Link></li>
-            <li><Link to="/schedule" className="ink-underline">Schedule</Link></li>
-            <li><Link to="/news" className="ink-underline">News</Link></li>
-          </ul>
-        </div>
-        <div>
           <h4 className="font-serif text-lg mb-3">Connect</h4>
           <ul className="space-y-2 text-sm text-[var(--dojo-ink-soft)]">
-            <li><Link to="/contact" className="ink-underline">Contact</Link></li>
             <li><Link to="/login" className="ink-underline">Student Login</Link></li>
             <li><Link to="/login" className="ink-underline">Member Login</Link></li>
           </ul>

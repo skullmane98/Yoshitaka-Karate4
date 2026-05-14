@@ -2,17 +2,22 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import PublicLayout from "@/components/PublicLayout";
 import { useAuth } from "@/context/AuthContext";
-import { formatApiError } from "@/lib/api";
+import { formatApiError, warmBackend } from "@/lib/api";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [waking, setWaking] = useState(false);
   const { login } = useAuth();
   const nav = useNavigate();
   const loc = useLocation();
   const [search] = useSearchParams();
+
+  // Wake the (possibly sleeping) Render backend the moment the login page opens
+  // so the actual submit doesn't pay the cold-start tax.
+  useEffect(() => { warmBackend(); }, []);
 
   useEffect(() => {
     const oauthErr = search.get("oauth_error");
@@ -32,6 +37,8 @@ export default function Login() {
   const submit = async (e) => {
     e.preventDefault();
     setErr(""); setLoading(true);
+    // If the request is slow (cold-start), surface a friendly message.
+    const wakeTimer = setTimeout(() => setWaking(true), 4000);
     try {
       const u = await login(username, password);
       const dest =
@@ -42,6 +49,8 @@ export default function Login() {
     } catch (e) {
       setErr(formatApiError(e));
     } finally {
+      clearTimeout(wakeTimer);
+      setWaking(false);
       setLoading(false);
     }
   };
@@ -81,6 +90,12 @@ export default function Login() {
             />
           </div>
           {err && <div className="text-[var(--dojo-hinomaru)] text-sm" data-testid="login-error">{err}</div>}
+          {waking && !err && (
+            <div className="text-[var(--dojo-ink-soft)] text-xs flex items-center gap-2" data-testid="login-waking">
+              <span className="inline-block w-3 h-3 border-2 border-[var(--dojo-green)] border-t-transparent rounded-full animate-spin" />
+              Waking the dojo… first sign-in of the day can take ~30 seconds.
+            </div>
+          )}
           <button type="submit" className="btn-primary w-full" disabled={loading} data-testid="login-submit-btn">
             {loading ? "Entering…" : "Enter Dojo"}
           </button>

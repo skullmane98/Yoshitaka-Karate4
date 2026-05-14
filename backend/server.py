@@ -61,6 +61,13 @@ app = FastAPI(title="Yoshitaka Karate-Do CMS")
 api_router = APIRouter(prefix="/api")
 
 
+# Lightweight readiness probe — used by the frontend to wake the Render
+# free-tier dyno (no DB call, returns instantly).
+@api_router.get("/health")
+async def health():
+    return {"status": "ok", "service": "yoshitaka-karate-do"}
+
+
 # Surface the real exception in Render logs (was silently returning 500).
 @app.exception_handler(Exception)
 async def _unhandled_exception(request: Request, exc: Exception):

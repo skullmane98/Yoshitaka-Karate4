@@ -52,6 +52,7 @@ export default function IDCard({ user }) {
       }
     })();
     return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, user?.idcard_template, user?.idcard_overrides]);
 
   const exportPDF = async () => {

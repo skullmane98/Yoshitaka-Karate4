@@ -34,11 +34,13 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
   useEffect(() => {
     if (!user?.id) return;
     let active = true;
-    api.get(`/users/${user.id}/qrcode`)
+    const qrColor = (draft?.idcard_overrides || {}).qr_color || "#D7263D";
+    api.get(`/users/${user.id}/qrcode`, { params: { color: qrColor } })
       .then((r) => { if (active) setQrPng(r.data?.qr_png || ""); })
       .catch(() => {});
     return () => { active = false; };
-  }, [user?.id, user?.qr_code]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.qr_code, draft?.idcard_overrides?.qr_color]);
 
   if (!user) return null;
 
@@ -260,6 +262,24 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                       />
                     </div>
                   </Field>
+                  <Field label="QR Code Color" hint="Stays solid + high-contrast against white for reliable scans.">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={(draft.idcard_overrides || {}).qr_color || "#D7263D"}
+                        onChange={(e) => setOverride("qr_color", e.target.value)}
+                        className="h-10 w-16 border border-[var(--dojo-border)]"
+                        data-testid="user-qr-color-picker"
+                      />
+                      <input
+                        className="input"
+                        value={(draft.idcard_overrides || {}).qr_color || ""}
+                        onChange={(e) => setOverride("qr_color", e.target.value)}
+                        placeholder="#D7263D"
+                        data-testid="user-qr-color-input"
+                      />
+                    </div>
+                  </Field>
                   {isAdminLike && (
                     <Field label="Background Image" hint="JPG/PNG under 1.5 MB. Stacks behind the certificate as a faded watermark.">
                       <div className="flex items-center gap-3 flex-wrap">
@@ -325,8 +345,35 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                 </div>
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] mb-3">Live Preview</div>
-                <IDCard user={draft} />
+                <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] mb-3">Live Preview · Horizontal</div>
+                <IDCard user={draft} defaultOrientation="horizontal" />
+                <div className="border border-[var(--dojo-border)] p-4 mt-4 space-y-2">
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Member Photo on Card</div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {draft.photo_url ? (
+                      <img src={draft.photo_url} alt="" className="h-20 w-16 object-cover border border-[var(--dojo-border)]" data-testid="user-idcard-photo-preview" />
+                    ) : (
+                      <div className="h-20 w-16 border border-dashed border-[var(--dojo-border)] flex items-center justify-center text-[8px] uppercase tracking-[0.2em] text-[var(--dojo-ink-soft)] text-center px-1">No photo</div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={onPhoto}
+                      className="text-sm"
+                      data-testid="user-idcard-photo-upload"
+                    />
+                    {draft.photo_url && (
+                      <button
+                        type="button"
+                        onClick={() => set("photo_url", "")}
+                        className="text-xs text-[var(--dojo-hinomaru)] underline"
+                      >Remove</button>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-[var(--dojo-ink-soft)]">
+                    Photo appears on the card next to the QR. JPG/PNG under 1.2 MB.
+                  </div>
+                </div>
               </div>
             </div>
           )}

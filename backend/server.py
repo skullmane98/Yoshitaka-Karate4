@@ -761,6 +761,7 @@ async def delete_user(
 @api_router.get("/users/{user_id}/qrcode")
 async def user_qrcode(
     user_id: str,
+    color: str = "#D7263D",
     current: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
@@ -777,6 +778,17 @@ async def user_qrcode(
         await session.commit()
         await session.refresh(target)
 
+    # Validate color — only allow #RRGGBB / #RGB / named-color-like input. Falls
+    # back to the brand red on anything weird so a malformed query string can't
+    # raise from PIL deep inside qrcode.
+    fill_color = "#D7263D"
+    if isinstance(color, str):
+        c = color.strip()
+        if (c.startswith("#") and len(c) in (4, 7) and all(x in "0123456789abcdefABCDEF" for x in c[1:])):
+            fill_color = c
+        elif c.replace("-", "").isalpha() and len(c) <= 24:
+            fill_color = c
+
     payload = target.qr_code
     qr = qrcode.QRCode(
         version=None,
@@ -786,7 +798,7 @@ async def user_qrcode(
     )
     qr.add_data(payload)
     qr.make(fit=True)
-    qr_img = qr.make_image(fill_color="#D7263D", back_color="white").convert("RGB")
+    qr_img = qr.make_image(fill_color=fill_color, back_color="white").convert("RGB")
     buf = io.BytesIO()
     qr_img.save(buf, format="PNG")
     data = base64.b64encode(buf.getvalue()).decode("utf-8")
@@ -795,6 +807,7 @@ async def user_qrcode(
         "member_number": target.member_number,
         "qr_code": target.qr_code,
         "qr_payload": payload,
+        "qr_color": fill_color,
         "qr_png": f"data:image/png;base64,{data}",
     }
 

@@ -18,6 +18,7 @@ const DEFAULTS = {
   role_label: "Role",
   name_label: "Member",
   accent_color: "#D7263D",
+  qr_color: "#D7263D",
   logo_url: "",
   background_url: "",
 };
@@ -56,21 +57,28 @@ export default function IDCard({ user, defaultOrientation = "horizontal" }) {
     (async () => {
       setLoading(true);
       try {
-        const [qr, idcardPage] = await Promise.allSettled([
-          api.get(`/users/${user.id}/qrcode`),
-          api.get(`/cms/pages/idcard`),
-        ]);
+        // 1) Resolve design (CMS + template + per-user overrides) so we know
+        //    which QR color to ask the server for.
+        const idcardPage = await api.get("/cms/pages/idcard").catch(() => null);
+        const globalCMS = idcardPage?.data?.content || {};
+        const merged = { ...DEFAULTS, ...resolveIDCardDesign(globalCMS, user) };
         if (!active) return;
-        if (qr.status === "fulfilled") setData(qr.value.data);
-        const globalCMS = idcardPage.status === "fulfilled" ? (idcardPage.value.data?.content || {}) : {};
-        setDesign({ ...DEFAULTS, ...resolveIDCardDesign(globalCMS, user) });
+        setDesign(merged);
+
+        // 2) Fetch the QR PNG in the requested color.
+        const qrColor = merged.qr_color || "#D7263D";
+        const qr = await api.get(`/users/${user.id}/qrcode`, {
+          params: { color: qrColor },
+        }).catch(() => null);
+        if (!active) return;
+        if (qr) setData(qr.data);
       } finally {
         if (active) setLoading(false);
       }
     })();
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, user?.idcard_template, user?.idcard_overrides]);
+  }, [user?.id, user?.idcard_template, user?.idcard_overrides, user?.qr_code]);
 
   // Compute the scale factor whenever the wrapper resizes so the card always
   // fills the available width while keeping CR80 aspect ratio.
@@ -220,55 +228,75 @@ function HorizontalLayout({ user, design, data, loading, logoSrc }) {
     <div className="relative h-full flex flex-col">
       <div className="flex items-start justify-between mb-3 gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <img src={logoSrc} alt="" className="h-14 w-14 object-contain shrink-0" />
+          <img src={logoSrc} alt="" className="h-12 w-12 object-contain shrink-0" />
           <div className="min-w-0">
             <div className="text-[10px] uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)] mb-1 truncate">
               {design.dojo_name}
             </div>
-            <div className="font-serif text-2xl font-medium tracking-tight leading-none truncate">
+            <div className="font-serif text-xl font-medium tracking-tight leading-none truncate">
               {design.certificate_title}
             </div>
           </div>
         </div>
-        <span className="font-kanji text-3xl leading-none shrink-0" style={{ color: design.accent_color }}>
+        <span className="font-kanji text-2xl leading-none shrink-0" style={{ color: design.accent_color }}>
           {design.kanji_top}
         </span>
       </div>
 
-      <div className="brush-divider mb-4" />
+      <div className="brush-divider mb-3" />
 
-      <div className="grid grid-cols-[1fr_auto] gap-5 items-start flex-1 min-h-0">
-        <div className="space-y-3 min-w-0 self-center">
+      <div className="grid grid-cols-[auto_1fr_auto] gap-4 items-center flex-1 min-h-0">
+        {/* Member photo (left column) */}
+        {user.photo_url ? (
+          <div
+            className="border border-[var(--dojo-border)] bg-white shrink-0 self-center"
+            style={{ width: 110, height: 138 }}
+            data-testid="idcard-photo"
+          >
+            <img src={user.photo_url} alt="Member" className="w-full h-full object-cover" />
+          </div>
+        ) : (
+          <div
+            className="border border-dashed border-[var(--dojo-border)] bg-white shrink-0 self-center flex items-center justify-center text-[8px] uppercase tracking-[0.2em] text-[var(--dojo-ink-soft)] text-center px-2"
+            style={{ width: 110, height: 138 }}
+          >
+            No Photo
+          </div>
+        )}
+
+        {/* Member info (middle, fills) */}
+        <div className="space-y-2 min-w-0 self-center">
           <div>
             <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.name_label}</div>
-            <div className="font-serif text-2xl font-medium leading-tight truncate" data-testid="idcard-name">{user.name}</div>
+            <div className="font-serif text-xl font-medium leading-tight truncate" data-testid="idcard-name">{user.name}</div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <div>
               <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.role_label}</div>
-              <div className="text-sm font-medium capitalize truncate">{user.role.replace("_", " ")}</div>
+              <div className="text-xs font-medium capitalize truncate">{user.role.replace("_", " ")}</div>
             </div>
             <div>
               <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.rank_label}</div>
-              <div className="text-sm font-medium truncate">{user.belt_rank || "—"}</div>
+              <div className="text-xs font-medium truncate">{user.belt_rank || "—"}</div>
             </div>
           </div>
           <div>
             <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.footer_label}</div>
-            <div className="font-mono-accent text-base tracking-widest" data-testid="idcard-member-number">
+            <div className="font-mono-accent text-sm tracking-widest" data-testid="idcard-member-number">
               {user.member_number}
             </div>
           </div>
         </div>
 
+        {/* QR (right column) */}
         <div className="flex flex-col items-center gap-1 shrink-0 self-center">
-          <div className="p-2 bg-white border border-[var(--dojo-border)]">
+          <div className="p-1.5 bg-white border border-[var(--dojo-border)]">
             {loading || !data ? (
-              <div className="w-44 h-44 flex items-center justify-center">
+              <div className="w-32 h-32 flex items-center justify-center">
                 <Loader2 className="animate-spin text-[var(--dojo-ink-soft)]" />
               </div>
             ) : (
-              <img src={data.qr_png} alt="QR" className="w-44 h-44" data-testid="idcard-qr" />
+              <img src={data.qr_png} alt="QR" className="w-32 h-32" data-testid="idcard-qr" />
             )}
           </div>
           <div className="text-[9px] uppercase tracking-[0.3em] text-[var(--dojo-ink-soft)]">
@@ -291,52 +319,67 @@ function HorizontalLayout({ user, design, data, loading, logoSrc }) {
 function VerticalLayout({ user, design, data, loading, logoSrc }) {
   return (
     <div className="relative h-full flex flex-col items-center text-center">
-      <img src={logoSrc} alt="" className="h-16 w-16 object-contain mb-2" />
+      <img src={logoSrc} alt="" className="h-14 w-14 object-contain mb-1" />
       <div className="text-[10px] uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)]">
         {design.dojo_name}
       </div>
-      <div className="font-serif text-xl font-medium tracking-tight leading-tight mt-1">
+      <div className="font-serif text-lg font-medium tracking-tight leading-tight mt-1">
         {design.certificate_title}
       </div>
-      <span className="font-kanji text-2xl leading-none mt-1" style={{ color: design.accent_color }}>
-        {design.kanji_top}
-      </span>
 
-      <div className="brush-divider w-full my-3" />
+      <div className="brush-divider w-full my-2" />
 
-      <div className="p-2 bg-white border border-[var(--dojo-border)]">
-        {loading || !data ? (
-          <div className="w-40 h-40 flex items-center justify-center">
-            <Loader2 className="animate-spin text-[var(--dojo-ink-soft)]" />
+      <div className="flex items-center justify-center gap-3">
+        {user.photo_url ? (
+          <div
+            className="border border-[var(--dojo-border)] bg-white shrink-0"
+            style={{ width: 90, height: 110 }}
+            data-testid="idcard-photo"
+          >
+            <img src={user.photo_url} alt="Member" className="w-full h-full object-cover" />
           </div>
         ) : (
-          <img src={data.qr_png} alt="QR" className="w-40 h-40" data-testid="idcard-qr" />
+          <div
+            className="border border-dashed border-[var(--dojo-border)] bg-white shrink-0 flex items-center justify-center text-[8px] uppercase tracking-[0.2em] text-[var(--dojo-ink-soft)] text-center px-1"
+            style={{ width: 90, height: 110 }}
+          >
+            No Photo
+          </div>
         )}
+        <div className="p-1.5 bg-white border border-[var(--dojo-border)]">
+          {loading || !data ? (
+            <div className="w-28 h-28 flex items-center justify-center">
+              <Loader2 className="animate-spin text-[var(--dojo-ink-soft)]" />
+            </div>
+          ) : (
+            <img src={data.qr_png} alt="QR" className="w-28 h-28" data-testid="idcard-qr" />
+          )}
+        </div>
       </div>
       <div className="text-[9px] uppercase tracking-[0.3em] text-[var(--dojo-ink-soft)] mt-1">
         {design.scan_text}
       </div>
 
-      <div className="brush-divider w-full my-3" />
+      <div className="brush-divider w-full my-2" />
 
       <div className="w-full">
         <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.name_label}</div>
-        <div className="font-serif text-lg font-medium leading-tight truncate" data-testid="idcard-name">{user.name}</div>
+        <div className="font-serif text-base font-medium leading-tight truncate" data-testid="idcard-name">{user.name}</div>
       </div>
-      <div className="grid grid-cols-2 gap-3 w-full mt-3">
+      <div className="grid grid-cols-2 gap-2 w-full mt-2">
         <div>
           <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.rank_label}</div>
-          <div className="text-sm font-medium truncate">{user.belt_rank || "—"}</div>
+          <div className="text-xs font-medium truncate">{user.belt_rank || "—"}</div>
         </div>
         <div>
           <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.footer_label}</div>
-          <div className="font-mono-accent text-sm tracking-widest truncate" data-testid="idcard-member-number">
+          <div className="font-mono-accent text-xs tracking-widest truncate" data-testid="idcard-member-number">
             {user.member_number}
           </div>
         </div>
       </div>
 
-      <div className="mt-auto pt-3 w-full text-[9px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] flex justify-between items-end">
+      <div className="mt-auto pt-2 w-full text-[9px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] flex justify-between items-end">
         <span className="truncate pr-2">{design.issued_text}</span>
         <span className="font-kanji text-sm shrink-0" style={{ color: design.accent_color }}>
           {design.kanji_bottom}

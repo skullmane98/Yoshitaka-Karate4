@@ -127,7 +127,7 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
   return (
     <div className="fixed inset-0 z-50" data-testid="user-drawer">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="absolute right-0 top-0 h-full w-full max-w-4xl bg-[var(--dojo-paper)] border-l border-[var(--dojo-border)] overflow-y-auto">
+      <div className="absolute right-0 top-0 h-full w-full bg-[var(--dojo-paper)] border-l border-[var(--dojo-border)] overflow-y-auto">
         <div className="sticky top-0 z-10 bg-[var(--dojo-paper)] border-b border-[var(--dojo-border)] flex items-center justify-between px-6 py-4">
           <div>
             <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{user.member_number}</div>

@@ -37,8 +37,8 @@ export default function Login() {
   const submit = async (e) => {
     e.preventDefault();
     setErr(""); setLoading(true);
-    // If the request is slow (cold-start), surface a friendly message.
-    const wakeTimer = setTimeout(() => setWaking(true), 4000);
+    // Show the "waking" hint quickly so the user knows we're still alive.
+    const wakeTimer = setTimeout(() => setWaking(true), 2500);
     try {
       const u = await login(username, password);
       const dest =
@@ -91,13 +91,15 @@ export default function Login() {
           </div>
           {err && <div className="text-[var(--dojo-hinomaru)] text-sm" data-testid="login-error">{err}</div>}
           {waking && !err && (
-            <div className="text-[var(--dojo-ink-soft)] text-xs flex items-center gap-2" data-testid="login-waking">
-              <span className="inline-block w-3 h-3 border-2 border-[var(--dojo-green)] border-t-transparent rounded-full animate-spin" />
-              Waking the dojo… first sign-in of the day can take ~30 seconds.
+            <div className="text-[var(--dojo-ink-soft)] text-xs flex items-start gap-2" data-testid="login-waking">
+              <span className="inline-block w-3 h-3 mt-0.5 border-2 border-[var(--dojo-green)] border-t-transparent rounded-full animate-spin" />
+              <span>
+                Waking the dojo… the first login of the day can take up to 60&nbsp;seconds while the server warms up. Hang tight — we&apos;ll keep retrying automatically.
+              </span>
             </div>
           )}
           <button type="submit" className="btn-primary w-full" disabled={loading} data-testid="login-submit-btn">
-            {loading ? "Entering…" : "Enter Dojo"}
+            {loading ? (waking ? "Waking the dojo…" : "Entering…") : "Enter Dojo"}
           </button>
           <div className="text-center text-sm text-[var(--dojo-ink-soft)] pt-2">
             <Link to="/forgot-password" className="ink-underline" data-testid="login-forgot-link">Forgot password?</Link>

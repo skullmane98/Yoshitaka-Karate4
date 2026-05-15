@@ -98,12 +98,24 @@ export default function IDCard({ user, defaultOrientation = "horizontal" }) {
   const exportPDF = async () => {
     if (!cardRef.current) return;
     setExporting(true);
+    // html2canvas mis-reads sizes when the captured node has a `transform`
+    // ancestor. The scaled wrapper is purely for on-screen fit, so we
+    // temporarily neutralise it during the snapshot.
+    const transformParent = cardRef.current.parentElement;
+    const prevTransform = transformParent?.style.transform || "";
+    if (transformParent) transformParent.style.transform = "none";
     try {
       const canvas = await html2canvas(cardRef.current, {
         scale: 4,
         backgroundColor: "#FFFFFF",
         useCORS: true,
+        allowTaint: false,
         logging: false,
+        // Force exact pixel dims of the unscaled card.
+        width: cardRef.current.offsetWidth,
+        height: cardRef.current.offsetHeight,
+        windowWidth: cardRef.current.offsetWidth,
+        windowHeight: cardRef.current.offsetHeight,
       });
       const imgData = canvas.toDataURL("image/png");
       const isV = orientation === "vertical";
@@ -121,7 +133,19 @@ export default function IDCard({ user, defaultOrientation = "horizontal" }) {
         isV ? CR80_MM.w : CR80_MM.h,
       );
       pdf.save(`yoshitaka-id-${user.member_number}-${orientation}.pdf`);
+    } catch (err) {
+      // Surface the real cause (typically a tainted-canvas / CORS image).
+      // eslint-disable-next-line no-console
+      console.error("[IDCard PDF] export failed:", err);
+      alert(
+        "Couldn't generate the PDF.\n\n" +
+        "This is usually caused by an image (logo, photo, or background) " +
+        "served from a host without CORS. Try removing that image and " +
+        "re-exporting, or replacing it with a re-uploaded version.\n\n" +
+        "Error: " + (err?.message || err)
+      );
     } finally {
+      if (transformParent) transformParent.style.transform = prevTransform;
       setExporting(false);
     }
   };
@@ -223,6 +247,30 @@ export default function IDCard({ user, defaultOrientation = "horizontal" }) {
   );
 }
 
+// Default font sizes (in px) per logical section. Admin overrides via
+// `idcard_overrides.font_sizes.{key}`.
+const DEFAULT_FONT_SIZES = {
+  dojo_name: 10,
+  certificate_title: 20,
+  kanji_top: 24,
+  member_name: 20,
+  role_value: 12,
+  rank_value: 12,
+  member_number: 14,
+  field_label: 10,
+  scan_text: 9,
+  issued_text: 10,
+  kanji_bottom: 16,
+};
+
+function pxOf(design, key) {
+  const sizes = design?.font_sizes || {};
+  const raw = sizes[key];
+  const n = Number(raw);
+  if (Number.isFinite(n) && n >= 6 && n <= 64) return `${n}px`;
+  return `${DEFAULT_FONT_SIZES[key]}px`;
+}
+
 function HorizontalLayout({ user, design, data, loading, logoSrc }) {
   return (
     <div className="relative h-full flex flex-col">
@@ -230,15 +278,15 @@ function HorizontalLayout({ user, design, data, loading, logoSrc }) {
         <div className="flex items-center gap-3 min-w-0">
           <img src={logoSrc} alt="" className="h-12 w-12 object-contain shrink-0" />
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)] mb-1 truncate">
+            <div className="uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)] mb-1 truncate" style={{ fontSize: pxOf(design, "dojo_name") }}>
               {design.dojo_name}
             </div>
-            <div className="font-serif text-xl font-medium tracking-tight leading-none truncate">
+            <div className="font-serif font-medium tracking-tight leading-none truncate" style={{ fontSize: pxOf(design, "certificate_title") }}>
               {design.certificate_title}
             </div>
           </div>
         </div>
-        <span className="font-kanji text-2xl leading-none shrink-0" style={{ color: design.accent_color }}>
+        <span className="font-kanji leading-none shrink-0" style={{ color: design.accent_color, fontSize: pxOf(design, "kanji_top") }}>
           {design.kanji_top}
         </span>
       </div>
@@ -267,22 +315,22 @@ function HorizontalLayout({ user, design, data, loading, logoSrc }) {
         {/* Member info (middle, fills) */}
         <div className="space-y-2 min-w-0 self-center">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.name_label}</div>
-            <div className="font-serif text-xl font-medium leading-tight truncate" data-testid="idcard-name">{user.name}</div>
+            <div className="uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "field_label") }}>{design.name_label}</div>
+            <div className="font-serif font-medium leading-tight truncate" data-testid="idcard-name" style={{ fontSize: pxOf(design, "member_name") }}>{user.name}</div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.role_label}</div>
-              <div className="text-xs font-medium capitalize truncate">{user.role.replace("_", " ")}</div>
+              <div className="uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "field_label") }}>{design.role_label}</div>
+              <div className="font-medium capitalize truncate" style={{ fontSize: pxOf(design, "role_value") }}>{user.role.replace("_", " ")}</div>
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.rank_label}</div>
-              <div className="text-xs font-medium truncate">{user.belt_rank || "—"}</div>
+              <div className="uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "field_label") }}>{design.rank_label}</div>
+              <div className="font-medium truncate" style={{ fontSize: pxOf(design, "rank_value") }}>{user.belt_rank || "—"}</div>
             </div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.footer_label}</div>
-            <div className="font-mono-accent text-sm tracking-widest" data-testid="idcard-member-number">
+            <div className="uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "field_label") }}>{design.footer_label}</div>
+            <div className="font-mono-accent tracking-widest" data-testid="idcard-member-number" style={{ fontSize: pxOf(design, "member_number") }}>
               {user.member_number}
             </div>
           </div>
@@ -299,16 +347,16 @@ function HorizontalLayout({ user, design, data, loading, logoSrc }) {
               <img src={data.qr_png} alt="QR" className="w-32 h-32" data-testid="idcard-qr" />
             )}
           </div>
-          <div className="text-[9px] uppercase tracking-[0.3em] text-[var(--dojo-ink-soft)]">
+          <div className="uppercase tracking-[0.3em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "scan_text") }}>
             {design.scan_text}
           </div>
         </div>
       </div>
 
       <div className="brush-divider mt-3 mb-2" />
-      <div className="flex justify-between items-end text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">
+      <div className="flex justify-between items-end uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "issued_text") }}>
         <span className="truncate pr-2">{design.issued_text}</span>
-        <span className="font-kanji text-base shrink-0" style={{ color: design.accent_color }}>
+        <span className="font-kanji shrink-0" style={{ color: design.accent_color, fontSize: pxOf(design, "kanji_bottom") }}>
           {design.kanji_bottom}
         </span>
       </div>
@@ -320,10 +368,10 @@ function VerticalLayout({ user, design, data, loading, logoSrc }) {
   return (
     <div className="relative h-full flex flex-col items-center text-center">
       <img src={logoSrc} alt="" className="h-14 w-14 object-contain mb-1" />
-      <div className="text-[10px] uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)]">
+      <div className="uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "dojo_name") }}>
         {design.dojo_name}
       </div>
-      <div className="font-serif text-lg font-medium tracking-tight leading-tight mt-1">
+      <div className="font-serif font-medium tracking-tight leading-tight mt-1" style={{ fontSize: pxOf(design, "certificate_title") }}>
         {design.certificate_title}
       </div>
 
@@ -356,32 +404,32 @@ function VerticalLayout({ user, design, data, loading, logoSrc }) {
           )}
         </div>
       </div>
-      <div className="text-[9px] uppercase tracking-[0.3em] text-[var(--dojo-ink-soft)] mt-1">
+      <div className="uppercase tracking-[0.3em] text-[var(--dojo-ink-soft)] mt-1" style={{ fontSize: pxOf(design, "scan_text") }}>
         {design.scan_text}
       </div>
 
       <div className="brush-divider w-full my-2" />
 
       <div className="w-full">
-        <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.name_label}</div>
-        <div className="font-serif text-base font-medium leading-tight truncate" data-testid="idcard-name">{user.name}</div>
+        <div className="uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "field_label") }}>{design.name_label}</div>
+        <div className="font-serif font-medium leading-tight truncate" data-testid="idcard-name" style={{ fontSize: pxOf(design, "member_name") }}>{user.name}</div>
       </div>
       <div className="grid grid-cols-2 gap-2 w-full mt-2">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.rank_label}</div>
-          <div className="text-xs font-medium truncate">{user.belt_rank || "—"}</div>
+          <div className="uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "field_label") }}>{design.rank_label}</div>
+          <div className="font-medium truncate" style={{ fontSize: pxOf(design, "rank_value") }}>{user.belt_rank || "—"}</div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{design.footer_label}</div>
-          <div className="font-mono-accent text-xs tracking-widest truncate" data-testid="idcard-member-number">
+          <div className="uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "field_label") }}>{design.footer_label}</div>
+          <div className="font-mono-accent tracking-widest truncate" data-testid="idcard-member-number" style={{ fontSize: pxOf(design, "member_number") }}>
             {user.member_number}
           </div>
         </div>
       </div>
 
-      <div className="mt-auto pt-2 w-full text-[9px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] flex justify-between items-end">
+      <div className="mt-auto pt-2 w-full uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] flex justify-between items-end" style={{ fontSize: pxOf(design, "issued_text") }}>
         <span className="truncate pr-2">{design.issued_text}</span>
-        <span className="font-kanji text-sm shrink-0" style={{ color: design.accent_color }}>
+        <span className="font-kanji shrink-0" style={{ color: design.accent_color, fontSize: pxOf(design, "kanji_bottom") }}>
           {design.kanji_bottom}
         </span>
       </div>

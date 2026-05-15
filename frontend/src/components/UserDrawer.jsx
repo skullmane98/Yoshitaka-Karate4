@@ -280,6 +280,54 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                       />
                     </div>
                   </Field>
+
+                  {/* Font size editor */}
+                  <div className="border-t border-dashed border-[var(--dojo-border)] pt-3 mt-1">
+                    <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] mb-2">Font Sizes (px)</div>
+                    <div className="grid grid-cols-2 gap-2" data-testid="user-idcard-fontsizes">
+                      {[
+                        ["dojo_name", "Dojo name", 10],
+                        ["certificate_title", "Title", 20],
+                        ["kanji_top", "Kanji (top)", 24],
+                        ["member_name", "Member name", 20],
+                        ["role_value", "Role value", 12],
+                        ["rank_value", "Rank value", 12],
+                        ["member_number", "Member #", 14],
+                        ["field_label", "Field labels", 10],
+                        ["scan_text", "Scan caption", 9],
+                        ["issued_text", "Issued footer", 10],
+                        ["kanji_bottom", "Kanji (bottom)", 16],
+                      ].map(([key, label, def]) => {
+                        const cur = ((draft.idcard_overrides || {}).font_sizes || {})[key];
+                        return (
+                          <label key={key} className="flex items-center gap-2 text-[11px]">
+                            <span className="text-[var(--dojo-ink-soft)] flex-1 truncate" title={label}>{label}</span>
+                            <input
+                              type="number"
+                              min={6}
+                              max={64}
+                              value={cur ?? ""}
+                              placeholder={String(def)}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                const fs = { ...((draft.idcard_overrides || {}).font_sizes || {}) };
+                                if (v === "") delete fs[key];
+                                else fs[key] = Math.min(64, Math.max(6, Number(v)));
+                                setOverride("font_sizes", fs);
+                              }}
+                              className="input w-16 text-center"
+                              data-testid={`user-idcard-fs-${key}`}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setOverride("font_sizes", {})}
+                      className="text-[10px] text-[var(--dojo-hinomaru)] underline mt-2"
+                    >Reset font sizes</button>
+                  </div>
                   {isAdminLike && (
                     <Field label="Background Image" hint="JPG/PNG under 1.5 MB. Stacks behind the certificate as a faded watermark.">
                       <div className="flex items-center gap-3 flex-wrap">

@@ -1,6 +1,10 @@
 import axios from "axios";
 
-const BASE = process.env.REACT_APP_BACKEND_URL;
+// Tolerate operators who accidentally set REACT_APP_BACKEND_URL with a trailing
+// slash or with `/api` already appended — both situations cause `/api/api/...`
+// 404s in production. Normalise once at module load.
+const RAW = (process.env.REACT_APP_BACKEND_URL || "").trim();
+const BASE = RAW.replace(/\/+$/, "").replace(/\/api$/i, "");
 
 const api = axios.create({
   baseURL: `${BASE}/api`,

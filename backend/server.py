@@ -1625,11 +1625,26 @@ app.include_router(features_router)
 
 
 _cors_origins = [o.strip() for o in os.environ.get('CORS_ORIGINS', '*').split(',') if o.strip()]
+# Allow-list of trusted domain patterns. Anything not matched here AND not in
+# CORS_ORIGINS env var will be rejected by FastAPI with HTTP 400 "Disallowed
+# CORS origin" during the browser preflight (OPTIONS). When adding a new
+# production domain, prefer setting CORS_ORIGINS on Render rather than editing
+# this regex.
+_cors_regex = (
+    # Emergent preview domains (every fork's preview URL ends here)
+    r"https?://([a-z0-9-]+\.)*(preview\.)?emergentagent\.com"
+    # Local dev
+    r"|http://localhost(:\d+)?"
+    # Hostinger's auto-generated subdomains (yoursite.hostingersite.com)
+    r"|https?://([a-z0-9-]+\.)*hostingersite\.com"
+    # The actual production dojo domain + www variant
+    r"|https?://([a-z0-9-]+\.)*yoshitakakaratedo\.com"
+)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
     allow_origins=_cors_origins if _cors_origins != ['*'] else [],
-    allow_origin_regex=r"https?://([a-z0-9-]+\.)*(preview\.)?emergentagent\.com|http://localhost(:\d+)?|https?://([a-z0-9-]+\.)*hostingersite\.com",
+    allow_origin_regex=_cors_regex,
     allow_methods=["*"],
     allow_headers=["*"],
 )

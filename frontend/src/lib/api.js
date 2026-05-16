@@ -108,11 +108,18 @@ api.interceptors.response.use(
 
 export function formatApiError(err) {
   const detail = err?.response?.data?.detail;
+  const status = err?.response?.status;
   if (!detail) {
     if (err?.code === "ECONNABORTED") return "Server is taking too long to wake up. Please try again in a few seconds.";
     if (!err?.response) return "Could not reach the dojo server. It may be waking up — please try again.";
-    if (RETRY_STATUSES.has(err?.response?.status)) {
+    if (RETRY_STATUSES.has(status)) {
       return "The dojo server is still waking up. Please try again in 30 seconds.";
+    }
+    if (status === 400) {
+      const body = err?.response?.data;
+      if (typeof body === "string" && body.toLowerCase().includes("cors")) {
+        return "This site isn't on the backend's allow-list. The Render backend needs to be redeployed with the latest code to accept this domain.";
+      }
     }
     return err?.message || "Something went wrong";
   }

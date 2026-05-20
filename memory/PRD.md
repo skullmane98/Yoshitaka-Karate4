@@ -54,7 +54,11 @@ super_admin → admin → renshi → sensei → team_member → student
   - `api.js`: removed Render fallback URL + aggressive cold-start retry; now 2 quick retries (≤1.8s) for transient 502/503/504 only, 20s timeout
   - `server.py`: tightened CORS regex (dropped `hostingersite.com`; kept localhost, preview, `yoshitakakaratedo.com`)
   - Added `/app/deploy/`: `README.md` (runbook), `nginx-yoshitaka.conf`, `yoshitaka-api.service` (systemd), `yoshitaka-api.env.example`, `deploy.sh` (one-command updates)
-  - `frontend/.env.production` points the build at `https://api.yoshitakakaratedo.com`
+  - `frontend/.env.production` points the build at `https://portal.yoshitakakaratedo.com` (single-domain, path-based `/api` routing)
+- **[2026-02-17] Bug fix — QR / ID-card overrides silently dropped on self-edit**
+  - PATCH `/users/{user_id}`: previously when a user edited *themselves* (even super_admin), the allowed-fields set was hard-coded to 6 profile fields, so `idcard_overrides` + `idcard_template` were filtered out before reaching the DB
+  - Reordered the permission ladder: super_admin/admin get full perms even when self-editing; lower roles editing themselves still get the limited set, but ID-card customisation (`idcard_template`, `idcard_overrides`) is always allowed so members can tweak their own card
+  - Verified end-to-end via Playwright: pick color → save → reopen → color persists, QR re-renders with the new fill
 
 ## Backlog
 ### P1

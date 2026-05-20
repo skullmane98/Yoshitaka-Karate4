@@ -692,14 +692,22 @@ async def update_user(
         "date_of_birth", "address", "emergency_contact_name", "emergency_contact_phone",
         "medical_notes", "notes", "photo_url", "idcard_template", "idcard_overrides",
     }
-    if current.id == user_id:
-        allowed = {"name", "phone", "address", "emergency_contact_name", "emergency_contact_phone", "photo_url"}
-    elif current.role == "super_admin":
+    # Super-admins and admins are always allowed to edit their own ID card +
+    # everything else. Lower roles editing themselves are restricted.
+    if current.role == "super_admin":
         allowed = PROFILE_FIELDS
     elif current.role == "admin":
-        if target.role not in ("student", "team_member", "sensei", "renshi"):
+        if current.id != user_id and target.role not in ("student", "team_member", "sensei", "renshi"):
             raise HTTPException(status_code=403, detail="Admins cannot edit other admins")
-        allowed = PROFILE_FIELDS - {"role", "email"}
+        allowed = PROFILE_FIELDS - ({"role", "email"} if current.id != user_id else set())
+    elif current.id == user_id:
+        # Self-edit for non-admin roles — limited fields, but ID-card
+        # customisation is allowed so members can tweak their own card.
+        allowed = {
+            "name", "phone", "address", "emergency_contact_name",
+            "emergency_contact_phone", "photo_url",
+            "idcard_template", "idcard_overrides",
+        }
     elif current.role in ("renshi", "sensei"):
         if target.role != "student":
             raise HTTPException(status_code=403, detail="Forbidden")

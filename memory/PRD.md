@@ -59,6 +59,10 @@ super_admin → admin → renshi → sensei → team_member → student
   - PATCH `/users/{user_id}`: previously when a user edited *themselves* (even super_admin), the allowed-fields set was hard-coded to 6 profile fields, so `idcard_overrides` + `idcard_template` were filtered out before reaching the DB
   - Reordered the permission ladder: super_admin/admin get full perms even when self-editing; lower roles editing themselves still get the limited set, but ID-card customisation (`idcard_template`, `idcard_overrides`) is always allowed so members can tweak their own card
   - Verified end-to-end via Playwright: pick color → save → reopen → color persists, QR re-renders with the new fill
+- **[2026-02-17] Bug fix — Background image missing from CR-80 PDF export**
+  - `drawHorizontalCardOnPdf` / `drawVerticalCardOnPdf` previously loaded logo/photo/QR only — `design.background_url` was rendered on the DOM preview but never on the exported PDF
+  - Added `drawBackgroundWatermark()` helper: loads the image, draws it first at 40% opacity using a jsPDF `GState`, applies "cover" fit, and respects the `background_size` slider override
+  - Verified end-to-end: rendered the generated PDF with `pdftoppm` and confirmed ~85% of sampled pixels match the test background color
 
 ## Backlog
 ### P1

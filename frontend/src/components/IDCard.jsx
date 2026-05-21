@@ -21,6 +21,51 @@ function loadImage(src) {
   });
 }
 
+// Render the background image as a faded watermark on the PDF.
+//
+// Matches the DOM preview behaviour:
+//   • 40% opacity (jsPDF GState — supported in PDF 1.4+)
+//   • "cover" fit — image fills the card, cropping the overflowing axis
+//   • Optional zoom override (`design.background_size`, default 1.0)
+// The clipped area beyond the card bounds is intentionally drawn; the
+// surrounding white rect drawn afterwards in horizontal/vertical paths is
+// already there *before* this helper runs, so we rely on the page boundary
+// to clip overflow. Acceptable for a 85.6 × 53.98 mm card.
+function drawBackgroundWatermark(pdf, img, W, H, sizeOverride) {
+  const naturalW = img.naturalWidth || img.width;
+  const naturalH = img.naturalHeight || img.height;
+  if (!naturalW || !naturalH) return;
+
+  // "cover" fit — pick the larger scale so neither axis has gaps.
+  const cover = Math.max(W / naturalW, H / naturalH);
+  const zoom = Number(sizeOverride);
+  const scale = cover * (Number.isFinite(zoom) && zoom > 0 ? zoom : 1);
+  const drawW = naturalW * scale;
+  const drawH = naturalH * scale;
+  // Center on the card.
+  const x = (W - drawW) / 2;
+  const y = (H - drawH) / 2;
+
+  let restoreNeeded = false;
+  try {
+    // GState lets us draw at 40% opacity without compositing on a canvas.
+    const gs = new pdf.GState({ opacity: 0.4 });
+    pdf.setGState(gs);
+    restoreNeeded = true;
+    pdf.addImage(img, "PNG", x, y, drawW, drawH);
+  } catch (_) {
+    // Older jsPDF without GState — fall back to drawing without opacity.
+    try { pdf.addImage(img, "PNG", x, y, drawW, drawH); } catch (_) {}
+  } finally {
+    if (restoreNeeded) {
+      try {
+        const reset = new pdf.GState({ opacity: 1 });
+        pdf.setGState(reset);
+      } catch (_) {}
+    }
+  }
+}
+
 async function drawHorizontalCardOnPdf(pdf, ctx) {
   const { W, H, user, design, data } = ctx;
   const MARGIN = 4;            // mm
@@ -37,11 +82,19 @@ async function drawHorizontalCardOnPdf(pdf, ctx) {
 
   // Logo top-left
   const logoSrc = design.logo_url || LOGO_URL;
-  const [logoImg, photoImg, qrImg] = await Promise.all([
+  const [logoImg, photoImg, qrImg, bgImg] = await Promise.all([
     loadImage(logoSrc),
     loadImage(user.photo_url),
     loadImage(data?.qr_png),
+    loadImage(design.background_url),
   ]);
+
+  // Background watermark (drawn first so everything else sits on top).
+  // Matches the on-screen preview: 40% opacity, "cover" fit, optional zoom.
+  if (bgImg) {
+    drawBackgroundWatermark(pdf, bgImg, W, H, design.background_size);
+  }
+
   if (logoImg) {
     try { pdf.addImage(logoImg, "PNG", MARGIN, MARGIN + TOP_PAD, 9, 9); } catch (_) {}
   }
@@ -138,11 +191,17 @@ async function drawVerticalCardOnPdf(pdf, ctx) {
   pdf.rect(0.5, 0.5, W - 1, H - 1, "S");
 
   const logoSrc = design.logo_url || LOGO_URL;
-  const [logoImg, photoImg, qrImg] = await Promise.all([
+  const [logoImg, photoImg, qrImg, bgImg] = await Promise.all([
     loadImage(logoSrc),
     loadImage(user.photo_url),
     loadImage(data?.qr_png),
+    loadImage(design.background_url),
   ]);
+
+  // Background watermark first, so logo/photo/QR sit on top.
+  if (bgImg) {
+    drawBackgroundWatermark(pdf, bgImg, W, H, design.background_size);
+  }
 
   // Top: logo centered
   if (logoImg) {

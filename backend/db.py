@@ -118,6 +118,14 @@ async def _migrate_add_columns() -> None:
             except Exception:
                 # Column likely already exists — ignore.
                 pass
+        # MySQL-only: existing photo_url columns were created as TEXT (~64 KB),
+        # which silently truncates base64 data URLs >64 KB. Promote to LONGTEXT
+        # so member photos survive a round-trip. SQLite TEXT is unlimited.
+        if not IS_SQLITE:
+            try:
+                await conn.execute(text("ALTER TABLE users MODIFY photo_url LONGTEXT NULL"))
+            except Exception:
+                pass
         # Unique indexes (idempotent — duplicate errors ignored).
         # SQLite supports "IF NOT EXISTS"; MySQL doesn't, so we just swallow
         # the duplicate-index error there.

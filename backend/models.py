@@ -7,7 +7,16 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import JSON, Column, DateTime, Text
+from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlmodel import Field, SQLModel
+
+
+# Photo URLs are stored inline as base64 data URLs (no S3 yet). A typical
+# member photo at 1 MB raw becomes ~1.4 MB once base64-encoded, which blows
+# past MySQL's plain TEXT cap (~64 KB) and silently truncates the column.
+# LONGTEXT (4 GB) gives us comfortable headroom; on SQLite the variant just
+# falls back to TEXT which is unlimited anyway.
+PhotoColumn = LONGTEXT().with_variant(Text(), "sqlite")
 
 
 def _utcnow() -> datetime:
@@ -36,7 +45,7 @@ class User(SQLModel, table=True):
     emergency_contact_phone: Optional[str] = Field(default=None, max_length=64)
     medical_notes: Optional[str] = Field(default=None, sa_column=Column(Text))
     notes: Optional[str] = Field(default=None, sa_column=Column(Text))
-    photo_url: Optional[str] = Field(default=None, sa_column=Column(Text))
+    photo_url: Optional[str] = Field(default=None, sa_column=Column(PhotoColumn))
     # Per-user ID card overrides (JSON of custom fields, template name)
     idcard_template: Optional[str] = Field(default=None, max_length=32)  # student | team_class | sensei
     idcard_overrides: dict = Field(default_factory=dict, sa_column=Column(JSON))

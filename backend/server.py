@@ -6,6 +6,7 @@ load_dotenv(ROOT_DIR / '.env')
 
 import os
 import io
+import re
 import base64
 import uuid
 import secrets
@@ -25,7 +26,7 @@ from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Respons
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, EmailStr
-from sqlalchemy import func, select, delete
+from sqlalchemy import func, select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import engine, get_session, init_db
@@ -33,6 +34,7 @@ from models import (
     AccessCode,
     Attendance,
     CMSPage,
+    IDCardTemplate,
     PasswordResetToken,
     Payment,
     PaymentReminder,
@@ -289,6 +291,32 @@ class CMSPagePublic(BaseModel):
     title: str
     content: dict
     updated_at: datetime
+
+
+# ─── ID Card templates ────────────────────────────────────────────────────
+class IDCardTemplatePublic(BaseModel):
+    key: str
+    label: str
+    description: Optional[str] = None
+    config: dict
+    is_builtin: bool
+    sort_order: int
+    updated_at: datetime
+
+
+class IDCardTemplateCreate(BaseModel):
+    key: str  # url-safe slug, must be unique
+    label: str
+    description: Optional[str] = None
+    config: dict = {}
+    sort_order: int = 100
+
+
+class IDCardTemplateUpdate(BaseModel):
+    label: Optional[str] = None
+    description: Optional[str] = None
+    config: Optional[dict] = None
+    sort_order: Optional[int] = None
 
 
 # -----------------------------------------------------------------------------
@@ -1535,6 +1563,195 @@ async def update_cms_page(
 
 
 # -----------------------------------------------------------------------------
+# ID Card templates — full CRUD (Path B)
+# -----------------------------------------------------------------------------
+BUILTIN_TEMPLATES = [
+    {
+        "key": "student",
+        "label": "Student",
+        "description": "Standard member certificate.",
+        "sort_order": 10,
+        "config": {
+            "dojo_name": "Yoshitaka Karate-Do",
+            "certificate_title": "Student Member",
+            "kanji_top": "学生", "kanji_bottom": "義孝",
+            "issued_text": "Issued · Yoshitaka Dojo", "scan_text": "Scan to verify",
+            "name_label": "Member", "role_label": "Role", "rank_label": "Rank", "footer_label": "Member No.",
+            "accent_color": "#D7263D", "title_bg_color": "#FFF1D6", "title_text_color": "#0F0F0F",
+        },
+    },
+    {
+        "key": "team_class",
+        "label": "Team Class",
+        "description": "For students enrolled in special team / competition track.",
+        "sort_order": 20,
+        "config": {
+            "dojo_name": "Yoshitaka Karate-Do",
+            "certificate_title": "Team Class Member",
+            "kanji_top": "選手", "kanji_bottom": "義孝",
+            "issued_text": "Team Class · Yoshitaka Dojo", "scan_text": "Scan to verify",
+            "name_label": "Athlete", "role_label": "Track", "rank_label": "Rank", "footer_label": "Roster No.",
+            "accent_color": "#1E5BA8", "title_bg_color": "#DBE8F7", "title_text_color": "#0F0F0F",
+        },
+    },
+    {
+        "key": "sensei",
+        "label": "Sensei",
+        "description": "For instructors (Sensei / Renshi / Team Member).",
+        "sort_order": 30,
+        "config": {
+            "dojo_name": "Yoshitaka Karate-Do",
+            "certificate_title": "Instructor Credential",
+            "kanji_top": "先生", "kanji_bottom": "義孝",
+            "issued_text": "Faculty · Yoshitaka Dojo", "scan_text": "Scan to verify",
+            "name_label": "Instructor", "role_label": "Title", "rank_label": "Dan / Rank", "footer_label": "Faculty No.",
+            "accent_color": "#0F0F0F", "title_bg_color": "#EAEAEA", "title_text_color": "#0F0F0F",
+        },
+    },
+]
+
+# Slug used for new custom templates — alphanumerics, hyphens, underscores.
+_TEMPLATE_KEY_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
+
+
+def _template_public(t: IDCardTemplate) -> IDCardTemplatePublic:
+    return IDCardTemplatePublic(
+        key=t.key, label=t.label, description=t.description or "",
+        config=t.config or {}, is_builtin=t.is_builtin, sort_order=t.sort_order,
+        updated_at=t.updated_at,
+    )
+
+
+@api_router.get("/idcard-templates", response_model=List[IDCardTemplatePublic])
+async def list_idcard_templates(
+    current: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    res = await session.execute(
+        select(IDCardTemplate).order_by(IDCardTemplate.sort_order, IDCardTemplate.label)
+    )
+    return [_template_public(t) for t in res.scalars().all()]
+
+
+async def _require_template_edit(session: AsyncSession, current: User):
+    from features import _user_has_permission
+    if not await _user_has_permission(session, current, "cms.edit_idcard"):
+        raise HTTPException(status_code=403, detail="Missing permission: cms.edit_idcard")
+
+
+@api_router.post("/idcard-templates", response_model=IDCardTemplatePublic)
+async def create_idcard_template(
+    payload: IDCardTemplateCreate,
+    current: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    await _require_template_edit(session, current)
+    key = payload.key.strip().lower()
+    if not _TEMPLATE_KEY_RE.match(key):
+        raise HTTPException(status_code=400, detail="Key must be lowercase letters, numbers, hyphens or underscores (max 64 chars).")
+    existing = await session.execute(select(IDCardTemplate).where(IDCardTemplate.key == key))
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail=f"Template key '{key}' already exists.")
+    now = _strip_tz(datetime.now(timezone.utc))
+    t = IDCardTemplate(
+        key=key, label=payload.label.strip() or key,
+        description=payload.description or "",
+        config=payload.config or {},
+        is_builtin=False, sort_order=payload.sort_order,
+        created_at=now, updated_at=now,
+    )
+    session.add(t)
+    await session.commit()
+    await session.refresh(t)
+    return _template_public(t)
+
+
+@api_router.patch("/idcard-templates/{key}", response_model=IDCardTemplatePublic)
+async def update_idcard_template(
+    key: str,
+    payload: IDCardTemplateUpdate,
+    current: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    await _require_template_edit(session, current)
+    res = await session.execute(select(IDCardTemplate).where(IDCardTemplate.key == key))
+    t = res.scalar_one_or_none()
+    if not t:
+        raise HTTPException(status_code=404, detail="Template not found")
+    if payload.label is not None:
+        t.label = payload.label.strip() or t.label
+    if payload.description is not None:
+        t.description = payload.description
+    if payload.config is not None:
+        t.config = payload.config
+    if payload.sort_order is not None:
+        t.sort_order = payload.sort_order
+    t.updated_at = _strip_tz(datetime.now(timezone.utc))
+    session.add(t)
+    await session.commit()
+    await session.refresh(t)
+    return _template_public(t)
+
+
+@api_router.post("/idcard-templates/{key}/duplicate", response_model=IDCardTemplatePublic)
+async def duplicate_idcard_template(
+    key: str,
+    current: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Create a clone of an existing template (built-in or custom) with a
+    unique key like `<source>_copy`, `<source>_copy_2`, etc."""
+    await _require_template_edit(session, current)
+    res = await session.execute(select(IDCardTemplate).where(IDCardTemplate.key == key))
+    src = res.scalar_one_or_none()
+    if not src:
+        raise HTTPException(status_code=404, detail="Template not found")
+    base_key = f"{src.key}_copy"
+    new_key = base_key
+    suffix = 1
+    while True:
+        check = await session.execute(select(IDCardTemplate).where(IDCardTemplate.key == new_key))
+        if not check.scalar_one_or_none():
+            break
+        suffix += 1
+        new_key = f"{base_key}_{suffix}"
+    now = _strip_tz(datetime.now(timezone.utc))
+    t = IDCardTemplate(
+        key=new_key, label=f"{src.label} (copy)",
+        description=src.description, config=dict(src.config or {}),
+        is_builtin=False, sort_order=src.sort_order + 1,
+        created_at=now, updated_at=now,
+    )
+    session.add(t)
+    await session.commit()
+    await session.refresh(t)
+    return _template_public(t)
+
+
+@api_router.delete("/idcard-templates/{key}")
+async def delete_idcard_template(
+    key: str,
+    current: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    await _require_template_edit(session, current)
+    res = await session.execute(select(IDCardTemplate).where(IDCardTemplate.key == key))
+    t = res.scalar_one_or_none()
+    if not t:
+        raise HTTPException(status_code=404, detail="Template not found")
+    if t.is_builtin:
+        raise HTTPException(status_code=400, detail="Built-in templates can be edited but not deleted.")
+    # Unassign this template from any users currently using it.
+    await session.execute(
+        update(User).where(User.idcard_template == key).values(idcard_template=None)
+    )
+    await session.delete(t)
+    await session.commit()
+    return {"ok": True}
+
+
+
+# -----------------------------------------------------------------------------
 # Dashboard stats
 # -----------------------------------------------------------------------------
 @api_router.get("/stats")
@@ -1645,6 +1862,25 @@ async def on_startup():
             res = await session.execute(select(CMSPage).where(CMSPage.slug == slug))
             if not res.scalar_one_or_none():
                 session.add(CMSPage(slug=slug, title=page["title"], content=page["content"], updated_at=now))
+        await session.commit()
+
+        # Seed built-in ID-card templates. Existing rows are left untouched
+        # so admin edits are preserved across restarts; only missing keys are
+        # inserted.
+        for tpl in BUILTIN_TEMPLATES:
+            res = await session.execute(select(IDCardTemplate).where(IDCardTemplate.key == tpl["key"]))
+            existing_tpl = res.scalar_one_or_none()
+            if existing_tpl is None:
+                session.add(IDCardTemplate(
+                    key=tpl["key"], label=tpl["label"], description=tpl["description"],
+                    config=tpl["config"], is_builtin=True, sort_order=tpl["sort_order"],
+                    created_at=now, updated_at=now,
+                ))
+            elif not existing_tpl.is_builtin:
+                # Ensure built-ins stay marked as such even if a prior code
+                # path created them as custom templates.
+                existing_tpl.is_builtin = True
+                session.add(existing_tpl)
         await session.commit()
 
     # Spin up the self-ping keep-warm loop. Render free tier sleeps after ~15

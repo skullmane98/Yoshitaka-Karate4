@@ -34,8 +34,16 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
 
   useEffect(() => {
     let active = true;
-    api.get("/cms/pages/idcard-templates")
-      .then((r) => { if (active) setLiveTemplates(mergeTemplates(r.data?.content || {})); })
+    api.get("/idcard-templates")
+      .then((r) => {
+        if (!active) return;
+        // Convert list → keyed object so the existing merge helper still works.
+        const keyed = {};
+        for (const t of r.data || []) {
+          keyed[t.key] = { label: t.label, description: t.description, config: t.config || {} };
+        }
+        setLiveTemplates(mergeTemplates(keyed));
+      })
       .catch(() => {});
     return () => { active = false; };
   }, []);

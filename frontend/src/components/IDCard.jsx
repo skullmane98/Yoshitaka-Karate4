@@ -375,9 +375,9 @@ function cardPx(orientation) {
  * vertical), both sized to CR80 (85.6 × 53.98 mm). PDF export targets exactly
  * those dimensions so prints come out flush on standard blank cards.
  */
-export default function IDCard({ user, defaultOrientation = "horizontal" }) {
+export default function IDCard({ user, defaultOrientation = "horizontal", previewMode = false }) {
   const { user: currentUser } = useAuth();
-  const canDownload = ["admin", "super_admin"].includes(currentUser?.role);
+  const canDownload = !previewMode && ["admin", "super_admin"].includes(currentUser?.role);
   const [data, setData] = useState(null);
   const [design, setDesign] = useState(DEFAULTS);
   const [loading, setLoading] = useState(true);
@@ -393,19 +393,28 @@ export default function IDCard({ user, defaultOrientation = "horizontal" }) {
     (async () => {
       setLoading(true);
       try {
-        // 1) Resolve design (CMS + template + per-user overrides) so we know
-        //    which QR color to ask the server for.
-        const [idcardPage, templatesPage] = await Promise.all([
+        // 1) Resolve design (CMS + template defaults + per-user overrides).
+        //    Template list now comes from the dedicated `idcard_templates`
+        //    table (Path B) instead of the legacy CMS page.
+        const [idcardPage, templateList] = await Promise.all([
           api.get("/cms/pages/idcard").catch(() => null),
-          api.get("/cms/pages/idcard-templates").catch(() => null),
+          api.get("/idcard-templates").catch(() => null),
         ]);
         const globalCMS = idcardPage?.data?.content || {};
-        const cmsTemplates = templatesPage?.data?.content || {};
+        const cmsTemplates = {};
+        for (const t of templateList?.data || []) {
+          cmsTemplates[t.key] = { label: t.label, description: t.description, config: t.config || {} };
+        }
         const merged = { ...DEFAULTS, ...resolveIDCardDesign(globalCMS, user, cmsTemplates) };
         if (!active) return;
         setDesign(merged);
 
-        // 2) Fetch the QR PNG in the requested color.
+        // 2) Fetch the QR PNG in the requested color. Skipped in preview mode
+        //    so the editor doesn't hit a 404 for the fake preview user.
+        if (previewMode) {
+          if (active) setData(null);
+          return;
+        }
         const qrColor = merged.qr_color || "#D7263D";
         const qr = await api.get(`/users/${user.id}/qrcode`, {
           params: { color: qrColor },
@@ -418,7 +427,7 @@ export default function IDCard({ user, defaultOrientation = "horizontal" }) {
     })();
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, user?.idcard_template, user?.idcard_overrides, user?.qr_code]);
+  }, [user?.id, user?.idcard_template, JSON.stringify(user?.idcard_overrides || {}), user?.qr_code, previewMode]);
 
   // Compute the scale factor whenever the wrapper resizes so the card always
   // fills the available width while keeping CR80 aspect ratio.

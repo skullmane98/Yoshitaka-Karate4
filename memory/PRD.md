@@ -84,7 +84,21 @@ super_admin → admin → renshi → sensei → team_member → student
     - Super admin → CMS tab → "ID Card Templates" panel
     - Admin → ID Card tab → "Edit Templates" button
   - Verified end-to-end: edited Student template's title + pill bg → saved → API round-trip confirmed → defaults persist
-- **[Path B backlog — not started]** Full templates CRUD (new DB table, dynamic list, create/duplicate/delete custom templates) — to be scheduled separately
+- **[2026-02-28] Feature — Path B: Full ID-card templates CRUD + live preview editor**
+  - New SQLModel table `idcard_templates` (`key`, `label`, `description`, `config` JSON, `is_builtin`, `sort_order`, timestamps) — built-ins (`student` / `team_class` / `sensei`) auto-seed on boot and stay protected from deletion
+  - Five new REST endpoints (all gated by `cms.edit_idcard` permission):
+    - `GET  /api/idcard-templates` — list all
+    - `POST /api/idcard-templates` — create (validates slug regex, 409 on duplicate)
+    - `PATCH /api/idcard-templates/{key}` — partial update
+    - `POST /api/idcard-templates/{key}/duplicate` — auto-generates unique key like `student_copy`, `student_copy_2`
+    - `DELETE /api/idcard-templates/{key}` — refuses built-ins; unassigns the template from any users still pointing at it
+  - Rewrote `IDCardTemplateEditor.jsx` as a **3-column layout**:
+    - Left: searchable list with `New Template`, `Duplicate`, `Delete` actions; lock icons on built-ins
+    - Middle: friendly form with all design fields (no raw JSON)
+    - Right: **live mini ID card preview** that updates on every keystroke (uses a fake "Sample Member" user; `IDCard` got a `previewMode` prop that skips the QR API fetch)
+  - `New Template` modal auto-derives a URL-safe slug from the display name
+  - `UserDrawer` template dropdown now fetches from `/idcard-templates` so newly-created templates appear immediately
+  - Verified end-to-end via Playwright: create / duplicate / delete / live preview title + pill all working; built-in delete properly returns 400
 
 ## Backlog
 ### P1

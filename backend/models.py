@@ -225,3 +225,34 @@ class BlogPost(SQLModel, table=True):
         default_factory=_utcnow,
         sa_column=Column(DateTime(timezone=False), nullable=False),
     )
+
+
+
+# ---------------------------------------------------------------------------
+# ID Card Templates
+# ---------------------------------------------------------------------------
+class IDCardTemplate(SQLModel, table=True):
+    """Per-template ID-card defaults, editable by admin/super_admin.
+
+    The 3 built-in templates (student / team_class / sensei) are seeded with
+    `is_builtin=True` and cannot be deleted — only edited. Admins can also
+    create unlimited custom templates (e.g. "Black Belt Society", "Tournament
+    Team", "Guest Pass") with arbitrary keys, then delete / duplicate them.
+    """
+
+    __tablename__ = "idcard_templates"
+
+    key: str = Field(primary_key=True, max_length=64)
+    label: str = Field(max_length=128)
+    description: Optional[str] = Field(default=None, sa_column=Column(Text))
+    config: dict = Field(default_factory=dict, sa_column=Column(JSON))
+    is_builtin: bool = Field(default=False)
+    sort_order: int = Field(default=100)
+    created_at: datetime = Field(
+        default_factory=_utcnow,
+        sa_column=Column(DateTime(timezone=False), nullable=False),
+    )
+    updated_at: datetime = Field(
+        default_factory=_utcnow,
+        sa_column=Column(DateTime(timezone=False), nullable=False),
+    )

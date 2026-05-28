@@ -3,6 +3,7 @@ import api from "@/lib/api";
 import { Loader2, Download, RotateCw } from "lucide-react";
 import { LOGO_URL } from "@/lib/brand";
 import { resolveIDCardDesign } from "@/lib/idcardTemplates";
+import { useAuth } from "@/context/AuthContext";
 import jsPDF from "jspdf";
 
 // Convert px (UI font size) → pt (jsPDF font size). 1 pt = 1.333 px.
@@ -107,7 +108,7 @@ async function drawHorizontalCardOnPdf(pdf, ctx) {
 
   drawTitleWithPill(pdf, design.certificate_title, MARGIN + 11, MARGIN + TOP_PAD + 8, {
     fontSize: 12,
-    color: { r: 15, g: 15, b: 15 },
+    color: hexToRgb(design.title_text_color || "#0F0F0F"),
     bgColor: design.title_bg_color,
   });
 
@@ -219,7 +220,7 @@ async function drawVerticalCardOnPdf(pdf, ctx) {
     const tw = pdf.getTextWidth(String(design.certificate_title || ""));
     drawTitleWithPill(pdf, design.certificate_title, W / 2 - tw / 2, MARGIN + 19, {
       fontSize,
-      color: { r: 15, g: 15, b: 15 },
+      color: hexToRgb(design.title_text_color || "#0F0F0F"),
       bgColor: design.title_bg_color,
     });
   }
@@ -375,6 +376,8 @@ function cardPx(orientation) {
  * those dimensions so prints come out flush on standard blank cards.
  */
 export default function IDCard({ user, defaultOrientation = "horizontal" }) {
+  const { user: currentUser } = useAuth();
+  const canDownload = ["admin", "super_admin"].includes(currentUser?.role);
   const [data, setData] = useState(null);
   const [design, setDesign] = useState(DEFAULTS);
   const [loading, setLoading] = useState(true);
@@ -543,12 +546,17 @@ export default function IDCard({ user, defaultOrientation = "horizontal" }) {
 
       <button
         onClick={exportPDF}
-        disabled={exporting || loading}
+        disabled={exporting || loading || !canDownload}
         className="btn-outline w-full flex items-center justify-center gap-2"
         data-testid="idcard-pdf-btn"
+        title={canDownload ? "" : "Only admins can download printable ID cards"}
       >
         <Download size={14} />
-        {exporting ? "Generating PDF…" : `Download CR80 ${orientation === "vertical" ? "Portrait" : "Landscape"} PDF`}
+        {!canDownload
+          ? "Download disabled — admin only"
+          : exporting
+            ? "Generating PDF…"
+            : `Download CR80 ${orientation === "vertical" ? "Portrait" : "Landscape"} PDF`}
       </button>
       <div className="text-[10px] text-[var(--dojo-ink-soft)] flex items-center gap-1">
         <RotateCw size={10} /> Print at 100% scale on a CR80 blank card (85.6 × 53.98 mm).
@@ -620,7 +628,7 @@ function HorizontalLayout({ user, design, data, loading, logoSrc }) {
             <div className="uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)] mb-1 truncate" style={{ fontSize: pxOf(design, "dojo_name"), lineHeight: 1.4 }}>
               {design.dojo_name}
             </div>
-            <div className="font-serif font-medium tracking-tight truncate" style={{ fontSize: pxOf(design, "certificate_title"), lineHeight: 1.25 }}>
+            <div className="font-serif font-medium tracking-tight truncate" style={{ fontSize: pxOf(design, "certificate_title"), lineHeight: 1.25, color: design.title_text_color || undefined }}>
               <TitlePill bg={design.title_bg_color}>{design.certificate_title}</TitlePill>
             </div>
           </div>
@@ -714,7 +722,7 @@ function VerticalLayout({ user, design, data, loading, logoSrc }) {
       <div className="uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "dojo_name"), lineHeight: 1.4 }}>
         {design.dojo_name}
       </div>
-      <div className="font-serif font-medium tracking-tight mt-1" style={{ fontSize: pxOf(design, "certificate_title"), lineHeight: 1.25 }}>
+      <div className="font-serif font-medium tracking-tight mt-1" style={{ fontSize: pxOf(design, "certificate_title"), lineHeight: 1.25, color: design.title_text_color || undefined }}>
         <TitlePill bg={design.title_bg_color}>{design.certificate_title}</TitlePill>
       </div>
 

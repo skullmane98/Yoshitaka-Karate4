@@ -227,7 +227,7 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                   <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Custom overrides (this user only)</div>
                   {[
                     ["dojo_name", "Dojo Name"],
-                    ["certificate_title", "Certificate Title"],
+                    ["certificate_title", "Member Title"],
                     ["kanji_top", "Kanji (top)"],
                     ["kanji_bottom", "Kanji (bottom)"],
                     ["issued_text", "Issued footer"],
@@ -301,6 +301,30 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                         onClick={() => setOverride("title_bg_color", "")}
                         className="text-[10px] uppercase tracking-[0.18em] px-2 py-1 border border-[var(--dojo-border)] hover:border-[var(--dojo-ink)]"
                         data-testid="user-title-bg-clear"
+                      >Clear</button>
+                    </div>
+                  </Field>
+                  <Field label="Member Title Text Color" hint="Color of the certificate title text itself.">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={(draft.idcard_overrides || {}).title_text_color || "#0F0F0F"}
+                        onChange={(e) => setOverride("title_text_color", e.target.value)}
+                        className="h-10 w-16 border border-[var(--dojo-border)]"
+                        data-testid="user-title-text-picker"
+                      />
+                      <input
+                        className="input flex-1"
+                        value={(draft.idcard_overrides || {}).title_text_color || ""}
+                        onChange={(e) => setOverride("title_text_color", e.target.value)}
+                        placeholder="#0F0F0F"
+                        data-testid="user-title-text-input"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setOverride("title_text_color", "")}
+                        className="text-[10px] uppercase tracking-[0.18em] px-2 py-1 border border-[var(--dojo-border)] hover:border-[var(--dojo-ink)]"
+                        data-testid="user-title-text-clear"
                       >Clear</button>
                     </div>
                   </Field>

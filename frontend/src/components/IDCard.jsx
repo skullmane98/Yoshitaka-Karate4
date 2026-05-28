@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import api from "@/lib/api";
 import { Loader2, Download, RotateCw } from "lucide-react";
 import { LOGO_URL } from "@/lib/brand";
-import { resolveIDCardDesign } from "@/lib/idcardTemplates";
+import { resolveIDCardDesign, mergeTemplates } from "@/lib/idcardTemplates";
 import { useAuth } from "@/context/AuthContext";
 import jsPDF from "jspdf";
 
@@ -395,9 +395,13 @@ export default function IDCard({ user, defaultOrientation = "horizontal" }) {
       try {
         // 1) Resolve design (CMS + template + per-user overrides) so we know
         //    which QR color to ask the server for.
-        const idcardPage = await api.get("/cms/pages/idcard").catch(() => null);
+        const [idcardPage, templatesPage] = await Promise.all([
+          api.get("/cms/pages/idcard").catch(() => null),
+          api.get("/cms/pages/idcard-templates").catch(() => null),
+        ]);
         const globalCMS = idcardPage?.data?.content || {};
-        const merged = { ...DEFAULTS, ...resolveIDCardDesign(globalCMS, user) };
+        const cmsTemplates = templatesPage?.data?.content || {};
+        const merged = { ...DEFAULTS, ...resolveIDCardDesign(globalCMS, user, cmsTemplates) };
         if (!active) return;
         setDesign(merged);
 

@@ -74,6 +74,17 @@ super_admin → admin → renshi → sensei → team_member → student
   - DOM: `<TitlePill>` wrapper component honors the bg color and falls back to plain text when blank
   - PDF: new `drawTitleWithPill()` helper measures text width via `getTextWidth()`, draws a hugging filled rect, then text on top — works on both horizontal and vertical layouts
   - Verified end-to-end with `pdftoppm`: ~1800 hot-pink pixels rendered in the PDF top-third matching the live preview
+- **[2026-02-28] Feature — Path A templates (editable defaults)**
+  - PDF download button now gated to admin / super_admin only (regular users see "Download disabled — admin only" tooltip)
+  - "Certificate Title" UI label renamed to "Member Title" everywhere; added per-user `title_text_color` override (color picker + text input + Clear) — applies to DOM and PDF
+  - New backend CMS page `idcard-templates` auto-seeds on boot containing Student/Team Class/Sensei templates with editable defaults (`certificate_title`, kanji, accent_color, title_bg_color, title_text_color, all labels)
+  - Backend gates PUT for `idcard-templates` slug behind `cms.edit_idcard` permission (same as `idcard`)
+  - Frontend `resolveIDCardDesign()` merges CMS templates on top of JS fallback, so editing template defaults applies to every user assigned that template (per-user `idcard_overrides` still take priority)
+  - New `IDCardTemplateEditor.jsx` modal — tabbed UI for Student / Team / Sensei with friendly form (no raw JSON), opened from a button in:
+    - Super admin → CMS tab → "ID Card Templates" panel
+    - Admin → ID Card tab → "Edit Templates" button
+  - Verified end-to-end: edited Student template's title + pill bg → saved → API round-trip confirmed → defaults persist
+- **[Path B backlog — not started]** Full templates CRUD (new DB table, dynamic list, create/duplicate/delete custom templates) — to be scheduled separately
 
 ## Backlog
 ### P1

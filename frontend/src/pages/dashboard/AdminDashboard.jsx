@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Copy, Trash2, Plus, X, Mail } from "lucide-react";
 import { toast } from "sonner";
 import IDCard from "@/components/IDCard";
+import IDCardTemplateEditor from "@/components/IDCardTemplateEditor";
 import { getEditorForSlug } from "@/components/CMSEditors";
 import AttendancePanel from "@/components/AttendancePanel";
 import NotificationsPanel from "@/components/NotificationsPanel";
@@ -31,6 +32,7 @@ export default function AdminDashboard({ isSuper = false }) {
   const [addingUser, setAddingUser] = useState(false);
   const [payFor, setPayFor] = useState(null);
   const [editingPage, setEditingPage] = useState(null);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
 
   const reload = async () => {
     const [u, c, p, s] = await Promise.all([
@@ -146,7 +148,7 @@ export default function AdminDashboard({ isSuper = false }) {
       {tab === "permissions" && isSuper && <PermissionsPanel />}
 
       {tab === "cms" && isSuper && (
-        <CMSPanel pages={pages} onEdit={setEditingPage} />
+        <CMSPanel pages={pages} onEdit={setEditingPage} onOpenTemplates={() => setTemplatesOpen(true)} />
       )}
 
       {tab === "idcard" && !isSuper && (() => {
@@ -157,18 +159,32 @@ export default function AdminDashboard({ isSuper = false }) {
           updated_at: new Date().toISOString(),
         };
         return (
-          <div className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-6 max-w-3xl">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Customize</div>
-                <h2 className="font-serif text-2xl">Member ID Card Design</h2>
+          <div className="space-y-4 max-w-3xl">
+            <div className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Customize</div>
+                  <h2 className="font-serif text-2xl">Member ID Card Design</h2>
+                </div>
+                <button onClick={() => setEditingPage(idcardPage)} className="btn-primary" data-testid="open-idcard-editor">Edit Global Design</button>
               </div>
-              <button onClick={() => setEditingPage(idcardPage)} className="btn-primary" data-testid="open-idcard-editor">Edit Design</button>
+              <p className="text-sm text-[var(--dojo-ink-soft)]">
+                Edit the labels, kanji, accent color, dojo logo, and background image used on every member's certificate.
+                Changes apply instantly to every student's dashboard.
+              </p>
             </div>
-            <p className="text-sm text-[var(--dojo-ink-soft)]">
-              Edit the labels, kanji, accent color, dojo logo, and background image used on every member's certificate.
-              Changes apply instantly to every student's dashboard.
-            </p>
+            <div className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Per-template defaults</div>
+                  <h3 className="font-serif text-xl">Edit Student / Team Class / Sensei templates</h3>
+                </div>
+                <button onClick={() => setTemplatesOpen(true)} className="btn-outline" data-testid="open-template-editor">Edit Templates</button>
+              </div>
+              <p className="text-sm text-[var(--dojo-ink-soft)]">
+                Tweak the title, kanji, colors, and labels per template. Edits apply automatically to every user assigned that template — individual user overrides still take priority.
+              </p>
+            </div>
           </div>
         );
       })()}
@@ -193,6 +209,9 @@ export default function AdminDashboard({ isSuper = false }) {
       )}
       {editingPage && (
         <EditPageModal page={editingPage} onClose={() => setEditingPage(null)} onSaved={() => { setEditingPage(null); reload(); }} />
+      )}
+      {templatesOpen && (
+        <IDCardTemplateEditor onClose={() => setTemplatesOpen(false)} />
       )}
     </DashboardLayout>
   );
@@ -456,17 +475,29 @@ function PaymentsPanel({ payments, onReload, users, onNew }) {
   );
 }
 
-function CMSPanel({ pages, onEdit }) {
+function CMSPanel({ pages, onEdit, onOpenTemplates }) {
   return (
-    <div className="grid md:grid-cols-2 gap-4" data-testid="cms-panel">
-      {pages.map((p) => (
-        <div key={p.slug} className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-6 flex flex-col" data-testid={`cms-page-${p.slug}`}>
-          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] mb-2">/{p.slug}</div>
-          <h3 className="font-serif text-2xl mb-2">{p.title}</h3>
-          <div className="text-xs text-[var(--dojo-ink-soft)] mb-4">Last updated {new Date(p.updated_at).toLocaleString()}</div>
-          <button className="btn-outline self-start" onClick={() => onEdit(p)} data-testid={`edit-page-${p.slug}`}>Edit Content</button>
+    <div className="space-y-6" data-testid="cms-panel">
+      <div className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-6 flex items-center justify-between">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] mb-1">Per-template defaults</div>
+          <h3 className="font-serif text-xl">ID Card Templates</h3>
+          <p className="text-xs text-[var(--dojo-ink-soft)] mt-1 max-w-xl">
+            Edit Student / Team Class / Sensei templates — title, kanji, colors, labels. Changes apply to every user assigned that template.
+          </p>
         </div>
-      ))}
+        <button className="btn-primary" onClick={onOpenTemplates} data-testid="open-template-editor">Edit Templates</button>
+      </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        {pages.map((p) => (
+          <div key={p.slug} className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-6 flex flex-col" data-testid={`cms-page-${p.slug}`}>
+            <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] mb-2">/{p.slug}</div>
+            <h3 className="font-serif text-2xl mb-2">{p.title}</h3>
+            <div className="text-xs text-[var(--dojo-ink-soft)] mb-4">Last updated {new Date(p.updated_at).toLocaleString()}</div>
+            <button className="btn-outline self-start" onClick={() => onEdit(p)} data-testid={`edit-page-${p.slug}`}>Edit Content</button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

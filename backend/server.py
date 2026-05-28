@@ -1413,6 +1413,71 @@ DEFAULT_PAGES = {
             "background_url": "",
         },
     },
+    # Editable per-template defaults. The shape mirrors the JS fallback in
+    # `frontend/src/lib/idcardTemplates.js` — admins can tweak any field
+    # here and changes apply to every user assigned that template.
+    "idcard-templates": {
+        "title": "ID Card Templates",
+        "content": {
+            "student": {
+                "label": "Student",
+                "description": "Standard member certificate.",
+                "config": {
+                    "dojo_name": "Yoshitaka Karate-Do",
+                    "certificate_title": "Student Member",
+                    "kanji_top": "学生",
+                    "kanji_bottom": "義孝",
+                    "issued_text": "Issued · Yoshitaka Dojo",
+                    "scan_text": "Scan to verify",
+                    "name_label": "Member",
+                    "role_label": "Role",
+                    "rank_label": "Rank",
+                    "footer_label": "Member No.",
+                    "accent_color": "#D7263D",
+                    "title_bg_color": "#FFF1D6",
+                    "title_text_color": "#0F0F0F",
+                },
+            },
+            "team_class": {
+                "label": "Team Class",
+                "description": "For students enrolled in special team / competition track.",
+                "config": {
+                    "dojo_name": "Yoshitaka Karate-Do",
+                    "certificate_title": "Team Class Member",
+                    "kanji_top": "選手",
+                    "kanji_bottom": "義孝",
+                    "issued_text": "Team Class · Yoshitaka Dojo",
+                    "scan_text": "Scan to verify",
+                    "name_label": "Athlete",
+                    "role_label": "Track",
+                    "rank_label": "Rank",
+                    "footer_label": "Roster No.",
+                    "accent_color": "#1E5BA8",
+                    "title_bg_color": "#DBE8F7",
+                    "title_text_color": "#0F0F0F",
+                },
+            },
+            "sensei": {
+                "label": "Sensei",
+                "description": "For instructors (Sensei / Renshi / Team Member).",
+                "config": {
+                    "dojo_name": "Yoshitaka Karate-Do",
+                    "certificate_title": "Instructor Credential",
+                    "kanji_top": "先生",
+                    "kanji_bottom": "義孝",
+                    "issued_text": "Faculty · Yoshitaka Dojo",
+                    "scan_text": "Scan to verify",
+                    "name_label": "Instructor",
+                    "role_label": "Title",
+                    "rank_label": "Dan / Rank",
+                    "footer_label": "Faculty No.",
+                    "accent_color": "#0F0F0F",
+                    "title_bg_color": "#EAEAEA",
+                    "title_text_color": "#0F0F0F",
+                },
+            },
+        },
+    },
 }
 
 
@@ -1448,7 +1513,7 @@ async def update_cms_page(
     session: AsyncSession = Depends(get_session),
 ):
     from features import _user_has_permission  # local to avoid circular import
-    if slug == "idcard":
+    if slug in ("idcard", "idcard-templates"):
         if not await _user_has_permission(session, current, "cms.edit_idcard"):
             raise HTTPException(status_code=403, detail="Missing permission: cms.edit_idcard")
     else:

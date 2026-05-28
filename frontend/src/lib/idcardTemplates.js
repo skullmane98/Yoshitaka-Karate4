@@ -2,6 +2,10 @@
 // Each template defines the labels, accent color, and kanji defaults used
 // when an admin selects that template for a user.
 // Per-user overrides (`idcard_overrides`) stack on top of the template.
+//
+// IMPORTANT: this is the fallback only. The live source of truth is the
+// `idcard-templates` CMS page, editable by admin/super_admin. The helpers
+// below merge that page on top of these defaults.
 
 export const IDCARD_TEMPLATES = {
   student: {
@@ -19,7 +23,8 @@ export const IDCARD_TEMPLATES = {
       rank_label: "Rank",
       footer_label: "Member No.",
       accent_color: "#D7263D",
-      title_bg_color: "#FFF1D6",  // warm cream — readable against any background image
+      title_bg_color: "#FFF1D6",
+      title_text_color: "#0F0F0F",
     },
   },
   team_class: {
@@ -37,7 +42,8 @@ export const IDCARD_TEMPLATES = {
       rank_label: "Rank",
       footer_label: "Roster No.",
       accent_color: "#1E5BA8",
-      title_bg_color: "#DBE8F7",  // light steel-blue tint of the team accent
+      title_bg_color: "#DBE8F7",
+      title_text_color: "#0F0F0F",
     },
   },
   sensei: {
@@ -55,15 +61,40 @@ export const IDCARD_TEMPLATES = {
       rank_label: "Dan / Rank",
       footer_label: "Faculty No.",
       accent_color: "#0F0F0F",
-      title_bg_color: "#EAEAEA",  // soft warm gray for the formal faculty card
+      title_bg_color: "#EAEAEA",
+      title_text_color: "#0F0F0F",
     },
   },
 };
 
-export function resolveIDCardDesign(globalCMS, user) {
+/**
+ * Merge live (CMS-stored) template config on top of the JS fallback so
+ * editing a template's defaults via the Templates editor takes effect
+ * for every user assigned that template.
+ */
+export function mergeTemplates(cmsTemplates) {
+  const out = {};
+  const keys = new Set([
+    ...Object.keys(IDCARD_TEMPLATES),
+    ...Object.keys(cmsTemplates || {}),
+  ]);
+  for (const k of keys) {
+    const fallback = IDCARD_TEMPLATES[k] || {};
+    const cms = (cmsTemplates && cmsTemplates[k]) || {};
+    out[k] = {
+      label: cms.label || fallback.label || k,
+      description: cms.description || fallback.description || "",
+      config: { ...(fallback.config || {}), ...(cms.config || {}) },
+    };
+  }
+  return out;
+}
+
+export function resolveIDCardDesign(globalCMS, user, cmsTemplates) {
   const base = globalCMS || {};
+  const merged = mergeTemplates(cmsTemplates);
   const tmplKey = user?.idcard_template;
-  const tmpl = tmplKey && IDCARD_TEMPLATES[tmplKey] ? IDCARD_TEMPLATES[tmplKey].config : {};
+  const tmpl = tmplKey && merged[tmplKey] ? merged[tmplKey].config : {};
   const userOverrides = user?.idcard_overrides || {};
   return { ...base, ...tmpl, ...userOverrides };
 }

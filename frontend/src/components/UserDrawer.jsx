@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api, { formatApiError } from "@/lib/api";
 import IDCard, { FONT_SIZE_PRESETS } from "@/components/IDCard";
 import { BELT_NAMES } from "@/lib/belts";
-import { IDCARD_TEMPLATES } from "@/lib/idcardTemplates";
+import { IDCARD_TEMPLATES, mergeTemplates } from "@/lib/idcardTemplates";
 import { X, Save, KeyRound, RefreshCcw } from "lucide-react";
 
 /**
@@ -28,8 +28,17 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
   const [pw, setPw] = useState("");
   const [qrPng, setQrPng] = useState("");
   const [qrBusy, setQrBusy] = useState(false);
+  const [liveTemplates, setLiveTemplates] = useState(() => mergeTemplates(null));
 
   useEffect(() => { setDraft(user); }, [user]);
+
+  useEffect(() => {
+    let active = true;
+    api.get("/cms/pages/idcard-templates")
+      .then((r) => { if (active) setLiveTemplates(mergeTemplates(r.data?.content || {})); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -220,7 +229,7 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                 <Field label="Template" hint="Pick a starting design. Per-user overrides stack on top.">
                   <select className="input" value={draft.idcard_template || ""} onChange={(e) => set("idcard_template", e.target.value || null)} data-testid="idcard-template-select">
                     <option value="">— Default (CMS) —</option>
-                    {Object.entries(IDCARD_TEMPLATES).map(([k, v]) => <option key={k} value={k}>{v.label} — {v.description}</option>)}
+                    {Object.entries(liveTemplates).map(([k, v]) => <option key={k} value={k}>{v.label} — {v.description}</option>)}
                   </select>
                 </Field>
                 <div className="border border-[var(--dojo-border)] p-4 space-y-3">

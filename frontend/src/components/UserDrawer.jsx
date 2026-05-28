@@ -280,6 +280,30 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                       />
                     </div>
                   </Field>
+                  <Field label="Certificate Title Background" hint="Soft pill drawn behind the title so it stays readable on busy backgrounds. Leave blank for none.">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={(draft.idcard_overrides || {}).title_bg_color || "#FFF1D6"}
+                        onChange={(e) => setOverride("title_bg_color", e.target.value)}
+                        className="h-10 w-16 border border-[var(--dojo-border)]"
+                        data-testid="user-title-bg-picker"
+                      />
+                      <input
+                        className="input flex-1"
+                        value={(draft.idcard_overrides || {}).title_bg_color || ""}
+                        onChange={(e) => setOverride("title_bg_color", e.target.value)}
+                        placeholder="#FFF1D6 (or blank for none)"
+                        data-testid="user-title-bg-input"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setOverride("title_bg_color", "")}
+                        className="text-[10px] uppercase tracking-[0.18em] px-2 py-1 border border-[var(--dojo-border)] hover:border-[var(--dojo-ink)]"
+                        data-testid="user-title-bg-clear"
+                      >Clear</button>
+                    </div>
+                  </Field>
 
                   {/* Photo + QR size sliders */}
                   <div className="border-t border-dashed border-[var(--dojo-border)] pt-3 mt-1 space-y-3" data-testid="user-idcard-sizes">

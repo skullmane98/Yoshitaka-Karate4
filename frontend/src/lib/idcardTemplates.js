@@ -19,6 +19,7 @@ export const IDCARD_TEMPLATES = {
       rank_label: "Rank",
       footer_label: "Member No.",
       accent_color: "#D7263D",
+      title_bg_color: "#FFF1D6",  // warm cream — readable against any background image
     },
   },
   team_class: {
@@ -36,6 +37,7 @@ export const IDCARD_TEMPLATES = {
       rank_label: "Rank",
       footer_label: "Roster No.",
       accent_color: "#1E5BA8",
+      title_bg_color: "#DBE8F7",  // light steel-blue tint of the team accent
     },
   },
   sensei: {
@@ -53,6 +55,7 @@ export const IDCARD_TEMPLATES = {
       rank_label: "Dan / Rank",
       footer_label: "Faculty No.",
       accent_color: "#0F0F0F",
+      title_bg_color: "#EAEAEA",  // soft warm gray for the formal faculty card
     },
   },
 };

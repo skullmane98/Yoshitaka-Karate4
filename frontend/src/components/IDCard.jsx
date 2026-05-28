@@ -105,10 +105,11 @@ async function drawHorizontalCardOnPdf(pdf, ctx) {
   pdf.setFontSize(6);
   pdf.text(String(design.dojo_name).toUpperCase(), MARGIN + 11, MARGIN + TOP_PAD + 3.2);
 
-  pdf.setFont("times", "normal");
-  pdf.setTextColor(15, 15, 15);
-  pdf.setFontSize(12);
-  pdf.text(String(design.certificate_title), MARGIN + 11, MARGIN + TOP_PAD + 8);
+  drawTitleWithPill(pdf, design.certificate_title, MARGIN + 11, MARGIN + TOP_PAD + 8, {
+    fontSize: 12,
+    color: { r: 15, g: 15, b: 15 },
+    bgColor: design.title_bg_color,
+  });
 
   // Top-right kanji (in accent color)
   const accent = hexToRgb(design.accent_color || "#D7263D");
@@ -209,8 +210,19 @@ async function drawVerticalCardOnPdf(pdf, ctx) {
   }
   pdf.setFont("helvetica", "normal"); pdf.setFontSize(5); pdf.setTextColor(74, 74, 74);
   pdf.text(String(design.dojo_name).toUpperCase(), W / 2, MARGIN + 15.5, { align: "center" });
-  pdf.setFont("times", "normal"); pdf.setFontSize(10); pdf.setTextColor(15, 15, 15);
-  pdf.text(String(design.certificate_title), W / 2, MARGIN + 19, { align: "center" });
+  // Vertical layout — same pill helper, but centred so we measure the text
+  // first then offset x by half the width.
+  {
+    const fontSize = 10;
+    pdf.setFont("times", "normal");
+    pdf.setFontSize(fontSize);
+    const tw = pdf.getTextWidth(String(design.certificate_title || ""));
+    drawTitleWithPill(pdf, design.certificate_title, W / 2 - tw / 2, MARGIN + 19, {
+      fontSize,
+      color: { r: 15, g: 15, b: 15 },
+      bgColor: design.title_bg_color,
+    });
+  }
 
   // Photo + QR row
   const PHOTO_W = 14 * (design.photo_size || 1);
@@ -274,6 +286,56 @@ function hexToRgb(hex) {
   return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
 }
 
+// Small DOM helper that wraps the certificate title in a colored pill when
+// `bg` is set. Falls back to plain text when bg is empty / missing so the
+// existing layout doesn't change unless a template/user opts in.
+function TitlePill({ bg, children }) {
+  if (!bg) return <>{children}</>;
+  return (
+    <span
+      style={{
+        backgroundColor: bg,
+        padding: "0.06em 0.45em",
+        borderRadius: "0.18em",
+        boxDecorationBreak: "clone",
+        WebkitBoxDecorationBreak: "clone",
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+// Draws the certificate title on the PDF, with an optional colored pill
+// behind it sized to hug the text. Returns where the title baseline was.
+function drawTitleWithPill(pdf, text, x, y, opts) {
+  const { font = "times", style = "normal", fontSize, color, bgColor } = opts;
+  pdf.setFont(font, style);
+  pdf.setFontSize(fontSize);
+  const txt = String(text || "");
+  const textW = pdf.getTextWidth(txt);
+  // jsPDF font size is in pt → mm conversion (1 pt = 0.3528 mm).
+  const fontMM = fontSize * 0.3528;
+  // Generous horizontal pad; tight vertical pad — looks like a tab badge.
+  const padX = fontMM * 0.35;
+  const padY = fontMM * 0.18;
+  if (bgColor) {
+    const rgb = hexToRgb(bgColor);
+    pdf.setFillColor(rgb.r, rgb.g, rgb.b);
+    // Text baseline is at y. Approximate cap-height as 0.72 of font size.
+    const capHeight = fontMM * 0.72;
+    pdf.rect(
+      x - padX,
+      y - capHeight - padY * 0.4,
+      textW + padX * 2,
+      capHeight + padY * 1.4,
+      "F"
+    );
+  }
+  pdf.setTextColor(color.r, color.g, color.b);
+  pdf.text(txt, x, y);
+}
+
 const DEFAULTS = {
   dojo_name: "Yoshitaka Karate-Do",
   certificate_title: "Member Certificate",
@@ -287,6 +349,9 @@ const DEFAULTS = {
   name_label: "Member",
   accent_color: "#D7263D",
   qr_color: "#D7263D",
+  // Soft colored pill drawn behind the certificate title so it stays
+  // readable against busy background images. Empty string = no pill.
+  title_bg_color: "",
   logo_url: "",
   background_url: "",
 };
@@ -556,7 +621,7 @@ function HorizontalLayout({ user, design, data, loading, logoSrc }) {
               {design.dojo_name}
             </div>
             <div className="font-serif font-medium tracking-tight truncate" style={{ fontSize: pxOf(design, "certificate_title"), lineHeight: 1.25 }}>
-              {design.certificate_title}
+              <TitlePill bg={design.title_bg_color}>{design.certificate_title}</TitlePill>
             </div>
           </div>
         </div>
@@ -650,7 +715,7 @@ function VerticalLayout({ user, design, data, loading, logoSrc }) {
         {design.dojo_name}
       </div>
       <div className="font-serif font-medium tracking-tight mt-1" style={{ fontSize: pxOf(design, "certificate_title"), lineHeight: 1.25 }}>
-        {design.certificate_title}
+        <TitlePill bg={design.title_bg_color}>{design.certificate_title}</TitlePill>
       </div>
 
       <div className="brush-divider w-full my-2" />

@@ -63,6 +63,17 @@ super_admin → admin → renshi → sensei → team_member → student
   - `drawHorizontalCardOnPdf` / `drawVerticalCardOnPdf` previously loaded logo/photo/QR only — `design.background_url` was rendered on the DOM preview but never on the exported PDF
   - Added `drawBackgroundWatermark()` helper: loads the image, draws it first at 40% opacity using a jsPDF `GState`, applies "cover" fit, and respects the `background_size` slider override
   - Verified end-to-end: rendered the generated PDF with `pdftoppm` and confirmed ~85% of sampled pixels match the test background color
+- **[2026-02-22] Bug fix — Member photo silently truncated on save**
+  - MySQL `photo_url` column was `TEXT` (~64 KB cap); base64 data URLs for typical member photos (>50 KB) got truncated → broken images after the first reload
+  - `models.py`: switched column type to `LONGTEXT` (4 GB) on MySQL via `with_variant`, `TEXT` retained on SQLite
+  - `db.py`: added idempotent `ALTER TABLE users MODIFY photo_url LONGTEXT NULL` migration that runs on every boot
+  - Verified: 815 KB base64 photo round-trips through DB intact (matched byte-for-byte before/after save)
+- **[2026-02-28] Feature — Certificate-title pill / badge**
+  - Each template now ships a tinted title-pill default (Student=warm cream, Team=light steel-blue, Sensei=warm gray) so the title stays legible against busy background images
+  - Per-user override (`title_bg_color` in `idcard_overrides`) wired into `UserDrawer` with color picker + text input + Clear button
+  - DOM: `<TitlePill>` wrapper component honors the bg color and falls back to plain text when blank
+  - PDF: new `drawTitleWithPill()` helper measures text width via `getTextWidth()`, draws a hugging filled rect, then text on top — works on both horizontal and vertical layouts
+  - Verified end-to-end with `pdftoppm`: ~1800 hot-pink pixels rendered in the PDF top-third matching the live preview
 
 ## Backlog
 ### P1

@@ -95,6 +95,16 @@ export function resolveIDCardDesign(globalCMS, user, cmsTemplates) {
   const merged = mergeTemplates(cmsTemplates);
   const tmplKey = user?.idcard_template;
   const tmpl = tmplKey && merged[tmplKey] ? merged[tmplKey].config : {};
-  const userOverrides = user?.idcard_overrides || {};
+  const userOverridesRaw = user?.idcard_overrides || {};
+  // Strip empty/whitespace-only override values so an unfilled drawer input
+  // doesn't shadow the template default. Numbers (0) and explicit `false`
+  // are kept — only blank strings and null/undefined are treated as "use
+  // the template's value".
+  const userOverrides = {};
+  for (const [k, v] of Object.entries(userOverridesRaw)) {
+    if (v === null || v === undefined) continue;
+    if (typeof v === "string" && v.trim() === "") continue;
+    userOverrides[k] = v;
+  }
   return { ...base, ...tmpl, ...userOverrides };
 }

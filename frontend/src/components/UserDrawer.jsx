@@ -168,12 +168,13 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
             <div className="space-y-4 max-w-2xl">
               <div className="grid md:grid-cols-2 gap-4">
                 <Field label="Full Name"><input className="input" value={draft.name || ""} onChange={(e) => set("name", e.target.value)} data-testid="user-name-input" /></Field>
-                <Field label="Email"><input className="input" type="email" value={draft.email || ""} onChange={(e) => set("email", e.target.value)} disabled={!isSuper} data-testid="user-email-input" /></Field>
+                <Field label="Email" hint="Optional — used for password resets and notifications."><input className="input" type="email" value={draft.email || ""} onChange={(e) => set("email", e.target.value)} disabled={!isSuper} placeholder="(optional)" data-testid="user-email-input" /></Field>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
-                <Field label="Username" hint="Lets the user log in without their email.">
+                <Field label="Username *" hint="Required. The login they'll type at sign-in.">
                   <input
                     className="input"
+                    required
                     value={draft.username || ""}
                     onChange={(e) => set("username", e.target.value.replace(/\s/g, "").toLowerCase())}
                     placeholder="e.g. johnsmith"

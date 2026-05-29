@@ -27,7 +27,9 @@ class User(SQLModel, table=True):
     __tablename__ = "users"
 
     id: str = Field(primary_key=True, max_length=36)
-    email: str = Field(index=True, unique=True, max_length=255)
+    # Email is optional now (admins can create username-only accounts).
+    # UNIQUE on a nullable column lets MySQL/SQLite store multiple NULLs.
+    email: Optional[str] = Field(default=None, index=True, unique=True, max_length=255)
     username: Optional[str] = Field(default=None, max_length=64, index=True, unique=True)
     password_hash: str = Field(max_length=255)
     name: str = Field(max_length=255)

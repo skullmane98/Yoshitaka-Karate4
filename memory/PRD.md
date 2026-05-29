@@ -98,7 +98,14 @@ super_admin → admin → renshi → sensei → team_member → student
     - Right: **live mini ID card preview** that updates on every keystroke (uses a fake "Sample Member" user; `IDCard` got a `previewMode` prop that skips the QR API fetch)
   - `New Template` modal auto-derives a URL-safe slug from the display name
   - `UserDrawer` template dropdown now fetches from `/idcard-templates` so newly-created templates appear immediately
-  - Verified end-to-end via Playwright: create / duplicate / delete / live preview title + pill all working; built-in delete properly returns 400
+  - **[2026-02-29] follow-up:** added Card Background Image upload to the template editor (image preview + Remove button) so admins can attach a watermark per template; full-width row layout
+  - Verified end-to-end via Playwright: create / duplicate / delete / live preview title + pill / bg image upload all working; built-in delete properly returns 400
+- **[2026-02-29] Feature — Username required, Email optional**
+  - DB: `users.email` is now `Optional[str]` with the existing UNIQUE index (MySQL + SQLite both allow multiple NULLs on a nullable UNIQUE column). MySQL migration `ALTER TABLE users MODIFY email VARCHAR(255) NULL` runs idempotently on boot.
+  - Pydantic: `UserCreateRequest` + `RegisterRequest` now require `username` and accept `email` as `Optional[EmailStr]`. `UserPublic` returns `email: Optional[EmailStr]`.
+  - Server logic: both creation endpoints validate uniqueness only when email is provided; JWT issuance handles `email=None` by encoding an empty string in the claim.
+  - Frontend: `AddUserModal` flipped (Username `*` required, Email optional with placeholder `(optional)`); `UserDrawer` matches.
+  - Verified: `POST /api/users` without email returns 200, login by username works for email-less users, missing username returns 422.
 
 ## Backlog
 ### P1

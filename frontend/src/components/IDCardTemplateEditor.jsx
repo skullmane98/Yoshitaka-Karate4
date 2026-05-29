@@ -28,6 +28,7 @@ const FIELDS = [
   ["accent_color", "Accent color", "color"],
   ["title_bg_color", "Title pill background", "color"],
   ["title_text_color", "Title text color", "color"],
+  ["background_url", "Card background image", "image"],
 ];
 
 // Fake user used to render the live mini preview. The IDCard component
@@ -209,7 +210,7 @@ export default function IDCardTemplateEditor({ onClose }) {
                 <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] pt-2 border-t border-[var(--dojo-border)]">Default fields (apply to every user on this template)</div>
                 <div className="grid grid-cols-2 gap-3">
                   {FIELDS.map(([key, label, type]) => (
-                    <Field key={key} label={label}>
+                    <Field key={key} label={label} colSpan={type === "image" ? 2 : undefined}>
                       {type === "color" ? (
                         <div className="flex items-center gap-2">
                           <input
@@ -226,6 +227,38 @@ export default function IDCardTemplateEditor({ onClose }) {
                             placeholder="#RRGGBB"
                             data-testid={`template-field-${key}-input`}
                           />
+                        </div>
+                      ) : type === "image" ? (
+                        <div className="flex items-center gap-3 flex-wrap">
+                          {draftConfig[key] && (
+                            <img
+                              src={draftConfig[key]}
+                              alt="Background preview"
+                              className="h-16 w-24 object-cover border border-[var(--dojo-border)]"
+                            />
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (!f) return;
+                              if (f.size > 1.5 * 1024 * 1024) { alert("Image must be under 1.5 MB"); return; }
+                              const r = new FileReader();
+                              r.onload = () => setField(key, r.result);
+                              r.readAsDataURL(f);
+                            }}
+                            className="text-sm"
+                            data-testid={`template-field-${key}-upload`}
+                          />
+                          {draftConfig[key] && (
+                            <button
+                              type="button"
+                              onClick={() => setField(key, "")}
+                              className="text-xs text-[var(--dojo-hinomaru)] underline"
+                              data-testid={`template-field-${key}-clear`}
+                            >Remove</button>
+                          )}
                         </div>
                       ) : (
                         <input
@@ -335,9 +368,9 @@ function NewTemplateModal({ onCancel, onCreated }) {
   );
 }
 
-function Field({ label, hint, children }) {
+function Field({ label, hint, colSpan, children }) {
   return (
-    <div>
+    <div className={colSpan === 2 ? "col-span-2" : ""}>
       <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-1.5">{label}</label>
       {children}
       {hint && <div className="text-[10px] text-[var(--dojo-ink-soft)] mt-1">{hint}</div>}

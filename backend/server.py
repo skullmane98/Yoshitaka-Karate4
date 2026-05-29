@@ -161,7 +161,7 @@ Role = Literal["super_admin", "admin", "student"]
 
 class UserPublic(BaseModel):
     id: str
-    email: EmailStr
+    email: Optional[EmailStr] = None
     username: Optional[str] = None
     name: str
     role: Role
@@ -183,10 +183,11 @@ class UserPublic(BaseModel):
 
 
 class RegisterRequest(BaseModel):
-    email: EmailStr
+    username: str  # required
     password: str = Field(min_length=6)
     name: str
     access_code: str
+    email: Optional[EmailStr] = None
     phone: Optional[str] = None
 
 
@@ -215,10 +216,14 @@ class UserUpdateRequest(BaseModel):
 
 
 class UserCreateRequest(BaseModel):
-    """Admin/super_admin manual user creation. No access code required."""
+    """Admin/super_admin manual user creation. No access code required.
+
+    Username is required. Email is optional — admins can create
+    username-only accounts (useful for kids without their own email).
+    """
     name: str
-    email: EmailStr
-    username: Optional[str] = None
+    username: str  # required
+    email: Optional[EmailStr] = None
     password: str = Field(min_length=6)
     role: Role = "student"
     phone: Optional[str] = None
@@ -333,10 +338,10 @@ def verify_password(plain: str, hashed: str) -> bool:
         return False
 
 
-def create_access_token(user_id: str, email: str, role: str) -> str:
+def create_access_token(user_id: str, email: Optional[str], role: str) -> str:
     payload = {
         "sub": user_id,
-        "email": email,
+        "email": email or "",
         "role": role,
         "exp": datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
         "type": "access",
@@ -492,8 +497,14 @@ async def register(
     response: Response,
     session: AsyncSession = Depends(get_session),
 ):
-    email = payload.email.lower()
-    if await _get_user_by_email(session, email):
+    username = (payload.username or "").lower().strip()
+    if not username:
+        raise HTTPException(status_code=400, detail="Username is required")
+    res = await session.execute(select(User).where(User.username == username))
+    if res.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Username already taken")
+    email = (payload.email or "").lower().strip() or None
+    if email and await _get_user_by_email(session, email):
         raise HTTPException(status_code=400, detail="Email already registered")
 
     res = await session.execute(
@@ -511,6 +522,7 @@ async def register(
     user = User(
         id=str(uuid.uuid4()),
         email=email,
+        username=username,
         password_hash=hash_password(payload.password),
         name=payload.name,
         role=code_doc.role,
@@ -646,17 +658,19 @@ async def create_user_manual(
     session: AsyncSession = Depends(get_session),
 ):
     """Manual user creation by admin / super_admin. No access code required."""
-    email = payload.email.lower()
     # Role authorization
     if current.role == "admin" and payload.role in ("admin", "super_admin"):
         raise HTTPException(status_code=403, detail="Admins cannot create admin-level users")
-    if await _get_user_by_email(session, email):
+    username = (payload.username or "").lower().strip()
+    if not username:
+        raise HTTPException(status_code=400, detail="Username is required")
+    res = await session.execute(select(User).where(User.username == username))
+    if res.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Username already taken")
+    # Email is optional — only validate uniqueness when provided.
+    email = (payload.email or "").lower().strip() or None
+    if email and await _get_user_by_email(session, email):
         raise HTTPException(status_code=400, detail="Email already registered")
-    username = (payload.username or "").lower().strip() or None
-    if username:
-        res = await session.execute(select(User).where(User.username == username))
-        if res.scalar_one_or_none():
-            raise HTTPException(status_code=400, detail="Username already taken")
     member_number = generate_member_number()
     user = User(
         id=str(uuid.uuid4()),

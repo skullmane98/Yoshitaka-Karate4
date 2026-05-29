@@ -34,7 +34,11 @@ export default function AddUserModal({ currentUser, onClose, onCreated }) {
     e.preventDefault();
     setBusy(true); setMsg("");
     try {
-      const payload = { ...draft, username: draft.username.trim() || null };
+      const payload = {
+        ...draft,
+        username: draft.username.trim().toLowerCase(),
+        email: draft.email.trim() || null,
+      };
       const { data } = await api.post("/users", payload);
       onCreated?.(data);
       onClose();
@@ -61,11 +65,13 @@ export default function AddUserModal({ currentUser, onClose, onCreated }) {
             <Section title="Account">
               <div className="grid md:grid-cols-2 gap-4">
                 <Field label="Full Name *"><input className="input" required value={draft.name} onChange={(e) => set("name", e.target.value)} data-testid="newuser-name" /></Field>
-                <Field label="Email *"><input className="input" type="email" required value={draft.email} onChange={(e) => set("email", e.target.value)} data-testid="newuser-email" /></Field>
+                <Field label="Username *" hint="Required. The login they'll type at sign-in.">
+                  <input className="input" required minLength={2} value={draft.username} onChange={(e) => set("username", e.target.value.replace(/\s/g, "").toLowerCase())} data-testid="newuser-username" placeholder="e.g. johnsmith" />
+                </Field>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
-                <Field label="Username" hint="Optional. Lets them log in without typing their email.">
-                  <input className="input" value={draft.username} onChange={(e) => set("username", e.target.value.replace(/\s/g, "").toLowerCase())} data-testid="newuser-username" placeholder="e.g. johnsmith" />
+                <Field label="Email" hint="Optional. Useful for password resets and notifications.">
+                  <input className="input" type="email" value={draft.email} onChange={(e) => set("email", e.target.value)} data-testid="newuser-email" placeholder="(optional)" />
                 </Field>
                 <Field label="Starter Password *" hint="At least 6 chars. User can change later."><input className="input" type="text" required minLength={6} value={draft.password} onChange={(e) => set("password", e.target.value)} data-testid="newuser-pw" /></Field>
               </div>

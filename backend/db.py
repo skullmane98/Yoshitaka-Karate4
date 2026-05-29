@@ -126,6 +126,13 @@ async def _migrate_add_columns() -> None:
                 await conn.execute(text("ALTER TABLE users MODIFY photo_url LONGTEXT NULL"))
             except Exception:
                 pass
+            # Email is optional now — make sure the column allows NULL on
+            # already-deployed MySQL databases. (Idempotent: re-running is a
+            # no-op once the column is nullable.)
+            try:
+                await conn.execute(text("ALTER TABLE users MODIFY email VARCHAR(255) NULL"))
+            except Exception:
+                pass
         # Unique indexes (idempotent — duplicate errors ignored).
         # SQLite supports "IF NOT EXISTS"; MySQL doesn't, so we just swallow
         # the duplicate-index error there.

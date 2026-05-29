@@ -235,8 +235,27 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
           {tab === "idcard" && (
             <div className="grid lg:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <Field label="Template" hint="Pick a starting design. Per-user overrides stack on top.">
-                  <select className="input" value={draft.idcard_template || ""} onChange={(e) => set("idcard_template", e.target.value || null)} data-testid="idcard-template-select">
+                <Field label="Template" hint="Pick a starting design. Saves instantly — per-user overrides stack on top.">
+                  <select
+                    className="input"
+                    value={draft.idcard_template || ""}
+                    onChange={async (e) => {
+                      const newKey = e.target.value || null;
+                      set("idcard_template", newKey);
+                      // Auto-save the template selection so the user's actual
+                      // card (and student dashboard) updates immediately —
+                      // admins shouldn't need an extra "Save Changes" click
+                      // just to switch templates. Per-user override fields
+                      // still need the normal Save flow.
+                      if (user?.id) {
+                        try {
+                          await api.patch(`/users/${user.id}`, { idcard_template: newKey });
+                          if (onSaved) onSaved({ ...user, idcard_template: newKey });
+                        } catch (err) { setMsg(formatApiError(err)); }
+                      }
+                    }}
+                    data-testid="idcard-template-select"
+                  >
                     <option value="">— Default (CMS) —</option>
                     {Object.entries(liveTemplates).map(([k, v]) => <option key={k} value={k}>{v.label} — {v.description}</option>)}
                   </select>

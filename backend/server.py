@@ -1641,10 +1641,14 @@ async def list_idcard_templates(
     current: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    res = await session.execute(
-        select(IDCardTemplate).order_by(IDCardTemplate.sort_order, IDCardTemplate.label)
-    )
-    return [_template_public(t) for t in res.scalars().all()]
+    # Sort in Python (not SQL) — MySQL's `sort_buffer_size` (default 256 KB)
+    # can't hold rows when `config` contains a base64-encoded background image
+    # (~1.5 MB each), raising 1038 'Out of sort memory'. There are only a
+    # handful of templates so the cost of in-memory sort is negligible.
+    res = await session.execute(select(IDCardTemplate))
+    templates = list(res.scalars().all())
+    templates.sort(key=lambda t: (t.sort_order, t.label or "", t.key))
+    return [_template_public(t) for t in templates]
 
 
 async def _require_template_edit(session: AsyncSession, current: User):

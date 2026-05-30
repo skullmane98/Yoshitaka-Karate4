@@ -415,6 +415,7 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                   {/* Position offsets — title + background nudge */}
                   <div className="border-t border-dashed border-[var(--dojo-border)] pt-3 mt-1 space-y-3" data-testid="user-idcard-offsets">
                     <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Position nudge (mm)</div>
+                    <div className="text-[10px] text-[var(--dojo-ink-soft)] -mt-1">Slider covers ±50 mm for fine nudging. Type a value into the box for anything up to ±1500 mm.</div>
                     {[
                       ["title_offset_x", "Member Title — Left ↔ Right"],
                       ["title_offset_y", "Member Title — Up ↕ Down"],
@@ -422,16 +423,28 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                       ["bg_offset_y", "Background — Up ↕ Down"],
                     ].map(([key, label]) => {
                       const cur = Number((draft.idcard_overrides || {})[key] ?? 0);
+                      // Slider clamps to ±50 for usable resolution; the
+                      // number input below accepts the full ±1500 range.
+                      const sliderVal = Math.max(-50, Math.min(50, cur));
                       return (
                         <div key={key} className="grid grid-cols-[1fr_auto_auto] gap-3 items-center">
                           <label className="text-[11px] text-[var(--dojo-ink-soft)]">{label}</label>
                           <input
-                            type="range" min="-10" max="10" step="0.5" value={cur}
+                            type="range" min="-50" max="50" step="0.5" value={sliderVal}
                             onChange={(e) => setOverride(key, Number(e.target.value))}
                             className="w-44 accent-[var(--dojo-green)]"
                             data-testid={`user-idcard-${key}-slider`}
                           />
-                          <span className="font-mono-accent text-[11px] w-12 text-right">{cur > 0 ? `+${cur}` : cur}mm</span>
+                          <input
+                            type="number" min="-1500" max="1500" step="0.5" value={cur}
+                            onChange={(e) => {
+                              const v = Number(e.target.value);
+                              if (!Number.isFinite(v)) return;
+                              setOverride(key, Math.max(-1500, Math.min(1500, v)));
+                            }}
+                            className="input w-20 text-right font-mono-accent text-[11px]"
+                            data-testid={`user-idcard-${key}-input`}
+                          />
                         </div>
                       );
                     })}

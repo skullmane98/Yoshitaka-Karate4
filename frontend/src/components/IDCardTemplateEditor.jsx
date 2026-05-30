@@ -268,15 +268,27 @@ export default function IDCardTemplateEditor({ onClose }) {
                       ) : type === "offset" ? (
                         (() => {
                           const v = Number(draftConfig[key] ?? 0);
+                          // Slider stays at ±50 for fine visual nudging;
+                          // number input below accepts the full ±1500 range.
+                          const sliderVal = Math.max(-50, Math.min(50, v));
                           return (
                             <div className="flex items-center gap-2">
                               <input
-                                type="range" min="-10" max="10" step="0.5" value={v}
+                                type="range" min="-50" max="50" step="0.5" value={sliderVal}
                                 onChange={(e) => setField(key, Number(e.target.value))}
                                 className="flex-1 accent-[var(--dojo-green)]"
                                 data-testid={`template-field-${key}-slider`}
                               />
-                              <span className="font-mono-accent text-[11px] w-12 text-right">{v > 0 ? `+${v}` : v}mm</span>
+                              <input
+                                type="number" min="-1500" max="1500" step="0.5" value={v}
+                                onChange={(e) => {
+                                  const n = Number(e.target.value);
+                                  if (!Number.isFinite(n)) return;
+                                  setField(key, Math.max(-1500, Math.min(1500, n)));
+                                }}
+                                className="input w-20 text-right font-mono-accent text-[11px]"
+                                data-testid={`template-field-${key}-input`}
+                              />
                             </div>
                           );
                         })()

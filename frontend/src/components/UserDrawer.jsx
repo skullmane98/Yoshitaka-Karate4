@@ -271,7 +271,6 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                     ["scan_text", "Scan caption"],
                     ["name_label", "Name label"],
                     ["role_label", "Role label"],
-                    ["rank_label", "Rank label"],
                     ["footer_label", "Member# label"],
                   ].map(([k, label]) => (
                     <Field key={k} label={label}>
@@ -479,7 +478,6 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                         ["kanji_top", "Kanji (top)", 24, { kind: "kanji" }],
                         ["member_name", "Member name", 20, { kind: "title" }],
                         ["role_value", "Role value", 12, { kind: "value" }],
-                        ["rank_value", "Rank value", 12, { kind: "value" }],
                         ["member_number", "Member #", 14, { kind: "mono" }],
                         ["field_label", "Field labels", 10, { kind: "label" }],
                         ["scan_text", "Scan caption", 9, { kind: "label" }],

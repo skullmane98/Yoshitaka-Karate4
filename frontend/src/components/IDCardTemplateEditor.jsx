@@ -23,7 +23,6 @@ const FIELDS = [
   ["scan_text", "Scan caption", "text"],
   ["name_label", "Name label", "text"],
   ["role_label", "Role label", "text"],
-  ["rank_label", "Rank label", "text"],
   ["footer_label", "Member# label", "text"],
   ["accent_color", "Accent color", "color"],
   ["title_bg_color", "Title pill background", "color"],

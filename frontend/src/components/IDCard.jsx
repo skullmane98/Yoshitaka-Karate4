@@ -156,9 +156,6 @@ async function drawHorizontalCardOnPdf(pdf, ctx) {
   drawLabel(pdf, design.role_label, infoX, infoY);
   drawValue(pdf, prettyRole(user.role), infoX, infoY + 3.2);
   infoY += 6;
-  drawLabel(pdf, design.rank_label, infoX, infoY);
-  drawValue(pdf, user.belt_rank || "—", infoX, infoY + 3.2);
-  infoY += 6;
   drawLabel(pdf, design.footer_label, infoX, infoY);
   pdf.setFont("courier", "normal"); pdf.setFontSize(9); pdf.setTextColor(15, 15, 15);
   pdf.text(String(user.member_number || "—"), infoX, infoY + 3.4);
@@ -254,11 +251,9 @@ async function drawVerticalCardOnPdf(pdf, ctx) {
   pdf.setFont("times", "normal"); pdf.setFontSize(9); pdf.setTextColor(15, 15, 15);
   pdf.text(String(user.name || "—"), MARGIN, y + 3.4);
   y += 7;
-  drawLabel(pdf, design.rank_label, MARGIN, y);
-  drawValue(pdf, user.belt_rank || "—", MARGIN, y + 3.2);
-  drawLabel(pdf, design.footer_label, MARGIN + 22, y);
+  drawLabel(pdf, design.footer_label, MARGIN, y);
   pdf.setFont("courier", "normal"); pdf.setFontSize(7); pdf.setTextColor(15, 15, 15);
-  pdf.text(String(user.member_number || "—"), MARGIN + 22, y + 3.2);
+  pdf.text(String(user.member_number || "—"), MARGIN, y + 3.2);
 
   // Bottom footer
   const accent = hexToRgb(design.accent_color || "#D7263D");
@@ -700,10 +695,6 @@ function HorizontalLayout({ user, design, data, loading, logoSrc }) {
             <div className="font-medium capitalize truncate" style={{ fontSize: pxOf(design, "role_value"), lineHeight: 1.3 }}>{user.role.replace("_", " ")}</div>
           </div>
           <div>
-            <div className="uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "field_label"), lineHeight: 1.4 }}>{design.rank_label}</div>
-            <div className="font-medium truncate" style={{ fontSize: pxOf(design, "rank_value"), lineHeight: 1.3 }}>{user.belt_rank || "—"}</div>
-          </div>
-          <div>
             <div className="uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "field_label"), lineHeight: 1.4 }}>{design.footer_label}</div>
             <div className="font-mono-accent tracking-widest" data-testid="idcard-member-number" style={{ fontSize: pxOf(design, "member_number"), lineHeight: 1.3 }}>
               {user.member_number}
@@ -803,16 +794,10 @@ function VerticalLayout({ user, design, data, loading, logoSrc }) {
         <div className="uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "field_label"), lineHeight: 1.4 }}>{design.name_label}</div>
         <div className="font-serif font-medium truncate" data-testid="idcard-name" style={{ fontSize: pxOf(design, "member_name"), lineHeight: 1.25 }}>{user.name}</div>
       </div>
-      <div className="grid grid-cols-2 gap-2 w-full mt-2">
-        <div>
-          <div className="uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "field_label"), lineHeight: 1.4 }}>{design.rank_label}</div>
-          <div className="font-medium truncate" style={{ fontSize: pxOf(design, "rank_value"), lineHeight: 1.3 }}>{user.belt_rank || "—"}</div>
-        </div>
-        <div>
-          <div className="uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "field_label"), lineHeight: 1.4 }}>{design.footer_label}</div>
-          <div className="font-mono-accent tracking-widest truncate" data-testid="idcard-member-number" style={{ fontSize: pxOf(design, "member_number"), lineHeight: 1.3 }}>
-            {user.member_number}
-          </div>
+      <div className="w-full mt-2">
+        <div className="uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "field_label"), lineHeight: 1.4 }}>{design.footer_label}</div>
+        <div className="font-mono-accent tracking-widest truncate" data-testid="idcard-member-number" style={{ fontSize: pxOf(design, "member_number"), lineHeight: 1.3 }}>
+          {user.member_number}
         </div>
       </div>
 

@@ -28,7 +28,12 @@ const FIELDS = [
   ["accent_color", "Accent color", "color"],
   ["title_bg_color", "Title pill background", "color"],
   ["title_text_color", "Title text color", "color"],
+  ["title_offset_x", "Title nudge ↔ (mm)", "offset"],
+  ["title_offset_y", "Title nudge ↕ (mm)", "offset"],
   ["background_url", "Card background image", "image"],
+  ["background_opacity", "Background opacity", "opacity"],
+  ["bg_offset_x", "Background nudge ↔ (mm)", "offset"],
+  ["bg_offset_y", "Background nudge ↕ (mm)", "offset"],
 ];
 
 // Fake user used to render the live mini preview. The IDCard component
@@ -260,6 +265,36 @@ export default function IDCardTemplateEditor({ onClose }) {
                             >Remove</button>
                           )}
                         </div>
+                      ) : type === "offset" ? (
+                        (() => {
+                          const v = Number(draftConfig[key] ?? 0);
+                          return (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="range" min="-10" max="10" step="0.5" value={v}
+                                onChange={(e) => setField(key, Number(e.target.value))}
+                                className="flex-1 accent-[var(--dojo-green)]"
+                                data-testid={`template-field-${key}-slider`}
+                              />
+                              <span className="font-mono-accent text-[11px] w-12 text-right">{v > 0 ? `+${v}` : v}mm</span>
+                            </div>
+                          );
+                        })()
+                      ) : type === "opacity" ? (
+                        (() => {
+                          const pct = Math.round(Number(draftConfig[key] ?? 0.55) * 100);
+                          return (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="range" min="20" max="100" step="5" value={pct}
+                                onChange={(e) => setField(key, Number(e.target.value) / 100)}
+                                className="flex-1 accent-[var(--dojo-green)]"
+                                data-testid={`template-field-${key}-slider`}
+                              />
+                              <span className="font-mono-accent text-[11px] w-12 text-right">{pct}%</span>
+                            </div>
+                          );
+                        })()
                       ) : (
                         <input
                           className="input"

@@ -32,7 +32,7 @@ function loadImage(src) {
 // surrounding white rect drawn afterwards in horizontal/vertical paths is
 // already there *before* this helper runs, so we rely on the page boundary
 // to clip overflow. Acceptable for a 85.6 × 53.98 mm card.
-function drawBackgroundWatermark(pdf, img, W, H, sizeOverride) {
+function drawBackgroundWatermark(pdf, img, W, H, sizeOverride, offsetX = 0, offsetY = 0, opacity = 0.55) {
   const naturalW = img.naturalWidth || img.width;
   const naturalH = img.naturalHeight || img.height;
   if (!naturalW || !naturalH) return;
@@ -43,19 +43,18 @@ function drawBackgroundWatermark(pdf, img, W, H, sizeOverride) {
   const scale = cover * (Number.isFinite(zoom) && zoom > 0 ? zoom : 1);
   const drawW = naturalW * scale;
   const drawH = naturalH * scale;
-  // Center on the card.
-  const x = (W - drawW) / 2;
-  const y = (H - drawH) / 2;
+  // Center on the card, then nudge by the admin-configured offset (mm).
+  const x = (W - drawW) / 2 + Number(offsetX || 0);
+  const y = (H - drawH) / 2 + Number(offsetY || 0);
 
+  const clampedOpacity = Math.min(1, Math.max(0, Number(opacity) || 0.55));
   let restoreNeeded = false;
   try {
-    // GState lets us draw at 40% opacity without compositing on a canvas.
-    const gs = new pdf.GState({ opacity: 0.4 });
+    const gs = new pdf.GState({ opacity: clampedOpacity });
     pdf.setGState(gs);
     restoreNeeded = true;
     pdf.addImage(img, "PNG", x, y, drawW, drawH);
   } catch (_) {
-    // Older jsPDF without GState — fall back to drawing without opacity.
     try { pdf.addImage(img, "PNG", x, y, drawW, drawH); } catch (_) {}
   } finally {
     if (restoreNeeded) {
@@ -91,9 +90,9 @@ async function drawHorizontalCardOnPdf(pdf, ctx) {
   ]);
 
   // Background watermark (drawn first so everything else sits on top).
-  // Matches the on-screen preview: 40% opacity, "cover" fit, optional zoom.
+  // Matches the on-screen preview: opacity / offsets / "cover" fit / zoom.
   if (bgImg) {
-    drawBackgroundWatermark(pdf, bgImg, W, H, design.background_size);
+    drawBackgroundWatermark(pdf, bgImg, W, H, design.background_size, design.bg_offset_x, design.bg_offset_y, design.background_opacity);
   }
 
   if (logoImg) {
@@ -106,7 +105,7 @@ async function drawHorizontalCardOnPdf(pdf, ctx) {
   pdf.setFontSize(6);
   pdf.text(String(design.dojo_name).toUpperCase(), MARGIN + 11, MARGIN + TOP_PAD + 3.2);
 
-  drawTitleWithPill(pdf, design.certificate_title, MARGIN + 11, MARGIN + TOP_PAD + 8, {
+  drawTitleWithPill(pdf, design.certificate_title, MARGIN + 11 + Number(design.title_offset_x || 0), MARGIN + TOP_PAD + 8 + Number(design.title_offset_y || 0), {
     fontSize: 12,
     color: hexToRgb(design.title_text_color || "#0F0F0F"),
     bgColor: design.title_bg_color,
@@ -202,7 +201,7 @@ async function drawVerticalCardOnPdf(pdf, ctx) {
 
   // Background watermark first, so logo/photo/QR sit on top.
   if (bgImg) {
-    drawBackgroundWatermark(pdf, bgImg, W, H, design.background_size);
+    drawBackgroundWatermark(pdf, bgImg, W, H, design.background_size, design.bg_offset_x, design.bg_offset_y, design.background_opacity);
   }
 
   // Top: logo centered
@@ -218,7 +217,7 @@ async function drawVerticalCardOnPdf(pdf, ctx) {
     pdf.setFont("times", "normal");
     pdf.setFontSize(fontSize);
     const tw = pdf.getTextWidth(String(design.certificate_title || ""));
-    drawTitleWithPill(pdf, design.certificate_title, W / 2 - tw / 2, MARGIN + 19, {
+    drawTitleWithPill(pdf, design.certificate_title, W / 2 - tw / 2 + Number(design.title_offset_x || 0), MARGIN + 19 + Number(design.title_offset_y || 0), {
       fontSize,
       color: hexToRgb(design.title_text_color || "#0F0F0F"),
       bgColor: design.title_bg_color,
@@ -353,6 +352,15 @@ const DEFAULTS = {
   // Soft colored pill drawn behind the certificate title so it stays
   // readable against busy background images. Empty string = no pill.
   title_bg_color: "",
+  // Position offsets (in mm) so admins can nudge elements on cards where the
+  // template's default position fights with a custom background image.
+  title_offset_x: 0,
+  title_offset_y: 0,
+  bg_offset_x: 0,
+  bg_offset_y: 0,
+  // Watermark opacity (0–1). Default raised from 0.4 → 0.55 so backgrounds
+  // are visible without overpowering the foreground content.
+  background_opacity: 0.55,
   logo_url: "",
   background_url: "",
 };
@@ -536,12 +544,13 @@ export default function IDCard({ user, defaultOrientation = "horizontal", previe
             {design.background_url && (
               <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
                 <div
-                  className="absolute inset-0 opacity-40"
+                  className="absolute inset-0"
                   style={{
                     backgroundImage: `url(${design.background_url})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
-                    transform: `scale(${scaleOf(design, "background_size")})`,
+                    opacity: Number(design.background_opacity ?? 0.55),
+                    transform: `translate(${Number(design.bg_offset_x || 0)}mm, ${Number(design.bg_offset_y || 0)}mm) scale(${scaleOf(design, "background_size")})`,
                     transformOrigin: "center center",
                   }}
                 />
@@ -641,7 +650,15 @@ function HorizontalLayout({ user, design, data, loading, logoSrc }) {
             <div className="uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)] mb-1 truncate" style={{ fontSize: pxOf(design, "dojo_name"), lineHeight: 1.4 }}>
               {design.dojo_name}
             </div>
-            <div className="font-serif font-medium tracking-tight truncate" style={{ fontSize: pxOf(design, "certificate_title"), lineHeight: 1.25, color: design.title_text_color || undefined }}>
+            <div
+              className="font-serif font-medium tracking-tight truncate"
+              style={{
+                fontSize: pxOf(design, "certificate_title"),
+                lineHeight: 1.25,
+                color: design.title_text_color || undefined,
+                transform: `translate(${Number(design.title_offset_x || 0)}mm, ${Number(design.title_offset_y || 0)}mm)`,
+              }}
+            >
               <TitlePill bg={design.title_bg_color}>{design.certificate_title}</TitlePill>
             </div>
           </div>
@@ -735,7 +752,15 @@ function VerticalLayout({ user, design, data, loading, logoSrc }) {
       <div className="uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "dojo_name"), lineHeight: 1.4 }}>
         {design.dojo_name}
       </div>
-      <div className="font-serif font-medium tracking-tight mt-1" style={{ fontSize: pxOf(design, "certificate_title"), lineHeight: 1.25, color: design.title_text_color || undefined }}>
+      <div
+        className="font-serif font-medium tracking-tight mt-1"
+        style={{
+          fontSize: pxOf(design, "certificate_title"),
+          lineHeight: 1.25,
+          color: design.title_text_color || undefined,
+          transform: `translate(${Number(design.title_offset_x || 0)}mm, ${Number(design.title_offset_y || 0)}mm)`,
+        }}
+      >
         <TitlePill bg={design.title_bg_color}>{design.certificate_title}</TitlePill>
       </div>
 

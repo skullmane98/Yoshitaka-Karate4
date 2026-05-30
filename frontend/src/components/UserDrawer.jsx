@@ -393,6 +393,48 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                         </div>
                       );
                     })}
+                    <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] pt-1">Background opacity</div>
+                    {(() => {
+                      const cur = (draft.idcard_overrides || {}).background_opacity;
+                      const pct = Math.round(((cur ?? 0.55)) * 100);
+                      return (
+                        <div className="grid grid-cols-[1fr_auto_auto] gap-3 items-center">
+                          <label className="text-[11px] text-[var(--dojo-ink-soft)]">Watermark opacity</label>
+                          <input
+                            type="range" min="20" max="100" step="5" value={pct}
+                            onChange={(e) => setOverride("background_opacity", Number(e.target.value) / 100)}
+                            className="w-44 accent-[var(--dojo-green)]"
+                            data-testid="user-idcard-bg-opacity-slider"
+                          />
+                          <span className="font-mono-accent text-[11px] w-12 text-right">{pct}%</span>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Position offsets — title + background nudge */}
+                  <div className="border-t border-dashed border-[var(--dojo-border)] pt-3 mt-1 space-y-3" data-testid="user-idcard-offsets">
+                    <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Position nudge (mm)</div>
+                    {[
+                      ["title_offset_x", "Member Title — Left ↔ Right"],
+                      ["title_offset_y", "Member Title — Up ↕ Down"],
+                      ["bg_offset_x", "Background — Left ↔ Right"],
+                      ["bg_offset_y", "Background — Up ↕ Down"],
+                    ].map(([key, label]) => {
+                      const cur = Number((draft.idcard_overrides || {})[key] ?? 0);
+                      return (
+                        <div key={key} className="grid grid-cols-[1fr_auto_auto] gap-3 items-center">
+                          <label className="text-[11px] text-[var(--dojo-ink-soft)]">{label}</label>
+                          <input
+                            type="range" min="-10" max="10" step="0.5" value={cur}
+                            onChange={(e) => setOverride(key, Number(e.target.value))}
+                            className="w-44 accent-[var(--dojo-green)]"
+                            data-testid={`user-idcard-${key}-slider`}
+                          />
+                          <span className="font-mono-accent text-[11px] w-12 text-right">{cur > 0 ? `+${cur}` : cur}mm</span>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* Font size editor */}

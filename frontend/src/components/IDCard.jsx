@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import api from "@/lib/api";
 import { Loader2, Download, RotateCw } from "lucide-react";
-import { LOGO_URL } from "@/lib/brand";
 import { resolveIDCardDesign, mergeTemplates } from "@/lib/idcardTemplates";
 import { useAuth } from "@/context/AuthContext";
 import jsPDF from "jspdf";
@@ -80,10 +79,9 @@ async function drawHorizontalCardOnPdf(pdf, ctx) {
   pdf.setLineWidth(0.2);
   pdf.rect(0.5, 0.5, W - 1, H - 1, "S");
 
-  // Logo top-left
-  const logoSrc = design.logo_url || LOGO_URL;
-  const [logoImg, photoImg, qrImg, bgImg] = await Promise.all([
-    loadImage(logoSrc),
+  // Card logo intentionally not rendered — admins requested a clean
+  // header. Member photo, QR, and background image still render normally.
+  const [photoImg, qrImg, bgImg] = await Promise.all([
     loadImage(user.photo_url),
     loadImage(data?.qr_png),
     loadImage(design.background_url),
@@ -95,17 +93,13 @@ async function drawHorizontalCardOnPdf(pdf, ctx) {
     drawBackgroundWatermark(pdf, bgImg, W, H, design.background_size, design.bg_offset_x, design.bg_offset_y, design.background_opacity);
   }
 
-  if (logoImg) {
-    try { pdf.addImage(logoImg, "PNG", MARGIN, MARGIN + TOP_PAD, 9, 9); } catch (_) {}
-  }
-
-  // Top text block (right of logo)
+  // Top text block (left-aligned now that the logo slot is empty)
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(74, 74, 74);
   pdf.setFontSize(6);
-  pdf.text(String(design.dojo_name).toUpperCase(), MARGIN + 11, MARGIN + TOP_PAD + 3.2);
+  pdf.text(String(design.dojo_name).toUpperCase(), MARGIN, MARGIN + TOP_PAD + 3.2);
 
-  drawTitleWithPill(pdf, design.certificate_title, MARGIN + 11 + Number(design.title_offset_x || 0), MARGIN + TOP_PAD + 8 + Number(design.title_offset_y || 0), {
+  drawTitleWithPill(pdf, design.certificate_title, MARGIN + Number(design.title_offset_x || 0), MARGIN + TOP_PAD + 8 + Number(design.title_offset_y || 0), {
     fontSize: 12,
     color: hexToRgb(design.title_text_color || "#0F0F0F"),
     bgColor: design.title_bg_color,
@@ -188,9 +182,8 @@ async function drawVerticalCardOnPdf(pdf, ctx) {
   pdf.setDrawColor(229, 225, 213); pdf.setLineWidth(0.2);
   pdf.rect(0.5, 0.5, W - 1, H - 1, "S");
 
-  const logoSrc = design.logo_url || LOGO_URL;
-  const [logoImg, photoImg, qrImg, bgImg] = await Promise.all([
-    loadImage(logoSrc),
+  // Card logo intentionally not rendered.
+  const [photoImg, qrImg, bgImg] = await Promise.all([
     loadImage(user.photo_url),
     loadImage(data?.qr_png),
     loadImage(design.background_url),
@@ -201,31 +194,26 @@ async function drawVerticalCardOnPdf(pdf, ctx) {
     drawBackgroundWatermark(pdf, bgImg, W, H, design.background_size, design.bg_offset_x, design.bg_offset_y, design.background_opacity);
   }
 
-  // Top: logo centered
-  if (logoImg) {
-    try { pdf.addImage(logoImg, "PNG", (W - 10) / 2, MARGIN + 2, 10, 10); } catch (_) {}
-  }
+  // Top heading — no logo, dojo name + title slightly higher now
   pdf.setFont("helvetica", "normal"); pdf.setFontSize(5); pdf.setTextColor(74, 74, 74);
-  pdf.text(String(design.dojo_name).toUpperCase(), W / 2, MARGIN + 15.5, { align: "center" });
-  // Vertical layout — same pill helper, but centred so we measure the text
-  // first then offset x by half the width.
+  pdf.text(String(design.dojo_name).toUpperCase(), W / 2, MARGIN + 6, { align: "center" });
   {
     const fontSize = 10;
     pdf.setFont("times", "normal");
     pdf.setFontSize(fontSize);
     const tw = pdf.getTextWidth(String(design.certificate_title || ""));
-    drawTitleWithPill(pdf, design.certificate_title, W / 2 - tw / 2 + Number(design.title_offset_x || 0), MARGIN + 19 + Number(design.title_offset_y || 0), {
+    drawTitleWithPill(pdf, design.certificate_title, W / 2 - tw / 2 + Number(design.title_offset_x || 0), MARGIN + 10 + Number(design.title_offset_y || 0), {
       fontSize,
       color: hexToRgb(design.title_text_color || "#0F0F0F"),
       bgColor: design.title_bg_color,
     });
   }
 
-  // Photo + QR row
+  // Photo + QR row (was MARGIN+22, pulled up now that the logo is gone)
   const PHOTO_W = 14 * (design.photo_size || 1);
   const PHOTO_H = 18 * (design.photo_size || 1);
   const QR_SIDE = 18 * (design.qr_size || 1);
-  const rowY = MARGIN + 22;
+  const rowY = MARGIN + 14;
   const rowGap = 2;
   const rowW = PHOTO_W + rowGap + QR_SIDE;
   const startX = (W - rowW) / 2;
@@ -478,7 +466,6 @@ export default function IDCard({ user, defaultOrientation = "horizontal", previe
 
   if (!user) return null;
 
-  const logoSrc = design.logo_url || LOGO_URL;
   const isVertical = orientation === "vertical";
   const inner = cardPx(orientation);
 
@@ -553,9 +540,9 @@ export default function IDCard({ user, defaultOrientation = "horizontal", previe
             )}
 
             {isVertical ? (
-              <VerticalLayout user={user} design={design} data={data} loading={loading} logoSrc={logoSrc} />
+              <VerticalLayout user={user} design={design} data={data} loading={loading} />
             ) : (
-              <HorizontalLayout user={user} design={design} data={data} loading={loading} logoSrc={logoSrc} />
+              <HorizontalLayout user={user} design={design} data={data} loading={loading} />
             )}
           </div>
         </div>
@@ -630,7 +617,7 @@ function scaleOf(design, key, fallback = 1) {
   return fallback;
 }
 
-function HorizontalLayout({ user, design, data, loading, logoSrc }) {
+function HorizontalLayout({ user, design, data, loading }) {
   const photoScale = scaleOf(design, "photo_size");
   const qrScale = scaleOf(design, "qr_size");
   const photoW = Math.round(110 * photoScale);
@@ -639,15 +626,13 @@ function HorizontalLayout({ user, design, data, loading, logoSrc }) {
   return (
     <div className="relative h-full flex flex-col">
       <div className="flex items-start justify-between mb-3 gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <img src={logoSrc} alt="" className="h-12 w-12 object-contain shrink-0" />
-          <div className="min-w-0">
-            <div className="uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)] mb-1 truncate" style={{ fontSize: pxOf(design, "dojo_name"), lineHeight: 1.4 }}>
-              {design.dojo_name}
-            </div>
-            <div
-              className="font-serif font-medium tracking-tight truncate"
-              style={{
+        <div className="min-w-0 flex-1">
+          <div className="uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)] mb-1 truncate" style={{ fontSize: pxOf(design, "dojo_name"), lineHeight: 1.4 }}>
+            {design.dojo_name}
+          </div>
+          <div
+            className="font-serif font-medium tracking-tight truncate"
+            style={{
                 fontSize: pxOf(design, "certificate_title"),
                 lineHeight: 1.25,
                 color: design.title_text_color || undefined,
@@ -656,7 +641,6 @@ function HorizontalLayout({ user, design, data, loading, logoSrc }) {
             >
               <TitlePill bg={design.title_bg_color}>{design.certificate_title}</TitlePill>
             </div>
-          </div>
         </div>
         <span className="font-kanji shrink-0" style={{ color: design.accent_color, fontSize: pxOf(design, "kanji_top"), lineHeight: 1.2 }}>
           {design.kanji_top}
@@ -731,7 +715,7 @@ function HorizontalLayout({ user, design, data, loading, logoSrc }) {
   );
 }
 
-function VerticalLayout({ user, design, data, loading, logoSrc }) {
+function VerticalLayout({ user, design, data, loading }) {
   const photoScale = scaleOf(design, "photo_size");
   const qrScale = scaleOf(design, "qr_size");
   const photoW = Math.round(90 * photoScale);
@@ -739,8 +723,7 @@ function VerticalLayout({ user, design, data, loading, logoSrc }) {
   const qrSide = Math.round(112 * qrScale);
   return (
     <div className="relative h-full flex flex-col items-center text-center">
-      <img src={logoSrc} alt="" className="h-14 w-14 object-contain mb-1" />
-      <div className="uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "dojo_name"), lineHeight: 1.4 }}>
+      <div className="uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)] mt-1" style={{ fontSize: pxOf(design, "dojo_name"), lineHeight: 1.4 }}>
         {design.dojo_name}
       </div>
       <div

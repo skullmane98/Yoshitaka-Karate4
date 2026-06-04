@@ -100,6 +100,10 @@ super_admin → admin → renshi → sensei → team_member → student
   - `UserDrawer` template dropdown now fetches from `/idcard-templates` so newly-created templates appear immediately
   - **[2026-02-29] follow-up:** added Card Background Image upload to the template editor (image preview + Remove button) so admins can attach a watermark per template; full-width row layout
   - Verified end-to-end via Playwright: create / duplicate / delete / live preview title + pill / bg image upload all working; built-in delete properly returns 400
+- **[2026-03-04] Template editor parity with UserDrawer**
+  - `IDCardTemplateEditor.jsx` now exposes QR Code Color picker + scale sliders for Student Photo / QR / Card Background size (matches the per-user override drawer).
+  - Added `"scale"` field renderer (range 25–`opts.max`%, stored as `0.25–3.0` float in `config`).
+  - Verified end-to-end: slider mutates draft → PATCH `/api/idcard-templates/student` → reload shows `qr_color`, `photo_size` persisted; live preview reflects each change. Test-only values were rolled back via API.
 - **[2026-02-29] Feature — Username required, Email optional**
   - DB: `users.email` is now `Optional[str]` with the existing UNIQUE index (MySQL + SQLite both allow multiple NULLs on a nullable UNIQUE column). MySQL migration `ALTER TABLE users MODIFY email VARCHAR(255) NULL` runs idempotently on boot.
   - Pydantic: `UserCreateRequest` + `RegisterRequest` now require `username` and accept `email` as `Optional[EmailStr]`. `UserPublic` returns `email: Optional[EmailStr]`.

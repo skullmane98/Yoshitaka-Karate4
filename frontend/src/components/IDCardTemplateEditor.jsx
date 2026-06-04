@@ -220,7 +220,7 @@ export default function IDCardTemplateEditor({ onClose }) {
                 </Field>
                 <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] pt-2 border-t border-[var(--dojo-border)]">Default fields (apply to every user on this template)</div>
                 <div className="grid grid-cols-2 gap-3">
-                  {FIELDS.map(([key, label, type]) => (
+                  {FIELDS.map(([key, label, type, opts]) => (
                     <Field key={key} label={label} colSpan={type === "image" ? 2 : undefined}>
                       {type === "color" ? (
                         <div className="flex items-center gap-2">
@@ -305,6 +305,25 @@ export default function IDCardTemplateEditor({ onClose }) {
                             <div className="flex items-center gap-2">
                               <input
                                 type="range" min="20" max="100" step="5" value={pct}
+                                onChange={(e) => setField(key, Number(e.target.value) / 100)}
+                                className="flex-1 accent-[var(--dojo-green)]"
+                                data-testid={`template-field-${key}-slider`}
+                              />
+                              <span className="font-mono-accent text-[11px] w-12 text-right">{pct}%</span>
+                            </div>
+                          );
+                        })()
+                      ) : type === "scale" ? (
+                        (() => {
+                          // Per-template default for size multipliers. Stored as a
+                          // float (1.0 = 100%). Falls back to 1.0 when unset so the
+                          // slider/label don't jump around on first interaction.
+                          const max = opts?.max ?? 300;
+                          const pct = Math.round(Number(draftConfig[key] ?? 1) * 100);
+                          return (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="range" min="25" max={max} step="5" value={pct}
                                 onChange={(e) => setField(key, Number(e.target.value) / 100)}
                                 className="flex-1 accent-[var(--dojo-green)]"
                                 data-testid={`template-field-${key}-slider`}

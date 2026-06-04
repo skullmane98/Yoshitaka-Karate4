@@ -25,10 +25,17 @@ const FIELDS = [
   ["role_label", "Role label", "text"],
   ["footer_label", "Member# label", "text"],
   ["accent_color", "Accent color", "color"],
+  ["qr_color", "QR Code Color", "color"],
   ["title_bg_color", "Title pill background", "color"],
   ["title_text_color", "Title text color", "color"],
   ["title_offset_x", "Title nudge ↔ (mm)", "offset"],
   ["title_offset_y", "Title nudge ↕ (mm)", "offset"],
+  // Size sliders — `scale` is a 0.25–3.0 multiplier (rendered as 25–300%).
+  // Per-user overrides for these existed long before template defaults; now
+  // admins can set sensible per-template starting values too.
+  ["photo_size", "Student photo size", "scale", { max: 300 }],
+  ["qr_size", "QR code size", "scale", { max: 200 }],
+  ["background_size", "Card background size", "scale", { max: 200 }],
   ["background_url", "Card background image", "image"],
   ["background_opacity", "Background opacity", "opacity"],
   ["bg_offset_x", "Background nudge ↔ (mm)", "offset"],

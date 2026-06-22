@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import api, { formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
-import { Copy, Trash2, Plus, X, Mail } from "lucide-react";
+import { Trash2, Plus, X, Mail } from "lucide-react";
 import { toast } from "sonner";
 import IDCard from "@/components/IDCard";
 import IDCardTemplateEditor from "@/components/IDCardTemplateEditor";
@@ -15,16 +15,10 @@ import PaymentCalendar from "@/components/PaymentCalendar";
 import UserDrawer from "@/components/UserDrawer";
 import AddUserModal from "@/components/AddUserModal";
 
-const ROLES_FOR = {
-  admin: ["student"],
-  super_admin: ["student", "admin", "renshi", "sensei", "team_member"],
-};
-
 export default function AdminDashboard({ isSuper = false }) {
   const { user } = useAuth();
   const [tab, setTab] = useState("overview");
   const [users, setUsers] = useState([]);
-  const [codes, setCodes] = useState([]);
   const [payments, setPayments] = useState([]);
   const [stats, setStats] = useState(null);
   const [pages, setPages] = useState([]);
@@ -35,13 +29,12 @@ export default function AdminDashboard({ isSuper = false }) {
   const [templatesOpen, setTemplatesOpen] = useState(false);
 
   const reload = async () => {
-    const [u, c, p, s] = await Promise.all([
+    const [u, p, s] = await Promise.all([
       api.get("/users").catch(() => ({ data: [] })),
-      api.get("/access-codes").catch(() => ({ data: [] })),
       api.get("/payments").catch(() => ({ data: [] })),
       api.get("/stats").catch(() => ({ data: null })),
     ]);
-    setUsers(u.data); setCodes(c.data); setPayments(p.data); setStats(s.data);
+    setUsers(u.data); setPayments(p.data); setStats(s.data);
     const pg = await api.get("/cms/pages").catch(() => ({ data: [] }));
     setPages(pg.data);
   };
@@ -52,7 +45,6 @@ export default function AdminDashboard({ isSuper = false }) {
     ? [
         { id: "overview", label: "Overview" },
         { id: "users", label: "Users" },
-        { id: "codes", label: "Access Codes" },
         { id: "payments", label: "Payments" },
         { id: "attendance", label: "Attendance" },
         { id: "notify", label: "Notify" },
@@ -63,7 +55,6 @@ export default function AdminDashboard({ isSuper = false }) {
     : [
         { id: "overview", label: "Overview" },
         { id: "students", label: "Students" },
-        { id: "codes", label: "Access Codes" },
         { id: "payments", label: "Payments" },
         { id: "attendance", label: "Attendance" },
         { id: "notify", label: "Notify" },
@@ -97,7 +88,7 @@ export default function AdminDashboard({ isSuper = false }) {
             <Stat label="Students" value={stats?.students ?? "—"} />
             {isSuper && <Stat label="Admins" value={stats?.admins ?? "—"} />}
             <Stat label="Payments Due" value={`$${(stats?.payments_due_total ?? 0).toFixed(2)}`} sub={`${stats?.payments_due_count ?? 0} open`} />
-            <Stat label="Active Codes" value={codes.filter((c) => c.active).length} />
+            <Stat label="Active Members" value={stats?.active_users ?? users.filter((u) => u.active).length} />
             <div className="col-span-2 border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-6">
               <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] mb-3">Latest Payments</div>
               <div className="divide-y divide-[var(--dojo-border)]">
@@ -126,10 +117,6 @@ export default function AdminDashboard({ isSuper = false }) {
           onAdd={() => setAddingUser(true)}
           isSuper={isSuper}
         />
-      )}
-
-      {tab === "codes" && (
-        <CodesPanel codes={codes} allowedRoles={isSuper ? ROLES_FOR.super_admin : ROLES_FOR.admin} onReload={reload} />
       )}
 
       {tab === "payments" && (
@@ -286,92 +273,6 @@ function UsersPanel({ users, onEdit, onReload, onBill, onAdd, isSuper }) {
             )}
           </tbody>
         </table>
-      </div>
-    </div>
-  );
-}
-
-function CodesPanel({ codes, allowedRoles, onReload }) {
-  const [role, setRole] = useState(allowedRoles[0]);
-  const [maxUses, setMaxUses] = useState(1);
-  const [note, setNote] = useState("");
-  const [creating, setCreating] = useState(false);
-
-  const create = async (e) => {
-    e.preventDefault();
-    setCreating(true);
-    try {
-      await api.post("/access-codes", { role, max_uses: Number(maxUses), note: note || null });
-      setNote(""); setMaxUses(1);
-      toast.success("Access code created");
-      onReload();
-    } catch (e) { toast.error(formatApiError(e)); }
-    finally { setCreating(false); }
-  };
-  const copy = (t) => { navigator.clipboard.writeText(t); toast.success("Copied"); };
-  const deactivate = async (c) => {
-    if (!window.confirm("Deactivate this access code?")) return;
-    try { await api.delete(`/access-codes/${c.id}`); toast.success("Deactivated"); onReload(); }
-    catch (e) { toast.error(formatApiError(e)); }
-  };
-
-  return (
-    <div className="space-y-6" data-testid="codes-panel">
-      <form onSubmit={create} className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-6 grid md:grid-cols-[1fr_1fr_2fr_auto] gap-4 items-end">
-        <div>
-          <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Role</label>
-          <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full border border-[var(--dojo-border)] bg-[var(--dojo-input-bg)] px-3 py-2" data-testid="code-role-select">
-            {allowedRoles.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Max Uses</label>
-          <input type="number" min={1} value={maxUses} onChange={(e) => setMaxUses(e.target.value)} className="w-full border border-[var(--dojo-border)] bg-[var(--dojo-input-bg)] px-3 py-2" data-testid="code-maxuses-input" />
-        </div>
-        <div>
-          <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Note</label>
-          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="optional" className="w-full border border-[var(--dojo-border)] bg-[var(--dojo-input-bg)] px-3 py-2" data-testid="code-note-input" />
-        </div>
-        <button className="btn-primary flex items-center gap-2" disabled={creating} data-testid="code-create-btn">
-          <Plus size={14} /> {creating ? "…" : "Create"}
-        </button>
-      </form>
-
-      <div className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[var(--dojo-paper-alt)] text-[10px] uppercase tracking-[0.2em] text-[var(--dojo-ink-soft)]">
-              <tr>
-                <th className="text-left px-6 py-3">Code</th>
-                <th className="text-left px-6 py-3">Role</th>
-                <th className="text-left px-6 py-3">Usage</th>
-                <th className="text-left px-6 py-3">Status</th>
-                <th className="text-left px-6 py-3">Note</th>
-                <th className="text-right px-6 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {codes.map((c) => (
-                <tr key={c.id} className="border-t border-[var(--dojo-border)]" data-testid={`code-row-${c.id}`}>
-                  <td className="px-6 py-3 font-mono-accent tracking-widest">{c.code}</td>
-                  <td className="px-6 py-3 capitalize">{c.role}</td>
-                  <td className="px-6 py-3 text-[var(--dojo-ink-soft)]">{c.used_count} / {c.max_uses}</td>
-                  <td className="px-6 py-3">
-                    <span className={`text-[10px] uppercase tracking-[0.2em] px-2 py-1 border ${
-                      c.active ? "border-[#2E4E3F] text-[#2E4E3F]" : "border-[var(--dojo-ink-soft)] text-[var(--dojo-ink-soft)]"
-                    }`}>{c.active ? "Active" : "Inactive"}</span>
-                  </td>
-                  <td className="px-6 py-3 text-[var(--dojo-ink-soft)]">{c.note || "—"}</td>
-                  <td className="px-6 py-3 text-right whitespace-nowrap">
-                    <button className="text-xs inline-flex items-center gap-1 mr-3" onClick={() => copy(c.code)} data-testid={`copy-code-${c.id}`}><Copy size={12} /> Copy</button>
-                    {c.active && <button className="text-xs text-[var(--dojo-hinomaru)] underline" onClick={() => deactivate(c)} data-testid={`deactivate-code-${c.id}`}>Deactivate</button>}
-                  </td>
-                </tr>
-              ))}
-              {codes.length === 0 && <tr><td colSpan={6} className="px-6 py-8 text-center text-[var(--dojo-ink-soft)]">No codes yet.</td></tr>}
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   );

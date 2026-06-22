@@ -1,7 +1,8 @@
 import { useState } from "react";
 import api, { formatApiError } from "@/lib/api";
-import { X, UserPlus } from "lucide-react";
+import { X, UserPlus, Camera } from "lucide-react";
 import { BELT_NAMES } from "@/lib/belts";
+import PhotoCaptureModal from "@/components/PhotoCaptureModal";
 
 /**
  * Manual user-create modal. Replaces access-code registration for staff:
@@ -18,6 +19,9 @@ export default function AddUserModal({ currentUser, onClose, onCreated }) {
   });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [photoModal, setPhotoModal] = useState(false);
+  // Captured `photo_size` override — only PATCH'd after create when ≠ 1.0
+  const [photoSize, setPhotoSize] = useState(1);
 
   const set = (k, v) => setDraft((d) => ({ ...d, [k]: v }));
 
@@ -40,6 +44,15 @@ export default function AddUserModal({ currentUser, onClose, onCreated }) {
         email: draft.email.trim() || null,
       };
       const { data } = await api.post("/users", payload);
+      // If admin tuned photo_size in the capture modal, persist it as a
+      // per-user override on the freshly created account.
+      if (photoSize && photoSize !== 1) {
+        try {
+          await api.patch(`/users/${data.id}`, {
+            idcard_overrides: { ...(data.idcard_overrides || {}), photo_size: photoSize },
+          });
+        } catch (_) { /* non-fatal — user is still created */ }
+      }
       onCreated?.(data);
       onClose();
     } catch (err) {
@@ -107,10 +120,20 @@ export default function AddUserModal({ currentUser, onClose, onCreated }) {
               </div>
               <Field label="Medical Notes"><textarea className="input min-h-[60px]" value={draft.medical_notes} onChange={(e) => set("medical_notes", e.target.value)} placeholder="Allergies, injuries…" /></Field>
               <Field label="Internal Notes"><textarea className="input min-h-[60px]" value={draft.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
-              <Field label="Photo" hint="Optional. JPG/PNG under 1.2 MB.">
-                <div className="flex items-center gap-3">
-                  {draft.photo_url && <img src={draft.photo_url} alt="" className="h-16 w-16 object-cover border border-[var(--dojo-border)]" />}
-                  <input type="file" accept="image/*" onChange={onPhoto} className="text-sm" />
+              <Field label="Photo" hint="Optional. Use Capture for webcam + crop, or pick a file.">
+                <div className="flex items-center gap-3 flex-wrap">
+                  {draft.photo_url && <img src={draft.photo_url} alt="" className="h-16 w-[52px] object-cover border border-[var(--dojo-border)]" data-testid="newuser-photo-preview" />}
+                  <button
+                    type="button"
+                    onClick={() => setPhotoModal(true)}
+                    className="btn-outline flex items-center gap-2 text-xs"
+                    data-testid="newuser-photo-capture-btn"
+                  ><Camera size={13} /> Capture / Crop</button>
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--dojo-ink-soft)]">or</span>
+                  <input type="file" accept="image/*" onChange={onPhoto} className="text-sm" data-testid="newuser-photo-file" />
+                  {draft.photo_url && (
+                    <button type="button" onClick={() => { set("photo_url", ""); setPhotoSize(1); }} className="text-xs text-[var(--dojo-hinomaru)] underline">Remove</button>
+                  )}
                 </div>
               </Field>
             </Section>
@@ -124,6 +147,17 @@ export default function AddUserModal({ currentUser, onClose, onCreated }) {
           </div>
         </form>
       </div>
+      {photoModal && (
+        <PhotoCaptureModal
+          initialPhotoSize={photoSize}
+          onClose={() => setPhotoModal(false)}
+          onConfirm={(dataUrl, size) => {
+            set("photo_url", dataUrl);
+            setPhotoSize(size || 1);
+            setPhotoModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

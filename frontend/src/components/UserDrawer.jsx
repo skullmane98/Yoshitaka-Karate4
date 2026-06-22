@@ -3,7 +3,8 @@ import api, { formatApiError } from "@/lib/api";
 import IDCard, { FONT_SIZE_PRESETS } from "@/components/IDCard";
 import { BELT_NAMES } from "@/lib/belts";
 import { IDCARD_TEMPLATES, mergeTemplates } from "@/lib/idcardTemplates";
-import { X, Save, KeyRound, RefreshCcw } from "lucide-react";
+import { X, Save, KeyRound, RefreshCcw, Camera } from "lucide-react";
+import PhotoCaptureModal from "@/components/PhotoCaptureModal";
 
 /**
  * Slide-out editor for a single user. 4 tabs:
@@ -29,6 +30,7 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
   const [qrPng, setQrPng] = useState("");
   const [qrBusy, setQrBusy] = useState(false);
   const [liveTemplates, setLiveTemplates] = useState(() => mergeTemplates(null));
+  const [photoModal, setPhotoModal] = useState(false);
 
   useEffect(() => { setDraft(user); }, [user]);
 
@@ -207,9 +209,16 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
               <Field label="Active">
                 <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={!!draft.active} onChange={(e) => set("active", e.target.checked)} /> Account enabled</label>
               </Field>
-              <Field label="Profile Photo" hint="Optional. JPG/PNG under 1.2 MB.">
-                <div className="flex items-center gap-3">
-                  {draft.photo_url && <img src={draft.photo_url} alt="" className="h-20 w-20 object-cover border border-[var(--dojo-border)]" />}
+              <Field label="Profile Photo" hint="Optional. Capture + crop with the camera, or pick a file.">
+                <div className="flex items-center gap-3 flex-wrap">
+                  {draft.photo_url && <img src={draft.photo_url} alt="" className="h-20 w-16 object-cover border border-[var(--dojo-border)]" />}
+                  <button
+                    type="button"
+                    onClick={() => setPhotoModal(true)}
+                    className="btn-outline flex items-center gap-2 text-xs"
+                    data-testid="user-profile-photo-capture-btn"
+                  ><Camera size={13} /> Capture / Crop</button>
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--dojo-ink-soft)]">or</span>
                   <input type="file" accept="image/*" capture="environment" onChange={onPhoto} className="text-sm" data-testid="user-profile-photo-upload" />
                   {draft.photo_url && <button type="button" onClick={() => set("photo_url", "")} className="text-xs text-[var(--dojo-hinomaru)] underline">Remove</button>}
                 </div>
@@ -603,6 +612,13 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                     ) : (
                       <div className="h-20 w-16 border border-dashed border-[var(--dojo-border)] flex items-center justify-center text-[8px] uppercase tracking-[0.2em] text-[var(--dojo-ink-soft)] text-center px-1">No photo</div>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => setPhotoModal(true)}
+                      className="btn-outline flex items-center gap-2 text-xs"
+                      data-testid="user-idcard-photo-capture-btn"
+                    ><Camera size={13} /> Capture / Crop</button>
+                    <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--dojo-ink-soft)]">or</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -652,6 +668,17 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
           </div>
         )}
       </div>
+      {photoModal && (
+        <PhotoCaptureModal
+          initialPhotoSize={(draft.idcard_overrides || {}).photo_size || 1}
+          onClose={() => setPhotoModal(false)}
+          onConfirm={(dataUrl, size) => {
+            set("photo_url", dataUrl);
+            if (size && size !== 1) setOverride("photo_size", size);
+            setPhotoModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

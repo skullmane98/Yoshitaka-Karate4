@@ -100,6 +100,15 @@ super_admin → admin → renshi → sensei → team_member → student
   - `UserDrawer` template dropdown now fetches from `/idcard-templates` so newly-created templates appear immediately
   - **[2026-02-29] follow-up:** added Card Background Image upload to the template editor (image preview + Remove button) so admins can attach a watermark per template; full-width row layout
   - Verified end-to-end via Playwright: create / duplicate / delete / live preview title + pill / bg image upload all working; built-in delete properly returns 400
+- **[2026-03-04] Photo Capture + Crop modal (Add User & User Drawer)**
+  - New `PhotoCaptureModal.jsx`: combined Camera + Upload modal with a 4:5 portrait crop frame matching the ID-card photo placeholder. Includes drag-to-pan, zoom slider, and a `photo_size` slider (25–300%) with a live mini ID-card preview.
+  - `AddUserModal`: added "Capture / Crop" button next to the file picker. After user create, if photo_size ≠ 1.0 the new user is auto-PATCH'd with `idcard_overrides.photo_size`.
+  - `UserDrawer`: same Capture/Crop button on both Profile and ID Card tabs. Confirm writes `photo_url` + `idcard_overrides.photo_size` into the draft so the existing Save flow persists everything in one PATCH.
+  - Camera path: `getUserMedia({facingMode:'user'})` w/ mirrored preview; failed/unavailable cameras show "Requested device not found" and the admin can switch to Upload.
+  - Verified end-to-end via Playwright: upload → crop → confirm lands the cropped JPEG (480×600) in both Add User preview and User Drawer.
+- **[2026-03-04] Removed Access Codes from admin UI**
+  - Dropped the "Access Codes" tab + `CodesPanel` + `/access-codes` fetch from `AdminDashboard.jsx`. Overview tile "Active Codes" replaced with "Active Members".
+  - Backend endpoints + DB table left dormant (no removal needed; OAuth flow still routes through them if ever re-enabled).
 - **[2026-03-04] Template editor parity with UserDrawer**
   - `IDCardTemplateEditor.jsx` now exposes QR Code Color picker + scale sliders for Student Photo / QR / Card Background size (matches the per-user override drawer).
   - Added `"scale"` field renderer (range 25–`opts.max`%, stored as `0.25–3.0` float in `config`).

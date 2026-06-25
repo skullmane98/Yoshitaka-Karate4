@@ -100,6 +100,11 @@ super_admin → admin → renshi → sensei → team_member → student
   - `UserDrawer` template dropdown now fetches from `/idcard-templates` so newly-created templates appear immediately
   - **[2026-02-29] follow-up:** added Card Background Image upload to the template editor (image preview + Remove button) so admins can attach a watermark per template; full-width row layout
   - Verified end-to-end via Playwright: create / duplicate / delete / live preview title + pill / bg image upload all working; built-in delete properly returns 400
+- **[2026-03-04] Training overlay for Add User**
+  - New `AddUserTraining.jsx` mounts a vertical "Training" tab on the right edge of the Add User modal.
+  - Click → side-panel with two CTAs: **"Watch a 60-second demo video"** (opens an embed modal — drop your URL into `DEMO_VIDEO_URL` at the top of the file) and **"Start guided walkthrough"** (9-step tour: highlights each critical field with a green ring + positioned tooltip + Prev/Next/Step n/9).
+  - Tour overlay re-measures the target on resize/scroll, scrolls the field into view before positioning, and falls back to centred tooltip for welcome / completion steps.
+  - Verified via Playwright: panel opens, video-modal opens with placeholder card, tour advances Step 1 → 4 → … with ring tracking each field.
 - **[2026-03-04] Photo Capture + Crop modal (Add User & User Drawer)**
   - New `PhotoCaptureModal.jsx`: combined Camera + Upload modal with a 4:5 portrait crop frame matching the ID-card photo placeholder. Includes drag-to-pan, zoom slider, and a `photo_size` slider (25–300%) with a live mini ID-card preview.
   - `AddUserModal`: added "Capture / Crop" button next to the file picker. After user create, if photo_size ≠ 1.0 the new user is auto-PATCH'd with `idcard_overrides.photo_size`.

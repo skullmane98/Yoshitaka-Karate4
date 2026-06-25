@@ -3,6 +3,7 @@ import api, { formatApiError } from "@/lib/api";
 import { X, UserPlus, Camera } from "lucide-react";
 import { BELT_NAMES } from "@/lib/belts";
 import PhotoCaptureModal from "@/components/PhotoCaptureModal";
+import AddUserTraining from "@/components/AddUserTraining";
 
 /**
  * Manual user-create modal. Replaces access-code registration for staff:
@@ -66,7 +67,8 @@ export default function AddUserModal({ currentUser, onClose, onCreated }) {
     <div className="fixed inset-0 z-50" data-testid="add-user-modal">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="absolute inset-0 flex items-start justify-center p-6 overflow-y-auto">
-        <form onSubmit={submit} className="bg-[var(--dojo-paper)] border border-[var(--dojo-border)] w-full max-w-3xl my-8">
+        <form onSubmit={submit} className="relative bg-[var(--dojo-paper)] border border-[var(--dojo-border)] w-full max-w-3xl my-8">
+          <AddUserTraining />
           <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--dojo-border)]">
             <div>
               <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Onboarding</div>

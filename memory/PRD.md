@@ -100,6 +100,11 @@ super_admin → admin → renshi → sensei → team_member → student
   - `UserDrawer` template dropdown now fetches from `/idcard-templates` so newly-created templates appear immediately
   - **[2026-02-29] follow-up:** added Card Background Image upload to the template editor (image preview + Remove button) so admins can attach a watermark per template; full-width row layout
   - Verified end-to-end via Playwright: create / duplicate / delete / live preview title + pill / bg image upload all working; built-in delete properly returns 400
+- **[2026-03-04] ID Card — removed "Scan to verify" caption**
+  - Stripped the `scan_text` rendering from both DOM layouts (vertical + horizontal) and the PDF export in `IDCard.jsx`. Also removed the `scan_text` field row from `IDCardTemplateEditor.jsx`. Existing template values in DB remain but no longer render.
+- **[2026-03-04] Payments tab — re-order + hide calendar toggle**
+  - `PaymentsTabPanel` now renders ledger first, calendar second.
+  - "Hide calendar / Show calendar" toggle (persisted to `localStorage` key `yk_payments_calendar_visible`) lets admins collapse the calendar from view permanently.
 - **[2026-03-04] Training overlay for Add User**
   - New `AddUserTraining.jsx` mounts a vertical "Training" tab on the right edge of the Add User modal.
   - Click → side-panel with **"Start guided walkthrough"** (9-step tour: highlights each critical field with a green ring + positioned tooltip + Prev/Next/Step n/9).

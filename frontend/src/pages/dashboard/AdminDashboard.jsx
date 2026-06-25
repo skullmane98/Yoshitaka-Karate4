@@ -120,10 +120,12 @@ export default function AdminDashboard({ isSuper = false }) {
       )}
 
       {tab === "payments" && (
-        <div className="space-y-6">
-          <PaymentCalendar payments={payments} />
-          <PaymentsPanel payments={payments} onReload={reload} users={users} onNew={(u) => setPayFor(u)} />
-        </div>
+        <PaymentsTabPanel
+          payments={payments}
+          users={users}
+          onReload={reload}
+          onNew={(u) => setPayFor(u)}
+        />
       )}
 
       {tab === "attendance" && <AttendancePanel />}
@@ -274,6 +276,42 @@ function UsersPanel({ users, onEdit, onReload, onBill, onAdd, isSuper }) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function PaymentsTabPanel({ payments, users, onReload, onNew }) {
+  // Calendar visibility — persisted to localStorage so the admin's choice
+  // survives reloads. Defaults to visible.
+  const [showCalendar, setShowCalendar] = useState(() => {
+    try { return localStorage.getItem("yk_payments_calendar_visible") !== "0"; }
+    catch { return true; }
+  });
+  const toggleCalendar = () => {
+    setShowCalendar((v) => {
+      const next = !v;
+      try { localStorage.setItem("yk_payments_calendar_visible", next ? "1" : "0"); } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+  return (
+    <div className="space-y-6" data-testid="payments-tab">
+      <PaymentsPanel payments={payments} onReload={onReload} users={users} onNew={onNew} />
+      <div className="flex items-center justify-between border-t border-[var(--dojo-border)] pt-4">
+        <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Payment Calendar</div>
+        <button
+          type="button"
+          onClick={toggleCalendar}
+          className="text-[11px] uppercase tracking-[0.2em] border border-[var(--dojo-border)] hover:border-[var(--dojo-ink)] px-3 py-1.5"
+          data-testid="payments-calendar-toggle"
+        >{showCalendar ? "Hide calendar" : "Show calendar"}</button>
+      </div>
+      {showCalendar && (
+        <div data-testid="payments-calendar-wrapper">
+          <PaymentCalendar payments={payments} />
+        </div>
+      )}
     </div>
   );
 }

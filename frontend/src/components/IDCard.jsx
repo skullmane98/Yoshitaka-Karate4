@@ -160,8 +160,6 @@ async function drawHorizontalCardOnPdf(pdf, ctx) {
   if (qrImg) {
     try { pdf.addImage(qrImg, "PNG", qrX, qrY, QR_SIDE, QR_SIDE); } catch (_) {}
   }
-  pdf.setFont("helvetica", "normal"); pdf.setFontSize(5); pdf.setTextColor(74, 74, 74);
-  pdf.text(String(design.scan_text).toUpperCase(), qrX + QR_SIDE / 2, qrY + QR_SIDE + 2, { align: "center" });
 
   // Bottom divider + footer
   const footerY = H - MARGIN - 2;
@@ -697,9 +695,6 @@ function HorizontalLayout({ user, design, data, loading }) {
               <img src={data.qr_png} alt="QR" style={{ width: qrSide, height: qrSide }} data-testid="idcard-qr" />
             )}
           </div>
-          <div className="uppercase tracking-[0.3em] text-[var(--dojo-ink-soft)]" style={{ fontSize: pxOf(design, "scan_text") }}>
-            {design.scan_text}
-          </div>
         </div>
       </div>
 
@@ -766,9 +761,6 @@ function VerticalLayout({ user, design, data, loading }) {
             <img src={data.qr_png} alt="QR" style={{ width: qrSide, height: qrSide }} data-testid="idcard-qr" />
           )}
         </div>
-      </div>
-      <div className="uppercase tracking-[0.3em] text-[var(--dojo-ink-soft)] mt-1" style={{ fontSize: pxOf(design, "scan_text"), lineHeight: 1.4 }}>
-        {design.scan_text}
       </div>
 
       <div className="brush-divider w-full my-2" />

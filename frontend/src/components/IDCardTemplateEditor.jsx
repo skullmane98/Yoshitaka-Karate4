@@ -20,7 +20,6 @@ const FIELDS = [
   ["kanji_top", "Kanji (top)", "text"],
   ["kanji_bottom", "Kanji (bottom)", "text"],
   ["issued_text", "Issued footer", "text"],
-  ["scan_text", "Scan caption", "text"],
   ["name_label", "Name label", "text"],
   ["role_label", "Role label", "text"],
   ["footer_label", "Member# label", "text"],

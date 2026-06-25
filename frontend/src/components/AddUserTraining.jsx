@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Sparkles, Play, ChevronLeft, ChevronRight, X, GraduationCap } from "lucide-react";
+import { Sparkles, ChevronLeft, ChevronRight, X, GraduationCap } from "lucide-react";
 
 /**
  * Training overlay for the Add User modal.
@@ -8,19 +8,10 @@ import { Sparkles, Play, ChevronLeft, ChevronRight, X, GraduationCap } from "luc
  *   │                          │
  *   └──────────────────────────┘
  *
- * Click TRAINING → opens a small side-panel with:
- *   1. "Watch a 60-second demo video" — embed area (swap DEMO_VIDEO_URL below)
- *   2. "Start guided walkthrough" — overlays highlighted tooltips on each
- *      critical Add-User field in sequence.
- *
+ * Click TRAINING → opens a side-panel that launches a guided walkthrough.
  * The walkthrough finds each field by its `data-testid` (lookup happens in the
  * SAME modal that hosts this component, so portal positioning is straightforward).
  */
-
-// 👉 Drop your dojo's demo video URL here (YouTube embed, Vimeo, or direct mp4).
-// Example: "https://www.youtube.com/embed/dQw4w9WgXcQ"
-// Until set, a friendly placeholder card is shown instead.
-const DEMO_VIDEO_URL = "";
 
 const STEPS = [
   {
@@ -80,23 +71,15 @@ const STEPS = [
 
 export default function AddUserTraining() {
   const [panelOpen, setPanelOpen] = useState(false);
-  const [videoOpen, setVideoOpen] = useState(false);
   const [tourStep, setTourStep] = useState(-1); // -1 = inactive
   const tourActive = tourStep >= 0;
 
-  // Close everything if parent modal closes (component unmounts cleanly).
+  // Close everything if parent modal unmounts.
   useEffect(() => () => { setPanelOpen(false); setTourStep(-1); }, []);
 
   const startTour = () => {
     setPanelOpen(false);
     setTourStep(0);
-  };
-
-  // Auto-close the helper panel when the user dives into the video, so the
-  // TRAINING tab re-opens it cleanly afterwards (panel is a toggle).
-  const openVideo = () => {
-    setPanelOpen(false);
-    setVideoOpen(true);
   };
 
   const endTour = () => setTourStep(-1);
@@ -120,11 +103,8 @@ export default function AddUserTraining() {
         <TrainingPanel
           onClose={() => setPanelOpen(false)}
           onStartTour={startTour}
-          onWatchVideo={openVideo}
         />
       )}
-
-      {videoOpen && <DemoVideoModal onClose={() => setVideoOpen(false)} />}
 
       {tourActive && (
         <TourOverlay
@@ -140,7 +120,7 @@ export default function AddUserTraining() {
   );
 }
 
-function TrainingPanel({ onClose, onStartTour, onWatchVideo }) {
+function TrainingPanel({ onClose, onStartTour }) {
   return (
     <div
       className="absolute top-1/2 -right-[24rem] -translate-y-1/2 w-[22rem] bg-[var(--dojo-paper)] border border-[var(--dojo-border)] shadow-xl p-5 z-10"
@@ -159,66 +139,19 @@ function TrainingPanel({ onClose, onStartTour, onWatchVideo }) {
 
       <button
         type="button"
-        onClick={onWatchVideo}
-        className="w-full border border-[var(--dojo-border)] hover:border-[var(--dojo-ink)] p-3 text-left flex items-center gap-3 mb-3 transition-colors"
-        data-testid="training-watch-video"
-      >
-        <div className="w-10 h-10 rounded-full bg-[var(--dojo-green)] text-white flex items-center justify-center shrink-0"><Play size={16} fill="currentColor" /></div>
-        <div className="text-sm">
-          <div className="font-medium">Watch a 60-second demo video</div>
-          <div className="text-[11px] text-[var(--dojo-ink-soft)]">Full walkthrough — visual learners start here.</div>
-        </div>
-      </button>
-
-      <button
-        type="button"
         onClick={onStartTour}
         className="w-full border border-[var(--dojo-border)] hover:border-[var(--dojo-ink)] p-3 text-left flex items-center gap-3 transition-colors"
         data-testid="training-start-tour"
       >
-        <div className="w-10 h-10 rounded-full border-2 border-[var(--dojo-green)] text-[var(--dojo-green)] flex items-center justify-center shrink-0"><Sparkles size={16} /></div>
+        <div className="w-10 h-10 rounded-full bg-[var(--dojo-green)] text-white flex items-center justify-center shrink-0"><Sparkles size={16} /></div>
         <div className="text-sm">
           <div className="font-medium">Start guided walkthrough</div>
-          <div className="text-[11px] text-[var(--dojo-ink-soft)]">7 steps, ~30s — highlighted tooltips on each field.</div>
+          <div className="text-[11px] text-[var(--dojo-ink-soft)]">9 steps, ~30s — highlighted tooltips on each field.</div>
         </div>
       </button>
 
       <div className="text-[10px] text-[var(--dojo-ink-soft)] mt-4 leading-snug">
         Tip: you can re-open this panel any time — your form input is preserved.
-      </div>
-    </div>
-  );
-}
-
-function DemoVideoModal({ onClose }) {
-  return (
-    <div className="fixed inset-0 z-[70] bg-black/80 flex items-center justify-center p-6" onClick={onClose} data-testid="training-video-modal">
-      <div className="bg-[var(--dojo-paper)] border border-[var(--dojo-border)] w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--dojo-border)]">
-          <div className="font-serif text-lg">Add User — 60-second demo</div>
-          <button onClick={onClose} className="p-1 hover:text-[var(--dojo-hinomaru)]" data-testid="training-video-close"><X size={16} /></button>
-        </div>
-        <div className="aspect-video bg-black">
-          {DEMO_VIDEO_URL ? (
-            <iframe
-              src={DEMO_VIDEO_URL}
-              title="Add User demo"
-              className="w-full h-full"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              data-testid="training-video-iframe"
-            />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-white/80 text-sm text-center px-8 gap-3">
-              <Play size={42} className="opacity-40" />
-              <div className="max-w-md">
-                Drop your demo video URL into <code className="text-white">DEMO_VIDEO_URL</code> in <code className="text-white">AddUserTraining.jsx</code> to display it here.
-              </div>
-              <div className="text-[11px] text-white/50">YouTube embed, Vimeo, or direct .mp4 all work.</div>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
@@ -235,7 +168,6 @@ function TourOverlay({ step, index, total, onPrev, onNext, onClose }) {
     const el = document.querySelector(`[data-testid="${step.target}"]`);
     if (!el) { setRect(null); return; }
     el.scrollIntoView({ behavior: "smooth", block: "center" });
-    // give scroll a beat, then measure
     const t = setTimeout(() => {
       const r = el.getBoundingClientRect();
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
@@ -268,7 +200,6 @@ function TourOverlay({ step, index, total, onPrev, onNext, onClose }) {
     width: rect.width + PAD * 2,
     height: rect.height + PAD * 2,
   };
-  // Tooltip placement — under the field, falling back to centred if no target.
   const TOOLTIP_W = 320;
   const tooltipStyle = rect
     ? {
@@ -280,10 +211,8 @@ function TourOverlay({ step, index, total, onPrev, onNext, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[80] pointer-events-none" data-testid="training-tour-overlay">
-      {/* Dimmer */}
       <div className="absolute inset-0 bg-black/60 pointer-events-auto" onClick={onClose} />
 
-      {/* Highlight ring around the targeted field */}
       {ringStyle && (
         <div
           className="absolute border-2 border-[var(--dojo-green)] rounded-sm pointer-events-none transition-all duration-200"
@@ -292,7 +221,6 @@ function TourOverlay({ step, index, total, onPrev, onNext, onClose }) {
         />
       )}
 
-      {/* Tooltip */}
       <div
         ref={tooltipRef}
         className="absolute bg-[var(--dojo-paper)] border border-[var(--dojo-border)] shadow-2xl p-4 pointer-events-auto"

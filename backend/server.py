@@ -644,7 +644,9 @@ async def list_users(
     if current.role in ("renshi", "sensei", "team_member"):
         stmt = stmt.where(User.role == "student")
     elif current.role == "admin":
-        stmt = stmt.where(User.role.in_(["student", "team_member", "sensei", "renshi"]))
+        # Admins now see peer admins + everyone below them. Super-admins are
+        # still hidden from admin lists to prevent privilege escalation UX.
+        stmt = stmt.where(User.role.in_(["student", "team_member", "sensei", "renshi", "admin"]))
     elif role:
         stmt = stmt.where(User.role == role)
     res = await session.execute(stmt)
@@ -739,8 +741,10 @@ async def update_user(
     if current.role == "super_admin":
         allowed = PROFILE_FIELDS
     elif current.role == "admin":
-        if current.id != user_id and target.role not in ("student", "team_member", "sensei", "renshi"):
-            raise HTTPException(status_code=403, detail="Admins cannot edit other admins")
+        # Admins can edit peer admins + everyone below them. Super-admins are
+        # off-limits to prevent an admin from tampering with a higher role.
+        if current.id != user_id and target.role == "super_admin":
+            raise HTTPException(status_code=403, detail="Admins cannot edit super-admins")
         allowed = PROFILE_FIELDS - ({"role", "email"} if current.id != user_id else set())
     elif current.id == user_id:
         # Self-edit for non-admin roles — limited fields, but ID-card

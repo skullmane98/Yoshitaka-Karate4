@@ -1,23 +1,27 @@
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useT } from "@/context/LanguageContext";
 import { Menu, X } from "lucide-react";
 import { LOGO_URL } from "@/lib/brand";
 import ThemeToggle from "@/components/ThemeToggle";
 import NotificationBell from "@/components/NotificationBell";
+import LanguageToggle from "@/components/LanguageToggle";
 
-const NAV = [
-  { to: "/", label: "Home" },
-  { to: "/about", label: "Sensei" },
-  { to: "/programs", label: "Programs" },
-  { to: "/schedule", label: "Schedule" },
-  { to: "/blog", label: "Blog" },
-  { to: "/news", label: "News" },
-  { to: "/contact", label: "Contact" },
+// Build the nav from translation keys so switching language swaps labels.
+const NAV_ITEMS = [
+  { to: "/", key: "nav.home" },
+  { to: "/about", key: "nav.about" },
+  { to: "/programs", key: "nav.programs" },
+  { to: "/schedule", key: "nav.schedule" },
+  { to: "/blog", key: "nav.blog" },
+  { to: "/news", key: "nav.news" },
+  { to: "/contact", key: "nav.contact" },
 ];
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const nav = useNavigate();
   const loc = useLocation();
@@ -46,41 +50,42 @@ export default function Navbar() {
         </Link>
 
         <nav className="hidden lg:flex items-center gap-10">
-          {!isHome && NAV.map((n) => (
+          {!isHome && NAV_ITEMS.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
               end={n.to === "/"}
-              data-testid={`nav-${n.label.toLowerCase()}-link`}
+              data-testid={`nav-${n.key.split(".").pop()}-link`}
               className={({ isActive }) =>
                 `text-xs uppercase tracking-[0.18em] font-medium transition-colors ${
                   isActive ? "text-[var(--dojo-green)]" : "text-[var(--dojo-ink)] hover:text-[var(--dojo-green)]"
                 }`
               }
             >
-              {n.label}
+              {t(n.key)}
             </NavLink>
           ))}
         </nav>
 
         <div className="hidden lg:flex items-center gap-3">
+          {!isHome && <LanguageToggle variant="compact" />}
           {!isHome && <ThemeToggle compact />}
           {user && <NotificationBell />}
           {user ? (
             <>
               <Link to={dashHref} className="btn-outline" data-testid="nav-dashboard-btn">
-                Dashboard
+                {t("nav.dashboard")}
               </Link>
               <button
                 onClick={async () => { await logout(); nav("/"); }}
                 className="btn-primary"
                 data-testid="nav-logout-btn"
               >
-                Logout
+                {t("nav.logout")}
               </button>
             </>
           ) : (
-            <Link to="/login" className="btn-primary" data-testid="nav-login-btn">Login</Link>
+            <Link to="/login" className="btn-primary" data-testid="nav-login-btn">{t("nav.login")}</Link>
           )}
         </div>
 
@@ -97,32 +102,33 @@ export default function Navbar() {
       {open && (
         <div className="lg:hidden border-t border-[var(--dojo-border)] bg-[var(--dojo-paper)]" data-testid="nav-mobile-menu">
           <div className="px-6 py-6 flex flex-col gap-5">
-            {!isHome && NAV.map((n) => (
+            {!isHome && NAV_ITEMS.map((n) => (
               <NavLink
                 key={n.to}
                 to={n.to}
                 onClick={() => setOpen(false)}
                 className="text-sm uppercase tracking-[0.18em] font-medium"
-                data-testid={`nav-m-${n.label.toLowerCase()}`}
+                data-testid={`nav-m-${n.key.split(".").pop()}`}
               >
-                {n.label}
+                {t(n.key)}
               </NavLink>
             ))}
+            <div className="pt-2"><LanguageToggle /></div>
             <div className="flex gap-3 pt-3">
               {user ? (
                 <>
                   <Link to={dashHref} className="btn-outline flex-1 text-center" onClick={() => setOpen(false)}>
-                    Dashboard
+                    {t("nav.dashboard")}
                   </Link>
                   <button
                     onClick={async () => { await logout(); setOpen(false); nav("/"); }}
                     className="btn-primary flex-1"
                   >
-                    Logout
+                    {t("nav.logout")}
                   </button>
                 </>
               ) : (
-                <Link to="/login" className="btn-primary flex-1 text-center" onClick={() => setOpen(false)}>Login</Link>
+                <Link to="/login" className="btn-primary flex-1 text-center" onClick={() => setOpen(false)}>{t("nav.login")}</Link>
               )}
             </div>
           </div>

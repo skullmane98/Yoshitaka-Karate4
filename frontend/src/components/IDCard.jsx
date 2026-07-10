@@ -420,12 +420,23 @@ export default function IDCard({ user, defaultOrientation = "horizontal", previe
 
   // Compute the scale factor whenever the wrapper resizes so the card always
   // fills the available width while keeping CR80 aspect ratio.
+  //
+  // We ALSO clamp the max on-screen render to roughly the real physical size
+  // of a CR80 card (~ 3.78 px / mm at a standard 96 DPI screen). This means
+  // the preview shown to admins is a truthful 1:1 mock of the printed card
+  // rather than a giant blown-up canvas. Users won't be surprised by the
+  // "small" size of the physical card they'll receive.
   useEffect(() => {
     const inner = cardPx(orientation);
+    // Physical size at ~96 DPI: 85.6 mm × 3.78 px/mm ≈ 324 px (landscape) or
+    // 204 px (portrait short side). We divide by the internal render size to
+    // get the max on-screen scale.
+    const physicalW = (orientation === "vertical" ? CR80_MM.h : CR80_MM.w) * 3.78;
+    const maxScale = physicalW / inner.w;
     const update = () => {
       if (!wrapRef.current) return;
       const cw = wrapRef.current.clientWidth;
-      setScale(Math.min(cw / inner.w, 1.4));
+      setScale(Math.min(cw / inner.w, maxScale));
     };
     update();
     const ro = new ResizeObserver(update);

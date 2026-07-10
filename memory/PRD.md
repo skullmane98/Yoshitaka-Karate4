@@ -100,6 +100,12 @@ super_admin → admin → renshi → sensei → team_member → student
   - `UserDrawer` template dropdown now fetches from `/idcard-templates` so newly-created templates appear immediately
   - **[2026-02-29] follow-up:** added Card Background Image upload to the template editor (image preview + Remove button) so admins can attach a watermark per template; full-width row layout
   - Verified end-to-end via Playwright: create / duplicate / delete / live preview title + pill / bg image upload all working; built-in delete properly returns 400
+- **[2026-03-04] Site-wide EN/ES language toggle + ID Card cleanup + shortcut**
+  - New `LanguageProvider` + `useT()` hook (in `/context/LanguageContext.jsx`) drives a lightweight `t()` function backed by dictionaries in `/lib/i18n.js`. Persisted to `localStorage.yk_lang`; auto-detects browser locale on first visit.
+  - Compact `LanguageToggle` (EN/ES pill) mounted in public Navbar and DashboardLayout header. Translated surfaces so far: nav, mobile menu, login page, home hero, dashboard title/subtitle/tabs, overview stat cards, latest-payments card, users-panel heading. Deeper admin panels (Attendance, Notify, Blog editor, CMS) still render EN — TODO for a follow-up.
+  - **"Edit ID Cards" shortcut**: fixed to the top-right of every dashboard page. Opens a searchable user picker (`IDCardShortcutModal.jsx`); clicking a user opens the `UserDrawer` scrolled directly to the ID Card tab (added `initialTab` prop).
+  - **ID Card tab trimmed**: removed per-user overrides for dojo/certificate/kanji/issued/name/role/footer labels, accent + title colors, title offset X/Y, and the font-size grid. Kept only fields matching the elements visible on the sample PDF: template picker, QR color, photo/QR/background sizes, background opacity + position (± mm), background image, clear-overrides.
+  - **Preview scale**: `IDCard.jsx` now caps the on-screen render at true physical CR80 size (~324 px landscape @ 96 DPI) so admins see the printed size, not a blown-up mock.
 - **[2026-03-04] Admins can now see + edit other admins**
   - `GET /api/users` for `admin` role now includes peer admins in the returned list (previously only `student/team_member/sensei/renshi`). Super-admins remain hidden.
   - `PATCH /api/users/{id}` allows admins to edit peer admin profiles (name, phone, belt_rank, address, notes, photo, ID card overrides, active). Editing super-admins still returns 403 to prevent privilege escalation.

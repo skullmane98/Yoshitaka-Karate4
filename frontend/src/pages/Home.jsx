@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PublicLayout from "@/components/PublicLayout";
 import RichContent from "@/components/RichContent";
 import api from "@/lib/api";
+import { useT } from "@/context/LanguageContext";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { LOGO_URL } from "@/lib/brand";
@@ -13,6 +14,7 @@ const EXTERNAL_HOME = "https://yoshitakakaratedo.com";
 const EXTERNAL_CONTACT = "https://yoshitakakaratedo.com/contact";
 
 export default function Home() {
+  const { t } = useT();
   const [page, setPage] = useState(null);
 
   useEffect(() => {
@@ -38,13 +40,13 @@ export default function Home() {
           >
             <div className="flex items-center gap-4 mb-8">
               <span className="hinomaru-dot" />
-              <span className="text-[10px] uppercase tracking-[0.32em]">{c.tagline || "Traditional Shotokan Karate"}</span>
+              <span className="text-[10px] uppercase tracking-[0.32em]">{c.tagline || t("home.eyebrow")}</span>
             </div>
             <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl font-medium tracking-tight leading-[0.95] mb-8 max-w-4xl">
-              {c.hero_headline || "Forge Character. Refine Spirit."}
+              {c.hero_headline || `${t("home.hero_line1")} ${t("home.hero_line2")}`}
             </h1>
             <p className="text-lg md:text-xl max-w-2xl text-[#FBFAF6]/80 font-light leading-relaxed">
-              {c.hero_sub || "A dojo devoted to the enduring practice of Shotokan karate."}
+              {c.hero_sub || t("home.hero_sub")}
             </p>
             <div className="flex flex-wrap gap-4 mt-10">
               <a
@@ -54,7 +56,7 @@ export default function Home() {
                 className="btn-primary"
                 data-testid="home-cta-programs"
               >
-                Learn More <ArrowRight size={14} className="inline ml-2" />
+                {t("home.cta_learn_more")} <ArrowRight size={14} className="inline ml-2" />
               </a>
               <a
                 href={EXTERNAL_CONTACT}
@@ -64,7 +66,7 @@ export default function Home() {
                 style={{ color: "#FBFAF6", borderColor: "#FBFAF6" }}
                 data-testid="home-cta-contact"
               >
-                Contact Us
+                {t("home.cta_contact_us")}
               </a>
             </div>
           </motion.div>

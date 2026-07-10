@@ -1,12 +1,16 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, Home } from "lucide-react";
+import { LogOut, Home, IdCard } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import NotificationBell from "@/components/NotificationBell";
+import LanguageToggle from "@/components/LanguageToggle";
+import { useT } from "@/context/LanguageContext";
 
-export default function DashboardLayout({ title, subtitle, nav, children }) {
+export default function DashboardLayout({ title, subtitle, nav, onEditIDCards, children }) {
   const { user, logout } = useAuth();
+  const { t } = useT();
   const navigate = useNavigate();
+  const canEditIDCards = ["admin", "super_admin"].includes(user?.role);
 
   return (
     <div className="min-h-screen paper-texture flex flex-col">
@@ -26,7 +30,18 @@ export default function DashboardLayout({ title, subtitle, nav, children }) {
               <span className="uppercase tracking-widest">{user?.role?.replace("_", " ")}</span>
             </span>
             <ThemeToggle compact />
+            <LanguageToggle variant="compact" />
             <NotificationBell />
+            {canEditIDCards && onEditIDCards && (
+              <button
+                onClick={onEditIDCards}
+                className="hidden md:inline-flex items-center gap-2 px-3 py-2 border border-[var(--dojo-border)] hover:border-[var(--dojo-green)] hover:text-[var(--dojo-green)] transition-colors text-[11px] uppercase tracking-[0.18em]"
+                data-testid="dashboard-edit-idcards-btn"
+                title={t("dash.edit_idcards_shortcut")}
+              >
+                <IdCard size={14} /> {t("dash.edit_idcards_shortcut")}
+              </button>
+            )}
             <button
               onClick={() => navigate("/")}
               className="p-2 border border-[var(--dojo-border)] hover:border-[var(--dojo-green)] hover:text-[var(--dojo-green)] transition-colors"

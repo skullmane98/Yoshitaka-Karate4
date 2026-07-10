@@ -1,0 +1,351 @@
+/**
+ * Lightweight i18n dictionary for Yoshitaka Karate CMS.
+ *
+ * Strings are grouped by surface (`nav`, `login`, `dashboard`, etc.). Add new
+ * keys in BOTH `en` and `es`; missing keys fall back to the key path itself in
+ * dev so gaps are visible.
+ */
+
+export const TRANSLATIONS = {
+  en: {
+    // Public site navigation
+    "nav.home": "Home",
+    "nav.about": "About",
+    "nav.programs": "Programs",
+    "nav.schedule": "Schedule",
+    "nav.news": "News",
+    "nav.contact": "Contact",
+    "nav.blog": "Blog",
+    "nav.login": "Login",
+    "nav.dashboard": "Dashboard",
+    "nav.logout": "Logout",
+
+    // Language switcher
+    "lang.toggle_hint": "Language",
+    "lang.en": "EN",
+    "lang.es": "ES",
+
+    // Login page
+    "login.title": "Login",
+    "login.subtitle": "Sign in to access your member portal.",
+    "login.identifier_label": "Username, email, or member #",
+    "login.identifier_placeholder": "e.g. johnsmith or john@example.com",
+    "login.password_label": "Password",
+    "login.submit": "Sign In",
+    "login.forgot": "Forgot password?",
+    "login.google": "Continue with Google",
+
+    // Common buttons
+    "btn.save": "Save",
+    "btn.save_changes": "Save Changes",
+    "btn.cancel": "Cancel",
+    "btn.close": "Close",
+    "btn.edit": "Edit",
+    "btn.delete": "Delete",
+    "btn.add": "Add",
+    "btn.remove": "Remove",
+    "btn.confirm": "Confirm",
+    "btn.saving": "Saving…",
+
+    // Dashboard tabs
+    "tab.overview": "Overview",
+    "tab.users": "Users",
+    "tab.students": "Students",
+    "tab.payments": "Payments",
+    "tab.attendance": "Attendance",
+    "tab.notify": "Notify",
+    "tab.blog": "Blog",
+    "tab.cms": "CMS",
+    "tab.permissions": "Permissions",
+    "tab.idcard": "ID Card",
+
+    // Dashboard headers
+    "dash.super_admin_title": "Super Admin Control",
+    "dash.admin_title": "Admin Portal",
+    "dash.dojo_administration": "Dojo Administration",
+    "dash.student_administration": "Student Administration",
+    "dash.edit_idcards_shortcut": "Edit ID Cards",
+
+    // Overview stats
+    "stat.students": "Students",
+    "stat.admins": "Admins",
+    "stat.payments_due": "Payments Due",
+    "stat.active_members": "Active Members",
+    "stat.latest_payments": "Latest Payments",
+    "stat.no_payments": "No payments yet.",
+    "stat.open": "open",
+
+    // Users panel
+    "users.all_users": "All Users",
+    "users.records": "records",
+    "users.add_user": "Add User",
+    "users.col_name": "Name",
+    "users.col_email": "Email",
+    "users.col_username": "Username",
+    "users.col_role": "Role",
+    "users.col_belt": "Belt",
+    "users.col_status": "Status",
+    "users.col_actions": "Actions",
+    "users.active": "Active",
+    "users.inactive": "Inactive",
+    "users.no_users": "No users.",
+
+    // Add User modal
+    "adduser.title": "Add New User",
+    "adduser.onboarding": "Onboarding",
+    "adduser.section_account": "Account",
+    "adduser.section_information": "Information",
+    "adduser.full_name": "Full Name",
+    "adduser.username": "Username",
+    "adduser.username_hint": "Required. The login they'll type at sign-in.",
+    "adduser.email": "Email",
+    "adduser.email_hint": "Optional. Useful for password resets and notifications.",
+    "adduser.email_placeholder": "(optional)",
+    "adduser.password": "Starter Password",
+    "adduser.password_hint": "At least 6 chars. User can change later.",
+    "adduser.role": "Role",
+    "adduser.phone": "Phone",
+    "adduser.belt_rank": "Belt Rank",
+    "adduser.dob": "Date of Birth",
+    "adduser.address": "Address",
+    "adduser.emergency_name": "Emergency Contact Name",
+    "adduser.emergency_phone": "Emergency Contact Phone",
+    "adduser.medical_notes": "Medical Notes",
+    "adduser.medical_placeholder": "Allergies, injuries…",
+    "adduser.internal_notes": "Internal Notes",
+    "adduser.photo": "Photo",
+    "adduser.photo_hint": "Optional. Use Capture for webcam + crop, or pick a file.",
+    "adduser.capture_crop": "Capture / Crop",
+    "adduser.or": "or",
+    "adduser.create": "Create User",
+    "adduser.creating": "Creating…",
+
+    // User Drawer tabs
+    "drawer.tab_profile": "Profile",
+    "drawer.tab_info": "Information",
+    "drawer.tab_idcard": "ID Card",
+    "drawer.tab_security": "Security",
+
+    // ID Card tab
+    "idcard.template_label": "Template",
+    "idcard.template_hint": "Pick a starting design. Saves instantly — per-user overrides stack on top.",
+    "idcard.section_overrides": "Custom overrides (this user only)",
+    "idcard.member_photo": "Member Photo",
+    "idcard.qr_color": "QR Code Color",
+    "idcard.background_image": "Card Background Image",
+    "idcard.background_hint": "JPG/PNG under 1.5 MB. Overrides the template default.",
+    "idcard.photo_size": "Photo Size",
+    "idcard.qr_size": "QR Size",
+    "idcard.background_size": "Background Size",
+    "idcard.background_opacity": "Background Opacity",
+    "idcard.background_nudge_x": "Background Nudge ↔ (mm)",
+    "idcard.background_nudge_y": "Background Nudge ↕ (mm)",
+    "idcard.live_preview": "Live Preview",
+
+    // Payments tab
+    "payments.bill_student": "Bill Student",
+    "payments.select_student": "Select student…",
+    "payments.new_invoice": "New Invoice",
+    "payments.calendar": "Payment Calendar",
+    "payments.hide_calendar": "Hide calendar",
+    "payments.show_calendar": "Show calendar",
+    "payments.col_student": "Student",
+    "payments.col_description": "Description",
+    "payments.col_amount": "Amount",
+    "payments.col_due": "Due",
+    "payments.col_status": "Status",
+    "payments.no_payments": "No payments.",
+
+    // Training overlay
+    "training.tab_label": "Training",
+    "training.help_heading": "Help",
+    "training.heading": "Training",
+    "training.start_tour": "Start guided walkthrough",
+    "training.start_hint": "9 steps, ~30s — highlighted tooltips on each field.",
+    "training.tip": "Tip: you can re-open this panel any time — your form input is preserved.",
+
+    // Shortcut: Edit ID Cards
+    "shortcut.pick_user": "Pick a user to edit their ID card",
+    "shortcut.search_placeholder": "Search by name, username, or member #",
+    "shortcut.no_match": "No users match that search.",
+
+    // Home page
+    "home.eyebrow": "Traditional Shotokan Karate",
+    "home.hero_line1": "Forge Character. Refine",
+    "home.hero_line2": "Spirit.",
+    "home.hero_sub": "A dojo devoted to the enduring practice of Shotokan karate — where discipline shapes the body and kata shapes the soul.",
+    "home.cta_learn_more": "Learn More",
+    "home.cta_contact_us": "Contact Us",
+  },
+
+  es: {
+    // Public site navigation
+    "nav.home": "Inicio",
+    "nav.about": "Nosotros",
+    "nav.programs": "Programas",
+    "nav.schedule": "Horario",
+    "nav.news": "Noticias",
+    "nav.contact": "Contacto",
+    "nav.blog": "Blog",
+    "nav.login": "Iniciar Sesión",
+    "nav.dashboard": "Panel",
+    "nav.logout": "Cerrar Sesión",
+
+    // Language switcher
+    "lang.toggle_hint": "Idioma",
+    "lang.en": "EN",
+    "lang.es": "ES",
+
+    // Login
+    "login.title": "Iniciar Sesión",
+    "login.subtitle": "Accede a tu portal de miembro.",
+    "login.identifier_label": "Usuario, correo o número de miembro",
+    "login.identifier_placeholder": "ej. johnsmith o john@example.com",
+    "login.password_label": "Contraseña",
+    "login.submit": "Entrar",
+    "login.forgot": "¿Olvidaste tu contraseña?",
+    "login.google": "Continuar con Google",
+
+    // Common buttons
+    "btn.save": "Guardar",
+    "btn.save_changes": "Guardar Cambios",
+    "btn.cancel": "Cancelar",
+    "btn.close": "Cerrar",
+    "btn.edit": "Editar",
+    "btn.delete": "Eliminar",
+    "btn.add": "Agregar",
+    "btn.remove": "Quitar",
+    "btn.confirm": "Confirmar",
+    "btn.saving": "Guardando…",
+
+    // Dashboard tabs
+    "tab.overview": "Resumen",
+    "tab.users": "Usuarios",
+    "tab.students": "Estudiantes",
+    "tab.payments": "Pagos",
+    "tab.attendance": "Asistencia",
+    "tab.notify": "Notificar",
+    "tab.blog": "Blog",
+    "tab.cms": "CMS",
+    "tab.permissions": "Permisos",
+    "tab.idcard": "Credencial",
+
+    // Dashboard headers
+    "dash.super_admin_title": "Control de Super Admin",
+    "dash.admin_title": "Portal de Admin",
+    "dash.dojo_administration": "Administración del Dojo",
+    "dash.student_administration": "Administración de Estudiantes",
+    "dash.edit_idcards_shortcut": "Editar Credenciales",
+
+    // Overview stats
+    "stat.students": "Estudiantes",
+    "stat.admins": "Administradores",
+    "stat.payments_due": "Pagos Pendientes",
+    "stat.active_members": "Miembros Activos",
+    "stat.latest_payments": "Últimos Pagos",
+    "stat.no_payments": "Aún no hay pagos.",
+    "stat.open": "pendientes",
+
+    // Users panel
+    "users.all_users": "Todos los Usuarios",
+    "users.records": "registros",
+    "users.add_user": "Agregar Usuario",
+    "users.col_name": "Nombre",
+    "users.col_email": "Correo",
+    "users.col_username": "Usuario",
+    "users.col_role": "Rol",
+    "users.col_belt": "Cinturón",
+    "users.col_status": "Estado",
+    "users.col_actions": "Acciones",
+    "users.active": "Activo",
+    "users.inactive": "Inactivo",
+    "users.no_users": "Sin usuarios.",
+
+    // Add User modal
+    "adduser.title": "Agregar Nuevo Usuario",
+    "adduser.onboarding": "Incorporación",
+    "adduser.section_account": "Cuenta",
+    "adduser.section_information": "Información",
+    "adduser.full_name": "Nombre Completo",
+    "adduser.username": "Nombre de Usuario",
+    "adduser.username_hint": "Requerido. El nombre que usarán para iniciar sesión.",
+    "adduser.email": "Correo",
+    "adduser.email_hint": "Opcional. Útil para restablecer contraseña y notificaciones.",
+    "adduser.email_placeholder": "(opcional)",
+    "adduser.password": "Contraseña Inicial",
+    "adduser.password_hint": "Mínimo 6 caracteres. El usuario podrá cambiarla después.",
+    "adduser.role": "Rol",
+    "adduser.phone": "Teléfono",
+    "adduser.belt_rank": "Cinturón",
+    "adduser.dob": "Fecha de Nacimiento",
+    "adduser.address": "Dirección",
+    "adduser.emergency_name": "Nombre Contacto de Emergencia",
+    "adduser.emergency_phone": "Teléfono Contacto de Emergencia",
+    "adduser.medical_notes": "Notas Médicas",
+    "adduser.medical_placeholder": "Alergias, lesiones…",
+    "adduser.internal_notes": "Notas Internas",
+    "adduser.photo": "Foto",
+    "adduser.photo_hint": "Opcional. Usa Capturar para webcam + recorte, o elige un archivo.",
+    "adduser.capture_crop": "Capturar / Recortar",
+    "adduser.or": "o",
+    "adduser.create": "Crear Usuario",
+    "adduser.creating": "Creando…",
+
+    // User Drawer tabs
+    "drawer.tab_profile": "Perfil",
+    "drawer.tab_info": "Información",
+    "drawer.tab_idcard": "Credencial",
+    "drawer.tab_security": "Seguridad",
+
+    // ID Card tab
+    "idcard.template_label": "Plantilla",
+    "idcard.template_hint": "Elige un diseño base. Se guarda al instante — las personalizaciones se aplican encima.",
+    "idcard.section_overrides": "Personalización (solo este usuario)",
+    "idcard.member_photo": "Foto del Miembro",
+    "idcard.qr_color": "Color del Código QR",
+    "idcard.background_image": "Imagen de Fondo",
+    "idcard.background_hint": "JPG/PNG menor a 1.5 MB. Sobrescribe la plantilla.",
+    "idcard.photo_size": "Tamaño de la Foto",
+    "idcard.qr_size": "Tamaño del QR",
+    "idcard.background_size": "Tamaño del Fondo",
+    "idcard.background_opacity": "Opacidad del Fondo",
+    "idcard.background_nudge_x": "Ajuste Fondo ↔ (mm)",
+    "idcard.background_nudge_y": "Ajuste Fondo ↕ (mm)",
+    "idcard.live_preview": "Vista Previa",
+
+    // Payments
+    "payments.bill_student": "Facturar Estudiante",
+    "payments.select_student": "Selecciona estudiante…",
+    "payments.new_invoice": "Nueva Factura",
+    "payments.calendar": "Calendario de Pagos",
+    "payments.hide_calendar": "Ocultar calendario",
+    "payments.show_calendar": "Mostrar calendario",
+    "payments.col_student": "Estudiante",
+    "payments.col_description": "Descripción",
+    "payments.col_amount": "Monto",
+    "payments.col_due": "Vencimiento",
+    "payments.col_status": "Estado",
+    "payments.no_payments": "Sin pagos.",
+
+    // Training overlay
+    "training.tab_label": "Guía",
+    "training.help_heading": "Ayuda",
+    "training.heading": "Guía",
+    "training.start_tour": "Iniciar recorrido guiado",
+    "training.start_hint": "9 pasos, ~30s — sugerencias resaltadas en cada campo.",
+    "training.tip": "Consejo: puedes abrir este panel en cualquier momento — tus datos se conservan.",
+
+    // Shortcut
+    "shortcut.pick_user": "Elige un usuario para editar su credencial",
+    "shortcut.search_placeholder": "Buscar por nombre, usuario o núm. de miembro",
+    "shortcut.no_match": "Ningún usuario coincide con la búsqueda.",
+
+    // Home
+    "home.eyebrow": "Karate Shotokan Tradicional",
+    "home.hero_line1": "Forja Carácter. Refina el",
+    "home.hero_line2": "Espíritu.",
+    "home.hero_sub": "Un dojo dedicado a la práctica perdurable del karate Shotokan — donde la disciplina forma el cuerpo y el kata forma el alma.",
+    "home.cta_learn_more": "Saber Más",
+    "home.cta_contact_us": "Contáctanos",
+  },
+};

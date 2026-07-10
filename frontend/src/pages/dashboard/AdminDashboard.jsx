@@ -14,19 +14,24 @@ import PermissionsPanel from "@/components/PermissionsPanel";
 import PaymentCalendar from "@/components/PaymentCalendar";
 import UserDrawer from "@/components/UserDrawer";
 import AddUserModal from "@/components/AddUserModal";
+import IDCardShortcutModal from "@/components/IDCardShortcutModal";
+import { useT } from "@/context/LanguageContext";
 
 export default function AdminDashboard({ isSuper = false }) {
   const { user } = useAuth();
+  const { t } = useT();
   const [tab, setTab] = useState("overview");
   const [users, setUsers] = useState([]);
   const [payments, setPayments] = useState([]);
   const [stats, setStats] = useState(null);
   const [pages, setPages] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
+  const [editingUserTab, setEditingUserTab] = useState("profile");
   const [addingUser, setAddingUser] = useState(false);
   const [payFor, setPayFor] = useState(null);
   const [editingPage, setEditingPage] = useState(null);
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [idcardShortcutOpen, setIdcardShortcutOpen] = useState(false);
 
   const reload = async () => {
     const [u, p, s] = await Promise.all([
@@ -64,20 +69,21 @@ export default function AdminDashboard({ isSuper = false }) {
 
   return (
     <DashboardLayout
-      title={isSuper ? "Super Admin Control" : "Admin Portal"}
-      subtitle={isSuper ? "Dojo Administration" : "Student Administration"}
+      title={isSuper ? t("dash.super_admin_title") : t("dash.admin_title")}
+      subtitle={isSuper ? t("dash.dojo_administration") : t("dash.student_administration")}
+      onEditIDCards={() => setIdcardShortcutOpen(true)}
     >
       <div className="flex gap-2 mb-8 border-b border-[var(--dojo-border)] overflow-x-auto">
-        {TABS.map((t) => (
+        {TABS.map((tabInfo) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            data-testid={`tab-${t.id}`}
+            key={tabInfo.id}
+            onClick={() => setTab(tabInfo.id)}
+            data-testid={`tab-${tabInfo.id}`}
             className={`px-5 py-3 text-[11px] uppercase tracking-[0.2em] border-b-2 whitespace-nowrap transition-colors ${
-              tab === t.id ? "border-[var(--dojo-green)] text-[var(--dojo-ink)]" : "border-transparent text-[var(--dojo-ink-soft)] hover:text-[var(--dojo-ink)]"
+              tab === tabInfo.id ? "border-[var(--dojo-green)] text-[var(--dojo-ink)]" : "border-transparent text-[var(--dojo-ink-soft)] hover:text-[var(--dojo-ink)]"
             }`}
           >
-            {t.label}
+            {t(`tab.${tabInfo.id}`)}
           </button>
         ))}
       </div>
@@ -85,12 +91,12 @@ export default function AdminDashboard({ isSuper = false }) {
       {tab === "overview" && (
         <div className="grid lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 grid grid-cols-2 gap-4">
-            <Stat label="Students" value={stats?.students ?? "—"} />
-            {isSuper && <Stat label="Admins" value={stats?.admins ?? "—"} />}
-            <Stat label="Payments Due" value={`$${(stats?.payments_due_total ?? 0).toFixed(2)}`} sub={`${stats?.payments_due_count ?? 0} open`} />
-            <Stat label="Active Members" value={stats?.active_users ?? users.filter((u) => u.active).length} />
+            <Stat label={t("stat.students")} value={stats?.students ?? "—"} />
+            {isSuper && <Stat label={t("stat.admins")} value={stats?.admins ?? "—"} />}
+            <Stat label={t("stat.payments_due")} value={`$${(stats?.payments_due_total ?? 0).toFixed(2)}`} sub={`${stats?.payments_due_count ?? 0} ${t("stat.open")}`} />
+            <Stat label={t("stat.active_members")} value={stats?.active_users ?? users.filter((u) => u.active).length} />
             <div className="col-span-2 border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-6">
-              <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] mb-3">Latest Payments</div>
+              <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] mb-3">{t("stat.latest_payments")}</div>
               <div className="divide-y divide-[var(--dojo-border)]">
                 {payments.slice(0, 5).map((p) => (
                   <div key={p.id} className="py-2 flex justify-between text-sm">
@@ -98,7 +104,7 @@ export default function AdminDashboard({ isSuper = false }) {
                     <span className="font-mono-accent">${p.amount.toFixed(2)}</span>
                   </div>
                 ))}
-                {payments.length === 0 && <div className="text-sm text-[var(--dojo-ink-soft)]">No payments yet.</div>}
+                {payments.length === 0 && <div className="text-sm text-[var(--dojo-ink-soft)]">{t("stat.no_payments")}</div>}
               </div>
             </div>
           </div>
@@ -182,8 +188,19 @@ export default function AdminDashboard({ isSuper = false }) {
         <UserDrawer
           user={editingUser}
           currentUser={user}
-          onClose={() => setEditingUser(null)}
+          initialTab={editingUserTab}
+          onClose={() => { setEditingUser(null); setEditingUserTab("profile"); }}
           onSaved={(updated) => { setEditingUser(updated); reload(); }}
+        />
+      )}
+      {idcardShortcutOpen && (
+        <IDCardShortcutModal
+          onClose={() => setIdcardShortcutOpen(false)}
+          onPick={(u) => {
+            setIdcardShortcutOpen(false);
+            setEditingUserTab("idcard");
+            setEditingUser(u);
+          }}
         />
       )}
       {addingUser && (
@@ -225,7 +242,7 @@ function UsersPanel({ users, onEdit, onReload, onBill, onAdd, isSuper }) {
   return (
     <div className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)]" data-testid="users-panel">
       <div className="px-6 py-4 border-b border-[var(--dojo-border)] flex justify-between items-center">
-        <h2 className="font-serif text-2xl">{isSuper ? "All Users" : "Students"}</h2>
+        <h2 className="font-serif text-2xl">{isSuper ? t("users.all_users") : t("tab.students")}</h2>
         <div className="flex items-center gap-4">
           <span className="text-xs text-[var(--dojo-ink-soft)]">{users.length} records</span>
           <button onClick={onAdd} className="btn-primary flex items-center gap-2" data-testid="add-user-btn">

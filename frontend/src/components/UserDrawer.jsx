@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api, { formatApiError } from "@/lib/api";
-import IDCard, { FONT_SIZE_PRESETS } from "@/components/IDCard";
+import IDCard from "@/components/IDCard";
 import { BELT_NAMES } from "@/lib/belts";
 import { IDCARD_TEMPLATES, mergeTemplates } from "@/lib/idcardTemplates";
 import { X, Save, KeyRound, RefreshCcw, Camera } from "lucide-react";
@@ -19,10 +19,10 @@ const TABS = [
   { id: "security", label: "Security" },
 ];
 
-export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
+export default function UserDrawer({ user, currentUser, onClose, onSaved, initialTab = "profile" }) {
   const isSuper = currentUser?.role === "super_admin";
   const isAdminLike = ["admin", "super_admin"].includes(currentUser?.role);
-  const [tab, setTab] = useState("profile");
+  const [tab, setTab] = useState(initialTab);
   const [draft, setDraft] = useState(user);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
@@ -271,42 +271,10 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                 </Field>
                 <div className="border border-[var(--dojo-border)] p-4 space-y-3">
                   <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Custom overrides (this user only)</div>
-                  {[
-                    ["dojo_name", "Dojo Name"],
-                    ["certificate_title", "Member Title"],
-                    ["kanji_top", "Kanji (top)"],
-                    ["kanji_bottom", "Kanji (bottom)"],
-                    ["issued_text", "Issued footer"],
-                    ["scan_text", "Scan caption"],
-                    ["name_label", "Name label"],
-                    ["role_label", "Role label"],
-                    ["footer_label", "Member# label"],
-                  ].map(([k, label]) => (
-                    <Field key={k} label={label}>
-                      <input
-                        className="input"
-                        value={(draft.idcard_overrides || {})[k] || ""}
-                        onChange={(e) => setOverride(k, e.target.value)}
-                        placeholder="Use template default"
-                      />
-                    </Field>
-                  ))}
-                  <Field label="Accent Color">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={(draft.idcard_overrides || {}).accent_color || "#D7263D"}
-                        onChange={(e) => setOverride("accent_color", e.target.value)}
-                        className="h-10 w-16 border border-[var(--dojo-border)]"
-                      />
-                      <input
-                        className="input"
-                        value={(draft.idcard_overrides || {}).accent_color || ""}
-                        onChange={(e) => setOverride("accent_color", e.target.value)}
-                        placeholder="#D7263D"
-                      />
-                    </div>
-                  </Field>
+                  {/* Trimmed to only the elements that actually render on the
+                      ID Card sample: QR colour + photo/QR/background sizing +
+                      background image. Text/label/kanji overrides live on the
+                      Template Editor now — this panel is for per-user tweaks. */}
                   <Field label="QR Code Color" hint="Stays solid + high-contrast against white for reliable scans.">
                     <div className="flex items-center gap-3">
                       <input
@@ -325,60 +293,12 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                       />
                     </div>
                   </Field>
-                  <Field label="Certificate Title Background" hint="Soft pill drawn behind the title so it stays readable on busy backgrounds. Leave blank for none.">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={(draft.idcard_overrides || {}).title_bg_color || "#FFF1D6"}
-                        onChange={(e) => setOverride("title_bg_color", e.target.value)}
-                        className="h-10 w-16 border border-[var(--dojo-border)]"
-                        data-testid="user-title-bg-picker"
-                      />
-                      <input
-                        className="input flex-1"
-                        value={(draft.idcard_overrides || {}).title_bg_color || ""}
-                        onChange={(e) => setOverride("title_bg_color", e.target.value)}
-                        placeholder="#FFF1D6 (or blank for none)"
-                        data-testid="user-title-bg-input"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setOverride("title_bg_color", "")}
-                        className="text-[10px] uppercase tracking-[0.18em] px-2 py-1 border border-[var(--dojo-border)] hover:border-[var(--dojo-ink)]"
-                        data-testid="user-title-bg-clear"
-                      >Clear</button>
-                    </div>
-                  </Field>
-                  <Field label="Member Title Text Color" hint="Color of the certificate title text itself.">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={(draft.idcard_overrides || {}).title_text_color || "#0F0F0F"}
-                        onChange={(e) => setOverride("title_text_color", e.target.value)}
-                        className="h-10 w-16 border border-[var(--dojo-border)]"
-                        data-testid="user-title-text-picker"
-                      />
-                      <input
-                        className="input flex-1"
-                        value={(draft.idcard_overrides || {}).title_text_color || ""}
-                        onChange={(e) => setOverride("title_text_color", e.target.value)}
-                        placeholder="#0F0F0F"
-                        data-testid="user-title-text-input"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setOverride("title_text_color", "")}
-                        className="text-[10px] uppercase tracking-[0.18em] px-2 py-1 border border-[var(--dojo-border)] hover:border-[var(--dojo-ink)]"
-                        data-testid="user-title-text-clear"
-                      >Clear</button>
-                    </div>
-                  </Field>
 
-                  {/* Photo + QR size sliders */}
+                  {/* Photo + QR + Background size sliders */}
                   <div className="border-t border-dashed border-[var(--dojo-border)] pt-3 mt-1 space-y-3" data-testid="user-idcard-sizes">
-                    <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Photo & QR Size</div>
+                    <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Photo, QR & Background Size</div>
                     {[
-                      ["photo_size", "Student Photo", 100, 300],
+                      ["photo_size", "Member Photo", 100, 300],
                       ["qr_size", "QR Code", 100, 200],
                       ["background_size", "Card Background", 100, 200],
                     ].map(([key, label, , maxPct]) => {
@@ -420,19 +340,16 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                     })()}
                   </div>
 
-                  {/* Position offsets — title + background nudge */}
+                  {/* Background position — the only nudge that survived the
+                      trim, since the sample card leans heavily on the mountain
+                      backdrop being aligned correctly. */}
                   <div className="border-t border-dashed border-[var(--dojo-border)] pt-3 mt-1 space-y-3" data-testid="user-idcard-offsets">
-                    <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Position nudge (mm)</div>
-                    <div className="text-[10px] text-[var(--dojo-ink-soft)] -mt-1">Slider covers ±50 mm for fine nudging. Type a value into the box for anything up to ±1500 mm.</div>
+                    <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Background position (mm)</div>
                     {[
-                      ["title_offset_x", "Member Title — Left ↔ Right"],
-                      ["title_offset_y", "Member Title — Up ↕ Down"],
                       ["bg_offset_x", "Background — Left ↔ Right"],
                       ["bg_offset_y", "Background — Up ↕ Down"],
                     ].map(([key, label]) => {
                       const cur = Number((draft.idcard_overrides || {})[key] ?? 0);
-                      // Slider clamps to ±50 for usable resolution; the
-                      // number input below accepts the full ±1500 range.
                       const sliderVal = Math.max(-50, Math.min(50, cur));
                       return (
                         <div key={key} className="grid grid-cols-[1fr_auto_auto] gap-3 items-center">
@@ -458,85 +375,6 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved }) {
                     })}
                   </div>
 
-                  {/* Font size editor */}
-                  <div className="border-t border-dashed border-[var(--dojo-border)] pt-3 mt-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Font Sizes (px)</div>
-                      <div className="flex items-center gap-1" data-testid="user-idcard-presets">
-                        {[
-                          ["compact", "Compact"],
-                          ["standard", "Standard"],
-                          ["large_print", "Large-print"],
-                        ].map(([k, lbl]) => (
-                          <button
-                            key={k}
-                            type="button"
-                            onClick={() => setOverride("font_sizes", FONT_SIZE_PRESETS[k].sizes)}
-                            className="text-[10px] uppercase tracking-[0.18em] px-2 py-1 border border-[var(--dojo-border)] hover:border-[var(--dojo-ink)]"
-                            data-testid={`user-idcard-preset-${k}`}
-                          >
-                            {lbl}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="space-y-1.5" data-testid="user-idcard-fontsizes">
-                      {[
-                        ["dojo_name", "Dojo name", 10, { kind: "label" }],
-                        ["certificate_title", "Title", 20, { kind: "title" }],
-                        ["kanji_top", "Kanji (top)", 24, { kind: "kanji" }],
-                        ["member_name", "Member name", 20, { kind: "title" }],
-                        ["role_value", "Role value", 12, { kind: "value" }],
-                        ["member_number", "Member #", 14, { kind: "mono" }],
-                        ["field_label", "Field labels", 10, { kind: "label" }],
-                        ["scan_text", "Scan caption", 9, { kind: "label" }],
-                        ["issued_text", "Issued footer", 10, { kind: "label" }],
-                        ["kanji_bottom", "Kanji (bottom)", 16, { kind: "kanji" }],
-                      ].map(([key, label, def, opts]) => {
-                        const cur = ((draft.idcard_overrides || {}).font_sizes || {})[key];
-                        const effective = cur ?? def;
-                        // Inline preview style mirrors the actual card render.
-                        const sampleStyle = (() => {
-                          const base = { fontSize: `${effective}px`, lineHeight: 1.1 };
-                          if (opts.kind === "kanji") return { ...base, fontFamily: "var(--font-kanji, serif)", color: "var(--dojo-hinomaru)" };
-                          if (opts.kind === "title") return { ...base, fontFamily: "var(--font-serif, serif)", fontWeight: 500 };
-                          if (opts.kind === "value") return { ...base, fontWeight: 500, textTransform: "capitalize" };
-                          if (opts.kind === "mono") return { ...base, fontFamily: "var(--font-mono, monospace)", letterSpacing: "0.1em" };
-                          // label
-                          return { ...base, textTransform: "uppercase", letterSpacing: "0.24em", color: "var(--dojo-ink-soft)" };
-                        })();
-                        return (
-                          <div key={key} className="grid grid-cols-[110px_1fr_auto] gap-3 items-center" data-testid={`user-idcard-fs-row-${key}`}>
-                            <label className="text-[11px] text-[var(--dojo-ink-soft)] truncate" title={label}>{label}</label>
-                            <div className="overflow-hidden whitespace-nowrap" style={sampleStyle} data-testid={`user-idcard-fs-sample-${key}`}>
-                              {label}
-                            </div>
-                            <input
-                              type="number"
-                              min={6}
-                              max={64}
-                              value={cur ?? ""}
-                              placeholder={String(def)}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                const fs = { ...((draft.idcard_overrides || {}).font_sizes || {}) };
-                                if (v === "") delete fs[key];
-                                else fs[key] = Math.min(64, Math.max(6, Number(v)));
-                                setOverride("font_sizes", fs);
-                              }}
-                              className="input w-16 text-center"
-                              data-testid={`user-idcard-fs-${key}`}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setOverride("font_sizes", {})}
-                      className="text-[10px] text-[var(--dojo-hinomaru)] underline mt-2"
-                    >Reset font sizes</button>
-                  </div>
                   {isAdminLike && (
                     <Field label="Background Image" hint="JPG/PNG under 1.5 MB. Stacks behind the certificate as a faded watermark.">
                       <div className="flex items-center gap-3 flex-wrap">

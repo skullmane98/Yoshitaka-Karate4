@@ -5,6 +5,7 @@ import { BELT_NAMES } from "@/lib/belts";
 import { IDCARD_TEMPLATES, mergeTemplates } from "@/lib/idcardTemplates";
 import { X, Save, KeyRound, RefreshCcw, Camera } from "lucide-react";
 import PhotoCaptureModal from "@/components/PhotoCaptureModal";
+import { useT } from "@/context/LanguageContext";
 
 /**
  * Slide-out editor for a single user. 4 tabs:
@@ -12,14 +13,10 @@ import PhotoCaptureModal from "@/components/PhotoCaptureModal";
  *
  * Admins can edit role-permitted fields; super_admins can edit everything.
  */
-const TABS = [
-  { id: "profile", label: "Profile" },
-  { id: "info", label: "Information" },
-  { id: "idcard", label: "ID Card" },
-  { id: "security", label: "Security" },
-];
+const TAB_IDS = ["profile", "info", "idcard", "security"];
 
 export default function UserDrawer({ user, currentUser, onClose, onSaved, initialTab = "profile" }) {
+  const { t } = useT();
   const isSuper = currentUser?.role === "super_admin";
   const isAdminLike = ["admin", "super_admin"].includes(currentUser?.role);
   const [tab, setTab] = useState(initialTab);
@@ -155,13 +152,13 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved, initia
           <button onClick={onClose} className="p-2 hover:text-[var(--dojo-hinomaru)]" data-testid="user-drawer-close"><X size={18} /></button>
         </div>
         <div className="flex gap-1 px-6 pt-4 border-b border-[var(--dojo-border)]">
-          {TABS.map((t) => (
+          {TAB_IDS.map((tabId) => (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`px-3 py-2 text-xs uppercase tracking-[0.18em] border-b-2 ${tab === t.id ? "border-[var(--dojo-green)] text-[var(--dojo-ink)]" : "border-transparent text-[var(--dojo-ink-soft)] hover:text-[var(--dojo-ink)]"}`}
-              data-testid={`user-tab-${t.id}`}
-            >{t.label}</button>
+              key={tabId}
+              onClick={() => setTab(tabId)}
+              className={`px-3 py-2 text-xs uppercase tracking-[0.18em] border-b-2 ${tab === tabId ? "border-[var(--dojo-green)] text-[var(--dojo-ink)]" : "border-transparent text-[var(--dojo-ink-soft)] hover:text-[var(--dojo-ink)]"}`}
+              data-testid={`user-tab-${tabId}`}
+            >{t(`drawer.tab_${tabId}`)}</button>
           ))}
         </div>
         <div className="p-6 space-y-6">

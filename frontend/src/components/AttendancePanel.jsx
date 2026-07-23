@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import api, { formatApiError } from "@/lib/api";
 import { ScanLine, Loader2, X, CheckCircle2, AlertCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useT } from "@/context/LanguageContext";
 
 /**
  * USB scanner sign-in flow.
@@ -9,6 +10,7 @@ import { toast } from "sonner";
  * This panel keeps a hidden auto-focused input that captures those keystrokes globally.
  */
 export default function AttendancePanel() {
+  const { t } = useT();
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
@@ -114,9 +116,9 @@ export default function AttendancePanel() {
           <div>
             <div className="flex items-center gap-3 mb-3">
               <ScanLine className="text-[var(--dojo-green)] scan-pulse" size={22} />
-              <span className="text-[10px] uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)]">USB Scanner Active</span>
+              <span className="text-[10px] uppercase tracking-[0.28em] text-[var(--dojo-ink-soft)]">{t("att.usb_scanner_active")}</span>
             </div>
-            <h3 className="font-serif text-3xl tracking-tight mb-2">Sign In Members</h3>
+            <h3 className="font-serif text-3xl tracking-tight mb-2">{t("att.sign_in_members")}</h3>
             <p className="text-sm text-[var(--dojo-ink-soft)] leading-relaxed max-w-lg">
               Aim the USB scanner at the member's QR code or barcode on their ID. The scan will appear here automatically and a profile pop-up will confirm the sign-in.
             </p>
@@ -129,7 +131,7 @@ export default function AttendancePanel() {
                 data-testid="manual-scan-input"
               />
               <button type="submit" className="btn-primary whitespace-nowrap" disabled={!manual.trim() || scanning} data-testid="manual-scan-btn">
-                {scanning ? <Loader2 size={14} className="animate-spin" /> : "Scan"}
+                {scanning ? <Loader2 size={14} className="animate-spin" /> : t("att.scan")}
               </button>
             </form>
           </div>
@@ -140,18 +142,18 @@ export default function AttendancePanel() {
       {/* Recent log */}
       <div className="border border-[var(--dojo-border)] bg-[var(--dojo-card)]">
         <div className="px-6 py-4 border-b border-[var(--dojo-border)] flex justify-between items-center">
-          <h2 className="font-serif text-2xl">Recent Sign-Ins</h2>
+          <h2 className="font-serif text-2xl">{t("att.recent_signins")}</h2>
           <span className="text-xs text-[var(--dojo-ink-soft)]">last 7 days · {recent.length}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-[var(--dojo-paper-alt)] text-[10px] uppercase tracking-[0.2em] text-[var(--dojo-ink-soft)]">
               <tr>
-                <th className="text-left px-6 py-3">Time</th>
-                <th className="text-left px-6 py-3">Member</th>
-                <th className="text-left px-6 py-3">Member No.</th>
-                <th className="text-left px-6 py-3">Belt</th>
-                <th className="text-left px-6 py-3">Method</th>
+                <th className="text-left px-6 py-3">{t("att.col_time")}</th>
+                <th className="text-left px-6 py-3">{t("att.col_member")}</th>
+                <th className="text-left px-6 py-3">{t("att.col_member_no")}</th>
+                <th className="text-left px-6 py-3">{t("att.col_belt")}</th>
+                <th className="text-left px-6 py-3">{t("att.col_method")}</th>
                 <th className="text-right px-6 py-3"></th>
               </tr>
             </thead>
@@ -178,7 +180,7 @@ export default function AttendancePanel() {
                 </tr>
               ))}
               {!loading && recent.length === 0 && (
-                <tr><td colSpan={6} className="px-6 py-8 text-center text-[var(--dojo-ink-soft)]">No sign-ins yet today. Scan a member's ID to begin.</td></tr>
+                <tr><td colSpan={6} className="px-6 py-8 text-center text-[var(--dojo-ink-soft)]">{t("att.no_signins")}</td></tr>
               )}
             </tbody>
           </table>

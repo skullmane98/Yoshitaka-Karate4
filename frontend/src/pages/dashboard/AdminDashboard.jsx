@@ -234,6 +234,7 @@ function Stat({ label, value, sub }) {
 }
 
 function UsersPanel({ users, onEdit, onReload, onBill, onAdd, isSuper }) {
+  const { t } = useT();
   const del = async (u) => {
     if (!window.confirm(`Delete ${u.name}? This removes their payments too.`)) return;
     try { await api.delete(`/users/${u.id}`); toast.success("User deleted"); onReload(); }
@@ -244,9 +245,9 @@ function UsersPanel({ users, onEdit, onReload, onBill, onAdd, isSuper }) {
       <div className="px-6 py-4 border-b border-[var(--dojo-border)] flex justify-between items-center">
         <h2 className="font-serif text-2xl">{isSuper ? t("users.all_users") : t("tab.students")}</h2>
         <div className="flex items-center gap-4">
-          <span className="text-xs text-[var(--dojo-ink-soft)]">{users.length} records</span>
+          <span className="text-xs text-[var(--dojo-ink-soft)]">{users.length} {t("users.records")}</span>
           <button onClick={onAdd} className="btn-primary flex items-center gap-2" data-testid="add-user-btn">
-            <Plus size={14} /> Add User
+            <Plus size={14} /> {t("users.add_user")}
           </button>
         </div>
       </div>
@@ -254,13 +255,13 @@ function UsersPanel({ users, onEdit, onReload, onBill, onAdd, isSuper }) {
         <table className="w-full text-sm">
           <thead className="bg-[var(--dojo-paper-alt)] text-[10px] uppercase tracking-[0.2em] text-[var(--dojo-ink-soft)]">
             <tr>
-              <th className="text-left px-6 py-3">Name</th>
-              <th className="text-left px-6 py-3">Email</th>
-              <th className="text-left px-6 py-3">Role</th>
-              <th className="text-left px-6 py-3">Belt</th>
-              <th className="text-left px-6 py-3">Member No.</th>
-              <th className="text-left px-6 py-3">Status</th>
-              <th className="text-right px-6 py-3">Actions</th>
+              <th className="text-left px-6 py-3">{t("users.col_name")}</th>
+              <th className="text-left px-6 py-3">{t("users.col_email")}</th>
+              <th className="text-left px-6 py-3">{t("users.col_role")}</th>
+              <th className="text-left px-6 py-3">{t("users.col_belt")}</th>
+              <th className="text-left px-6 py-3">{t("users.col_member_no")}</th>
+              <th className="text-left px-6 py-3">{t("users.col_status")}</th>
+              <th className="text-right px-6 py-3">{t("users.col_actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -274,21 +275,21 @@ function UsersPanel({ users, onEdit, onReload, onBill, onAdd, isSuper }) {
                 <td className="px-6 py-3">
                   <span className={`text-[10px] uppercase tracking-[0.2em] px-2 py-1 border ${
                     u.active ? "border-[#2E4E3F] text-[#2E4E3F]" : "border-[var(--dojo-hinomaru)] text-[var(--dojo-hinomaru)]"
-                  }`}>{u.active ? "Active" : "Disabled"}</span>
+                  }`}>{u.active ? t("users.active") : t("users.inactive")}</span>
                 </td>
                 <td className="px-6 py-3 text-right whitespace-nowrap">
-                  <button className="text-xs underline mr-3" onClick={() => onEdit(u)} data-testid={`edit-user-${u.id}`}>Edit</button>
+                  <button className="text-xs underline mr-3" onClick={() => onEdit(u)} data-testid={`edit-user-${u.id}`}>{t("btn.edit")}</button>
                   {u.role === "student" && (
-                    <button className="text-xs underline mr-3" onClick={() => onBill(u)} data-testid={`bill-user-${u.id}`}>Bill</button>
+                    <button className="text-xs underline mr-3" onClick={() => onBill(u)} data-testid={`bill-user-${u.id}`}>{t("users.bill")}</button>
                   )}
                   {isSuper && (
-                    <button className="text-xs text-[var(--dojo-hinomaru)] underline" onClick={() => del(u)} data-testid={`delete-user-${u.id}`}>Delete</button>
+                    <button className="text-xs text-[var(--dojo-hinomaru)] underline" onClick={() => del(u)} data-testid={`delete-user-${u.id}`}>{t("btn.delete")}</button>
                   )}
                 </td>
               </tr>
             ))}
             {users.length === 0 && (
-              <tr><td colSpan={7} className="px-6 py-8 text-center text-[var(--dojo-ink-soft)]">No users.</td></tr>
+              <tr><td colSpan={7} className="px-6 py-8 text-center text-[var(--dojo-ink-soft)]">{t("users.no_users")}</td></tr>
             )}
           </tbody>
         </table>
@@ -298,8 +299,7 @@ function UsersPanel({ users, onEdit, onReload, onBill, onAdd, isSuper }) {
 }
 
 function PaymentsTabPanel({ payments, users, onReload, onNew }) {
-  // Calendar visibility — persisted to localStorage so the admin's choice
-  // survives reloads. Defaults to visible.
+  const { t } = useT();
   const [showCalendar, setShowCalendar] = useState(() => {
     try { return localStorage.getItem("yk_payments_calendar_visible") !== "0"; }
     catch { return true; }
@@ -316,13 +316,13 @@ function PaymentsTabPanel({ payments, users, onReload, onNew }) {
     <div className="space-y-6" data-testid="payments-tab">
       <PaymentsPanel payments={payments} onReload={onReload} users={users} onNew={onNew} />
       <div className="flex items-center justify-between border-t border-[var(--dojo-border)] pt-4">
-        <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Payment Calendar</div>
+        <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{t("payments.calendar")}</div>
         <button
           type="button"
           onClick={toggleCalendar}
           className="text-[11px] uppercase tracking-[0.2em] border border-[var(--dojo-border)] hover:border-[var(--dojo-ink)] px-3 py-1.5"
           data-testid="payments-calendar-toggle"
-        >{showCalendar ? "Hide calendar" : "Show calendar"}</button>
+        >{showCalendar ? t("payments.hide_calendar") : t("payments.show_calendar")}</button>
       </div>
       {showCalendar && (
         <div data-testid="payments-calendar-wrapper">
@@ -334,6 +334,7 @@ function PaymentsTabPanel({ payments, users, onReload, onNew }) {
 }
 
 function PaymentsPanel({ payments, onReload, users, onNew }) {
+  const { t } = useT();
   const [selectedUser, setSelectedUser] = useState("");
 
   const setStatus = async (p, status) => {
@@ -363,9 +364,9 @@ function PaymentsPanel({ payments, onReload, users, onNew }) {
     <div className="space-y-6" data-testid="payments-panel">
       <div className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-6 flex gap-4 items-end">
         <div className="flex-1">
-          <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">Bill Student</label>
+          <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">{t("payments.bill_student")}</label>
           <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} className="w-full border border-[var(--dojo-border)] bg-[var(--dojo-input-bg)] px-3 py-2" data-testid="payment-user-select">
-            <option value="">Select student…</option>
+            <option value="">{t("payments.select_student")}</option>
             {students.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
           </select>
         </div>
@@ -374,7 +375,7 @@ function PaymentsPanel({ payments, onReload, users, onNew }) {
           disabled={!selectedUser}
           onClick={() => { const u = users.find((x) => x.id === selectedUser); if (u) onNew(u); }}
           data-testid="new-payment-btn"
-        >New Invoice</button>
+        >{t("payments.new_invoice")}</button>
       </div>
 
       <div className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)]">
@@ -382,12 +383,12 @@ function PaymentsPanel({ payments, onReload, users, onNew }) {
           <table className="w-full text-sm">
             <thead className="bg-[var(--dojo-paper-alt)] text-[10px] uppercase tracking-[0.2em] text-[var(--dojo-ink-soft)]">
               <tr>
-                <th className="text-left px-6 py-3">Student</th>
-                <th className="text-left px-6 py-3">Description</th>
-                <th className="text-left px-6 py-3">Amount</th>
-                <th className="text-left px-6 py-3">Due</th>
-                <th className="text-left px-6 py-3">Status</th>
-                <th className="text-right px-6 py-3">Actions</th>
+                <th className="text-left px-6 py-3">{t("payments.col_student")}</th>
+                <th className="text-left px-6 py-3">{t("payments.col_description")}</th>
+                <th className="text-left px-6 py-3">{t("payments.col_amount")}</th>
+                <th className="text-left px-6 py-3">{t("payments.col_due")}</th>
+                <th className="text-left px-6 py-3">{t("payments.col_status")}</th>
+                <th className="text-right px-6 py-3">{t("users.col_actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -402,7 +403,7 @@ function PaymentsPanel({ payments, onReload, users, onNew }) {
                       p.status === "paid" ? "border-[#2E4E3F] text-[#2E4E3F]" :
                       p.status === "overdue" ? "border-[var(--dojo-hinomaru)] text-[var(--dojo-hinomaru)]" :
                       "border-[#B87F17] text-[#B87F17]"
-                    }`}>{p.status}</span>
+                    }`}>{t(`payments.status_${p.status}`)}</span>
                   </td>
                   <td className="px-6 py-3 text-right whitespace-nowrap">
                     {p.status !== "paid" && (
@@ -410,19 +411,19 @@ function PaymentsPanel({ payments, onReload, users, onNew }) {
                         className="text-xs underline mr-3 inline-flex items-center gap-1"
                         onClick={() => sendReminder(p)}
                         data-testid={`remind-payment-${p.id}`}
-                        title="Send email reminder"
+                        title={t("payments.remind_title")}
                       >
-                        <Mail size={12} /> Remind
+                        <Mail size={12} /> {t("payments.remind")}
                       </button>
                     )}
-                    {p.status !== "paid" && <button className="text-xs underline mr-3" onClick={() => setStatus(p, "paid")} data-testid={`mark-paid-${p.id}`}>Mark Paid</button>}
-                    {p.status === "paid" && <button className="text-xs underline mr-3" onClick={() => setStatus(p, "due")} data-testid={`mark-due-${p.id}`}>Reopen</button>}
-                    {p.status === "due" && <button className="text-xs underline mr-3" onClick={() => setStatus(p, "overdue")} data-testid={`mark-overdue-${p.id}`}>Overdue</button>}
+                    {p.status !== "paid" && <button className="text-xs underline mr-3" onClick={() => setStatus(p, "paid")} data-testid={`mark-paid-${p.id}`}>{t("payments.mark_paid")}</button>}
+                    {p.status === "paid" && <button className="text-xs underline mr-3" onClick={() => setStatus(p, "due")} data-testid={`mark-due-${p.id}`}>{t("payments.reopen")}</button>}
+                    {p.status === "due" && <button className="text-xs underline mr-3" onClick={() => setStatus(p, "overdue")} data-testid={`mark-overdue-${p.id}`}>{t("payments.status_overdue")}</button>}
                     <button className="text-xs text-[var(--dojo-hinomaru)] underline" onClick={() => del(p)} data-testid={`delete-payment-${p.id}`}><Trash2 size={12} className="inline" /></button>
                   </td>
                 </tr>
               ))}
-              {payments.length === 0 && <tr><td colSpan={6} className="px-6 py-8 text-center text-[var(--dojo-ink-soft)]">No payments.</td></tr>}
+              {payments.length === 0 && <tr><td colSpan={6} className="px-6 py-8 text-center text-[var(--dojo-ink-soft)]">{t("payments.no_payments")}</td></tr>}
             </tbody>
           </table>
         </div>
@@ -432,25 +433,26 @@ function PaymentsPanel({ payments, onReload, users, onNew }) {
 }
 
 function CMSPanel({ pages, onEdit, onOpenTemplates }) {
+  const { t } = useT();
   return (
     <div className="space-y-6" data-testid="cms-panel">
       <div className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-6 flex items-center justify-between">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] mb-1">Per-template defaults</div>
-          <h3 className="font-serif text-xl">ID Card Templates</h3>
+          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] mb-1">{t("cms.per_template_defaults")}</div>
+          <h3 className="font-serif text-xl">{t("cms.idcard_templates")}</h3>
           <p className="text-xs text-[var(--dojo-ink-soft)] mt-1 max-w-xl">
-            Edit Student / Team Class / Sensei templates — title, kanji, colors, labels. Changes apply to every user assigned that template.
+            {t("cms.idcard_templates_hint")}
           </p>
         </div>
-        <button className="btn-primary" onClick={onOpenTemplates} data-testid="open-template-editor">Edit Templates</button>
+        <button className="btn-primary" onClick={onOpenTemplates} data-testid="open-template-editor">{t("cms.edit_templates")}</button>
       </div>
       <div className="grid md:grid-cols-2 gap-4">
         {pages.map((p) => (
           <div key={p.slug} className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)] p-6 flex flex-col" data-testid={`cms-page-${p.slug}`}>
             <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] mb-2">/{p.slug}</div>
             <h3 className="font-serif text-2xl mb-2">{p.title}</h3>
-            <div className="text-xs text-[var(--dojo-ink-soft)] mb-4">Last updated {new Date(p.updated_at).toLocaleString()}</div>
-            <button className="btn-outline self-start" onClick={() => onEdit(p)} data-testid={`edit-page-${p.slug}`}>Edit Content</button>
+            <div className="text-xs text-[var(--dojo-ink-soft)] mb-4">{t("cms.last_updated")} {new Date(p.updated_at).toLocaleString()}</div>
+            <button className="btn-outline self-start" onClick={() => onEdit(p)} data-testid={`edit-page-${p.slug}`}>{t("cms.edit_content")}</button>
           </div>
         ))}
       </div>
@@ -459,6 +461,7 @@ function CMSPanel({ pages, onEdit, onOpenTemplates }) {
 }
 
 function NewPaymentModal({ user, onClose, onSaved }) {
+  const { t } = useT();
   const [desc, setDesc] = useState("Monthly Tuition");
   const [amount, setAmount] = useState("120");
   const [dueDate, setDueDate] = useState("");
@@ -482,14 +485,14 @@ function NewPaymentModal({ user, onClose, onSaved }) {
   };
 
   return (
-    <Modal title={`New Invoice · ${user.name}`} onClose={onClose}>
+    <Modal title={`${t("payments.new_invoice")} · ${user.name}`} onClose={onClose}>
       <form onSubmit={save} className="space-y-4">
-        <Field label="Description"><input value={desc} onChange={(e) => setDesc(e.target.value)} className="input" data-testid="new-pay-desc" /></Field>
-        <Field label="Amount"><input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="input" data-testid="new-pay-amount" /></Field>
-        <Field label="Due Date"><input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="input" data-testid="new-pay-due" /></Field>
+        <Field label={t("payments.col_description")}><input value={desc} onChange={(e) => setDesc(e.target.value)} className="input" data-testid="new-pay-desc" /></Field>
+        <Field label={t("payments.col_amount")}><input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="input" data-testid="new-pay-amount" /></Field>
+        <Field label={t("payments.col_due")}><input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="input" data-testid="new-pay-due" /></Field>
         <div className="flex gap-3 pt-2">
-          <button type="submit" className="btn-primary flex-1" disabled={busy} data-testid="new-pay-save">{busy ? "Saving…" : "Create"}</button>
-          <button type="button" className="btn-outline" onClick={onClose}>Cancel</button>
+          <button type="submit" className="btn-primary flex-1" disabled={busy} data-testid="new-pay-save">{busy ? t("btn.saving") : t("cms.create")}</button>
+          <button type="button" className="btn-outline" onClick={onClose}>{t("btn.cancel")}</button>
         </div>
       </form>
     </Modal>
@@ -497,11 +500,12 @@ function NewPaymentModal({ user, onClose, onSaved }) {
 }
 
 function EditPageModal({ page, onClose, onSaved }) {
+  const { t } = useT();
   const [title, setTitle] = useState(page.title);
   const [content, setContent] = useState(page.content);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const [showJson, setShowJson] = useState(false);
+  const [, setShowJson] = useState(false);
 
   const Editor = getEditorForSlug(page.slug);
 
@@ -517,12 +521,12 @@ function EditPageModal({ page, onClose, onSaved }) {
   };
 
   return (
-    <Modal title={`Edit /${page.slug}`} onClose={onClose} wide>
+    <Modal title={`${t("cms.edit_content")} /${page.slug}`} onClose={onClose} wide>
       <form onSubmit={save} className="space-y-5">
         {Editor ? (
           <Editor value={content} onChange={setContent} title={title} onTitleChange={setTitle} />
         ) : (
-          <Field label="Content (JSON)">
+          <Field label={t("cms.content_json")}>
             <textarea
               value={JSON.stringify(content, null, 2)}
               onChange={(e) => {
@@ -539,8 +543,8 @@ function EditPageModal({ page, onClose, onSaved }) {
 
         {Editor && (
           <details className="border-t border-[var(--dojo-border)] pt-3">
-            <summary className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] cursor-pointer" onClick={() => setShowJson(!showJson)}>
-              Advanced · View raw JSON
+            <summary className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] cursor-pointer" onClick={() => setShowJson((v) => !v)}>
+              {t("cms.advanced_raw_json")}
             </summary>
             <pre className="text-xs font-mono-accent bg-[var(--dojo-paper-alt)] p-3 mt-2 overflow-auto max-h-60">{JSON.stringify(content, null, 2)}</pre>
           </details>
@@ -548,8 +552,8 @@ function EditPageModal({ page, onClose, onSaved }) {
 
         {err && <div className="text-[var(--dojo-hinomaru)] text-sm" data-testid="edit-page-error">{err}</div>}
         <div className="flex gap-3 sticky bottom-0 bg-[var(--dojo-paper)] pt-3 border-t border-[var(--dojo-border)]">
-          <button type="submit" className="btn-primary flex-1" disabled={busy} data-testid="edit-page-save">{busy ? "Saving…" : "Save Page"}</button>
-          <button type="button" className="btn-outline" onClick={onClose}>Cancel</button>
+          <button type="submit" className="btn-primary flex-1" disabled={busy} data-testid="edit-page-save">{busy ? t("btn.saving") : t("cms.save_page")}</button>
+          <button type="button" className="btn-outline" onClick={onClose}>{t("btn.cancel")}</button>
         </div>
       </form>
     </Modal>

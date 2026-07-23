@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import api, { formatApiError } from "@/lib/api";
+import { useT } from "@/context/LanguageContext";
 
 /** Super-admin tab — toggle role-level permissions and view per-user effective. */
 export default function PermissionsPanel() {
+  const { t } = useT();
   const [catalog, setCatalog] = useState(null);
   const [role, setRole] = useState("admin");
   const [roleData, setRoleData] = useState(null);
@@ -36,7 +38,7 @@ export default function PermissionsPanel() {
     }
   };
 
-  if (!catalog) return <div className="text-sm text-[var(--dojo-ink-soft)]">Loading permissions…</div>;
+  if (!catalog) return <div className="text-sm text-[var(--dojo-ink-soft)]">{t("perm.loading")}</div>;
 
   const roles = (catalog.roles || []).filter((r) => r !== "super_admin");
 
@@ -44,9 +46,9 @@ export default function PermissionsPanel() {
     <div data-testid="permissions-panel">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Access Control</div>
-          <h2 className="font-serif text-2xl">Roles &amp; Permissions</h2>
-          <p className="text-sm text-[var(--dojo-ink-soft)] mt-1">Super admins always have every permission. Customize the rest below.</p>
+          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">{t("perm.access_control")}</div>
+          <h2 className="font-serif text-2xl">{t("perm.roles_and_permissions")}</h2>
+          <p className="text-sm text-[var(--dojo-ink-soft)] mt-1">{t("perm.hint")}</p>
         </div>
       </div>
       <div className="border border-[var(--dojo-border)] bg-[var(--dojo-paper)]">
@@ -63,7 +65,7 @@ export default function PermissionsPanel() {
           ))}
         </div>
         {!roleData ? (
-          <div className="p-10 text-sm text-[var(--dojo-ink-soft)]">Loading…</div>
+          <div className="p-10 text-sm text-[var(--dojo-ink-soft)]">{t("perm.loading_short")}</div>
         ) : (
           <ul>
             {catalog.permissions.map((perm) => {
@@ -74,7 +76,7 @@ export default function PermissionsPanel() {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium">{perm.description}</div>
                     <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--dojo-ink-soft)] mt-0.5">
-                      {perm.key} {hasOverride && <span className="text-[var(--dojo-hinomaru)]">(override)</span>}
+                      {perm.key} {hasOverride && <span className="text-[var(--dojo-hinomaru)]">({t("perm.override")})</span>}
                     </div>
                   </div>
                   <button

@@ -367,7 +367,7 @@ function PaymentsPanel({ payments, onReload, users, onNew }) {
           <label className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] block mb-2">{t("payments.bill_student")}</label>
           <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} className="w-full border border-[var(--dojo-border)] bg-[var(--dojo-input-bg)] px-3 py-2" data-testid="payment-user-select">
             <option value="">{t("payments.select_student")}</option>
-            {students.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
+            {students.map((u) => <option key={u.id} value={u.id}>{`${u.name} (${u.email})`}</option>)}
           </select>
         </div>
         <button

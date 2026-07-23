@@ -100,6 +100,11 @@ super_admin → admin → renshi → sensei → team_member → student
   - `UserDrawer` template dropdown now fetches from `/idcard-templates` so newly-created templates appear immediately
   - **[2026-02-29] follow-up:** added Card Background Image upload to the template editor (image preview + Remove button) so admins can attach a watermark per template; full-width row layout
   - Verified end-to-end via Playwright: create / duplicate / delete / live preview title + pill / bg image upload all working; built-in delete properly returns 400
+- **[2026-03-04] Bug fix — Users tab crash (regression from i18n rollout)**
+  - Cause: after the site-wide EN/ES translation, inline sub-components inside `AdminDashboard.jsx` (`UsersPanel`, `PaymentsPanel`, `PaymentsTabPanel`, `CMSPanel`, `NewPaymentModal`, `EditPageModal`) referenced `t()` without calling `useT()` in their own scope — threw `TypeError: t is not a function` the moment an admin clicked the Users tab.
+  - Fix: added `const { t } = useT();` at the top of each affected inline sub-component. Additionally wrapped `AttendancePanel`, `NotificationsPanel`, `BlogPanel`, `PermissionsPanel`, and `UserDrawer` with `useT()` and extended the EN + ES dictionaries to cover their surfaces.
+  - Verified end-to-end by testing_agent_v3_fork iteration 6: cycled all 8 dashboard tabs in BOTH EN and ES with zero runtime errors; Users panel renders; UserDrawer opens; Add User + Edit ID Cards shortcut open cleanly. Confirmed resolved.
+  - Follow-up TODO noted by testing agent: `AdminDashboard.jsx` is >500 lines with 6+ inline sub-components; recommend extracting into `/components/*.jsx` to prevent this exact bug class from recurring.
 - **[2026-03-04] Site-wide EN/ES language toggle + ID Card cleanup + shortcut**
   - New `LanguageProvider` + `useT()` hook (in `/context/LanguageContext.jsx`) drives a lightweight `t()` function backed by dictionaries in `/lib/i18n.js`. Persisted to `localStorage.yk_lang`; auto-detects browser locale on first visit.
   - Compact `LanguageToggle` (EN/ES pill) mounted in public Navbar and DashboardLayout header. Translated surfaces so far: nav, mobile menu, login page, home hero, dashboard title/subtitle/tabs, overview stat cards, latest-payments card, users-panel heading. Deeper admin panels (Attendance, Notify, Blog editor, CMS) still render EN — TODO for a follow-up.

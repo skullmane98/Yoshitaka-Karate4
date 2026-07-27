@@ -65,6 +65,22 @@ function drawBackgroundWatermark(pdf, img, W, H, sizeOverride, offsetX = 0, offs
   }
 }
 
+/**
+ * "Issued" label = `Issued <formatted-join-date>`. Auto-generated from the
+ * user's `created_at` (falls back to today if missing). Kept as a helper so
+ * DOM + PDF stay in lockstep.
+ */
+function issuedLabel(user) {
+  const raw = user?.created_at;
+  const d = raw ? new Date(raw) : new Date();
+  const s = Number.isNaN(d.getTime())
+    ? new Date().toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" })
+    : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
+  return `Issued · ${s}`;
+}
+
+
+
 async function drawHorizontalCardOnPdf(pdf, ctx) {
   const { W, H, user, design, data } = ctx;
   const MARGIN = 4;            // mm
@@ -166,7 +182,7 @@ async function drawHorizontalCardOnPdf(pdf, ctx) {
   pdf.setDrawColor(229, 225, 213); pdf.setLineWidth(0.15);
   pdf.line(MARGIN, footerY - 3, W - MARGIN, footerY - 3);
   pdf.setFont("helvetica", "normal"); pdf.setFontSize(5); pdf.setTextColor(74, 74, 74);
-  pdf.text(String(design.issued_text).toUpperCase(), MARGIN, footerY);
+  pdf.text(issuedLabel(user).toUpperCase(), MARGIN, footerY);
   pdf.setFont("times", "normal"); pdf.setFontSize(9);
   pdf.setTextColor(accent.r, accent.g, accent.b);
   pdf.text(String(design.kanji_bottom), W - MARGIN, footerY, { align: "right" });
@@ -245,7 +261,7 @@ async function drawVerticalCardOnPdf(pdf, ctx) {
   const accent = hexToRgb(design.accent_color || "#D7263D");
   const footerY = H - MARGIN - 1;
   pdf.setFont("helvetica", "normal"); pdf.setFontSize(5); pdf.setTextColor(74, 74, 74);
-  pdf.text(String(design.issued_text).toUpperCase(), MARGIN, footerY);
+  pdf.text(issuedLabel(user).toUpperCase(), MARGIN, footerY);
   pdf.setFont("times", "normal"); pdf.setFontSize(8); pdf.setTextColor(accent.r, accent.g, accent.b);
   pdf.text(String(design.kanji_bottom), W - MARGIN, footerY, { align: "right" });
 }
@@ -712,7 +728,7 @@ function HorizontalLayout({ user, design, data, loading }) {
       <div className="brush-divider mt-3 mb-2" />
       <div className="brush-divider mt-3 mb-2" />
       <div className="flex justify-between items-end uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] pb-1" style={{ fontSize: pxOf(design, "issued_text"), lineHeight: 1.4 }}>
-        <span className="truncate pr-2">{design.issued_text}</span>
+        <span className="truncate pr-2">{issuedLabel(user)}</span>
         <span className="font-kanji shrink-0" style={{ color: design.accent_color, fontSize: pxOf(design, "kanji_bottom"), lineHeight: 1.4 }}>
           {design.kanji_bottom}
         </span>
@@ -788,7 +804,7 @@ function VerticalLayout({ user, design, data, loading }) {
       </div>
 
       <div className="mt-auto pt-2 w-full uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)] flex justify-between items-end" style={{ fontSize: pxOf(design, "issued_text"), lineHeight: 1.4 }}>
-        <span className="truncate pr-2">{design.issued_text}</span>
+        <span className="truncate pr-2">{issuedLabel(user)}</span>
         <span className="font-kanji shrink-0" style={{ color: design.accent_color, fontSize: pxOf(design, "kanji_bottom"), lineHeight: 1.2 }}>
           {design.kanji_bottom}
         </span>

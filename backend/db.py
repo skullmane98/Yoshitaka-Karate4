@@ -75,6 +75,9 @@ async def init_db() -> None:
         UserPermissionOverride,
         Notification,
         BlogPost,
+        IDCardTemplate,
+        DojoSetting,
+        PermissionCatalogEntry,
     )
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
@@ -104,6 +107,9 @@ async def _migrate_add_columns() -> None:
         ("users", "idcard_overrides", "JSON NULL"),
         ("users", "username", "VARCHAR(64) NULL"),
         ("users", "qr_code", "VARCHAR(64) NULL"),
+        ("users", "last_login_at", "DATETIME NULL"),
+        ("users", "last_scan_at", "DATETIME NULL"),
+        ("users", "deactivation_exempt", "TINYINT(1) NOT NULL DEFAULT 0"),
     ]
     # SQLite equivalents (TEXT covers VARCHAR + JSON).
     sqlite_additions = [

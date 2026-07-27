@@ -204,8 +204,21 @@ export default function UserDrawer({ user, currentUser, onClose, onSaved, initia
                 ) : <div />}
               </div>
               <Field label="Active">
-                <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={!!draft.active} onChange={(e) => set("active", e.target.checked)} /> Account enabled</label>
+                <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={!!draft.active} onChange={(e) => set("active", e.target.checked)} data-testid="user-active-toggle" /> Account enabled</label>
               </Field>
+              {isAdminLike && (
+                <Field label="Auto-deactivation" hint="When enabled, this user is exempt from the dojo-wide inactivity sweep.">
+                  <label className="flex items-center gap-2 mt-2">
+                    <input
+                      type="checkbox"
+                      checked={!!draft.deactivation_exempt}
+                      onChange={(e) => set("deactivation_exempt", e.target.checked)}
+                      data-testid="user-deactivation-exempt-toggle"
+                    />
+                    Exempt from auto-deactivation
+                  </label>
+                </Field>
+              )}
               <Field label="Profile Photo" hint="Optional. Capture + crop with the camera, or pick a file.">
                 <div className="flex items-center gap-3 flex-wrap">
                   {draft.photo_url && <img src={draft.photo_url} alt="" className="h-20 w-16 object-cover border border-[var(--dojo-border)]" />}

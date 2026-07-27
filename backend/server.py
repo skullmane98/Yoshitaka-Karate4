@@ -34,10 +34,12 @@ from models import (
     AccessCode,
     Attendance,
     CMSPage,
+    DojoSetting,
     IDCardTemplate,
     PasswordResetToken,
     Payment,
     PaymentReminder,
+    PermissionCatalogEntry,
     User,
 )
 
@@ -180,6 +182,9 @@ class UserPublic(BaseModel):
     photo_url: Optional[str] = None
     idcard_template: Optional[str] = None
     idcard_overrides: dict = {}
+    last_login_at: Optional[datetime] = None
+    last_scan_at: Optional[datetime] = None
+    deactivation_exempt: bool = False
 
 
 class RegisterRequest(BaseModel):
@@ -218,11 +223,12 @@ class UserUpdateRequest(BaseModel):
 class UserCreateRequest(BaseModel):
     """Admin/super_admin manual user creation. No access code required.
 
-    Username is required. Email is optional — admins can create
-    username-only accounts (useful for kids without their own email).
+    Username is OPTIONAL — if blank, the backend auto-generates the next
+    `yoshi-userNN` slot from the persistent counter in `dojo_settings`.
+    Email is optional too.
     """
     name: str
-    username: str  # required
+    username: Optional[str] = None
     email: Optional[EmailStr] = None
     password: str = Field(min_length=6)
     role: Role = "student"
@@ -389,6 +395,9 @@ def user_to_public(u: User) -> UserPublic:
         photo_url=u.photo_url,
         idcard_template=u.idcard_template,
         idcard_overrides=u.idcard_overrides or {},
+        last_login_at=_as_utc(u.last_login_at) if u.last_login_at else None,
+        last_scan_at=_as_utc(u.last_scan_at) if u.last_scan_at else None,
+        deactivation_exempt=bool(u.deactivation_exempt),
     )
 
 
@@ -400,6 +409,59 @@ async def _get_user_by_id(session: AsyncSession, user_id: str) -> Optional[User]
 async def _get_user_by_email(session: AsyncSession, email: str) -> Optional[User]:
     res = await session.execute(select(User).where(User.email == email))
     return res.scalar_one_or_none()
+
+
+# ---------------------------------------------------------------------------
+# Dojo settings helpers + auto-generated username counter
+# ---------------------------------------------------------------------------
+
+# Format of the auto-generated username. `NN` is zero-padded to 2 digits for
+# the first 99 users, then naturally widens (yoshi-user100, 101, …).
+_AUTO_USERNAME_PREFIX = "yoshi-user"
+
+
+async def _get_setting(session: AsyncSession, key: str, default: dict) -> dict:
+    res = await session.execute(select(DojoSetting).where(DojoSetting.key == key))
+    row = res.scalar_one_or_none()
+    return row.value if row else default
+
+
+async def _put_setting(session: AsyncSession, key: str, value: dict) -> None:
+    res = await session.execute(select(DojoSetting).where(DojoSetting.key == key))
+    row = res.scalar_one_or_none()
+    if row:
+        row.value = value
+        row.updated_at = _strip_tz(datetime.now(timezone.utc))
+    else:
+        session.add(DojoSetting(
+            key=key,
+            value=value,
+            updated_at=_strip_tz(datetime.now(timezone.utc)),
+        ))
+
+
+async def _next_auto_username(session: AsyncSession) -> str:
+    """Return the next `yoshi-userNN` slot. Never re-uses numbers even if a
+    previous account is deleted — the counter monotonically increments.
+
+    Also scans existing usernames on first run so we don't collide with
+    manually-typed `yoshi-userNN` accounts a super-admin may have created
+    before this feature landed.
+    """
+    setting = await _get_setting(session, "auto_username_counter", {"next": 0})
+    n = int(setting.get("next", 0)) + 1
+    # Guard against collisions with any manually-created yoshi-userN.
+    while True:
+        candidate = f"{_AUTO_USERNAME_PREFIX}{n:02d}"
+        res = await session.execute(select(User).where(User.username == candidate))
+        if not res.scalar_one_or_none():
+            break
+        n += 1
+    await _put_setting(session, "auto_username_counter", {"next": n})
+    return candidate
+
+
+
 
 
 async def _get_user_by_login(session: AsyncSession, identifier: str) -> Optional[User]:
@@ -559,6 +621,9 @@ async def login(
         raise HTTPException(status_code=401, detail="Invalid login or password")
     if not user.active:
         raise HTTPException(status_code=403, detail="Account disabled")
+    # Track last-login for the auto-deactivation sweep.
+    user.last_login_at = _strip_tz(datetime.now(timezone.utc))
+    await session.commit()
     token = create_access_token(user.id, user.email, user.role)
     set_auth_cookie(response, token)
     pub = user_to_public(user)
@@ -665,7 +730,10 @@ async def create_user_manual(
         raise HTTPException(status_code=403, detail="Admins cannot create admin-level users")
     username = (payload.username or "").lower().strip()
     if not username:
-        raise HTTPException(status_code=400, detail="Username is required")
+        # Auto-generate `yoshi-userNN`. The counter lives in `dojo_settings`
+        # and never rewinds — even if a `yoshi-userNN` account is deleted,
+        # the next auto-generated one will still be N+1 (never re-used).
+        username = await _next_auto_username(session)
     res = await session.execute(select(User).where(User.username == username))
     if res.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Username already taken")
@@ -735,6 +803,7 @@ async def update_user(
         "name", "username", "phone", "belt_rank", "active", "email", "role",
         "date_of_birth", "address", "emergency_contact_name", "emergency_contact_phone",
         "medical_notes", "notes", "photo_url", "idcard_template", "idcard_overrides",
+        "deactivation_exempt",
     }
     # Super-admins and admins are always allowed to edit their own ID card +
     # everything else. Lower roles editing themselves are restricted.
@@ -1331,6 +1400,8 @@ async def attendance_scan(
         scanned_by=current.id,
     )
     session.add(rec)
+    # Track last scan on the user record for the auto-deactivation sweep.
+    user.last_scan_at = rec.scanned_at
     await session.commit()
     await session.refresh(rec)
     return _attendance_public(rec)
@@ -1768,6 +1839,192 @@ async def delete_idcard_template(
         update(User).where(User.idcard_template == key).values(idcard_template=None)
     )
     await session.delete(t)
+    await session.commit()
+    return {"ok": True}
+
+
+
+# -----------------------------------------------------------------------------
+# Auto-deactivation (admin-configurable)
+# -----------------------------------------------------------------------------
+
+_AUTO_DEACT_KEY = "auto_deactivate_config"
+_AUTO_DEACT_DEFAULT = {"days": 0, "metric": "either"}  # days=0 disables the sweep
+
+
+class AutoDeactivateConfig(BaseModel):
+    days: int = Field(default=0, ge=0, le=3650)
+    metric: str = Field(default="either")  # scan | login | either
+
+
+@api_router.get("/settings/auto-deactivate")
+async def get_auto_deactivate(
+    current: User = Depends(require_role("admin", "super_admin")),
+    session: AsyncSession = Depends(get_session),
+):
+    return await _get_setting(session, _AUTO_DEACT_KEY, _AUTO_DEACT_DEFAULT)
+
+
+@api_router.put("/settings/auto-deactivate")
+async def put_auto_deactivate(
+    payload: AutoDeactivateConfig,
+    current: User = Depends(require_role("super_admin")),
+    session: AsyncSession = Depends(get_session),
+):
+    if payload.metric not in ("scan", "login", "either"):
+        raise HTTPException(status_code=400, detail="metric must be scan|login|either")
+    value = {"days": payload.days, "metric": payload.metric}
+    await _put_setting(session, _AUTO_DEACT_KEY, value)
+    await session.commit()
+    return value
+
+
+@api_router.post("/settings/auto-deactivate/run")
+async def run_auto_deactivate(
+    current: User = Depends(require_role("super_admin")),
+    session: AsyncSession = Depends(get_session),
+):
+    """Sweep inactive users and set them to `active=False`.
+
+    A user is considered inactive when their most recent activity
+    (last_login_at / last_scan_at / created_at, whichever is newer) is older
+    than `days` days back. Users flagged `deactivation_exempt=True` are always
+    skipped. Runs synchronously so the admin sees the count immediately.
+    """
+    cfg = await _get_setting(session, _AUTO_DEACT_KEY, _AUTO_DEACT_DEFAULT)
+    days = int(cfg.get("days", 0) or 0)
+    if days <= 0:
+        return {"days": days, "deactivated": 0, "note": "Auto-deactivation is disabled (days=0)."}
+    metric = cfg.get("metric", "either")
+    cutoff = _strip_tz(datetime.now(timezone.utc) - timedelta(days=days))
+    # We pull only currently-active, non-exempt, non-super-admin users. Super
+    # admins are never auto-deactivated to avoid locking everyone out.
+    res = await session.execute(
+        select(User).where(
+            User.active == True,  # noqa: E712
+            User.deactivation_exempt == False,  # noqa: E712
+            User.role != "super_admin",
+        )
+    )
+    users = res.scalars().all()
+    deactivated = 0
+    for u in users:
+        last_login = u.last_login_at
+        last_scan = u.last_scan_at
+        created = u.created_at
+        # Combine the tracked metrics based on config. Missing timestamps
+        # count as "never" so freshly-onboarded users still get a grace
+        # window via their created_at.
+        candidates = []
+        if metric in ("scan", "either"):
+            candidates.append(last_scan)
+        if metric in ("login", "either"):
+            candidates.append(last_login)
+        candidates.append(created)
+        newest = max([c for c in candidates if c is not None], default=None)
+        if newest is None or newest < cutoff:
+            u.active = False
+            deactivated += 1
+    await session.commit()
+    return {"days": days, "metric": metric, "deactivated": deactivated}
+
+
+# -----------------------------------------------------------------------------
+# Permission catalog customisations (admin-managed hide + custom tags)
+# -----------------------------------------------------------------------------
+
+
+class PermissionCatalogPayload(BaseModel):
+    key: str = Field(min_length=1, max_length=64)
+    description: Optional[str] = Field(default=None, max_length=255)
+
+
+@api_router.get("/permission-catalog")
+async def list_permission_catalog(
+    current: User = Depends(require_role("super_admin")),
+    session: AsyncSession = Depends(get_session),
+):
+    res = await session.execute(select(PermissionCatalogEntry))
+    rows = res.scalars().all()
+    return [
+        {
+            "key": r.key,
+            "description": r.description,
+            "hidden": r.hidden,
+            "custom": r.custom,
+        }
+        for r in rows
+    ]
+
+
+@api_router.post("/permission-catalog")
+async def add_permission_catalog(
+    payload: PermissionCatalogPayload,
+    current: User = Depends(require_role("super_admin")),
+    session: AsyncSession = Depends(get_session),
+):
+    key = payload.key.strip()
+    if not key:
+        raise HTTPException(status_code=400, detail="key is required")
+    existing = await session.execute(select(PermissionCatalogEntry).where(PermissionCatalogEntry.key == key))
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Permission key already exists")
+    row = PermissionCatalogEntry(
+        key=key,
+        description=payload.description,
+        hidden=False,
+        custom=True,
+        created_by=current.id,
+        created_at=_strip_tz(datetime.now(timezone.utc)),
+    )
+    session.add(row)
+    await session.commit()
+    return {"key": row.key, "description": row.description, "hidden": row.hidden, "custom": row.custom}
+
+
+@api_router.patch("/permission-catalog/{key}")
+async def patch_permission_catalog(
+    key: str,
+    payload: dict,
+    current: User = Depends(require_role("super_admin")),
+    session: AsyncSession = Depends(get_session),
+):
+    """Hide or unhide a built-in permission, or edit a custom entry."""
+    res = await session.execute(select(PermissionCatalogEntry).where(PermissionCatalogEntry.key == key))
+    row = res.scalar_one_or_none()
+    if not row:
+        # Create a shadow row so we can persist the `hidden=True` flag on
+        # built-in permissions without needing to seed them.
+        row = PermissionCatalogEntry(
+            key=key,
+            description=payload.get("description"),
+            hidden=False,
+            custom=False,
+            created_by=current.id,
+            created_at=_strip_tz(datetime.now(timezone.utc)),
+        )
+        session.add(row)
+    if "hidden" in payload:
+        row.hidden = bool(payload["hidden"])
+    if "description" in payload:
+        row.description = payload["description"]
+    await session.commit()
+    return {"key": row.key, "description": row.description, "hidden": row.hidden, "custom": row.custom}
+
+
+@api_router.delete("/permission-catalog/{key}")
+async def delete_permission_catalog(
+    key: str,
+    current: User = Depends(require_role("super_admin")),
+    session: AsyncSession = Depends(get_session),
+):
+    res = await session.execute(select(PermissionCatalogEntry).where(PermissionCatalogEntry.key == key))
+    row = res.scalar_one_or_none()
+    if not row:
+        raise HTTPException(status_code=404, detail="Not found")
+    if not row.custom:
+        raise HTTPException(status_code=400, detail="Cannot delete a built-in permission — hide it instead.")
+    await session.delete(row)
     await session.commit()
     return {"ok": True}
 

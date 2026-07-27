@@ -51,6 +51,16 @@ class User(SQLModel, table=True):
     # Per-user ID card overrides (JSON of custom fields, template name)
     idcard_template: Optional[str] = Field(default=None, max_length=32)  # student | team_class | sensei
     idcard_overrides: dict = Field(default_factory=dict, sa_column=Column(JSON))
+    # Activity tracking — used by the auto-deactivation sweep.
+    last_login_at: Optional[datetime] = Field(
+        default=None, sa_column=Column(DateTime(timezone=False))
+    )
+    last_scan_at: Optional[datetime] = Field(
+        default=None, sa_column=Column(DateTime(timezone=False))
+    )
+    # Exempts a user from the auto-deactivation sweep (e.g. life-long members,
+    # honorary sensei) even if they haven't scanned in or logged in.
+    deactivation_exempt: bool = Field(default=False)
     created_at: datetime = Field(
         default_factory=_utcnow,
         sa_column=Column(DateTime(timezone=False), nullable=False),
@@ -255,6 +265,51 @@ class IDCardTemplate(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=False), nullable=False),
     )
     updated_at: datetime = Field(
+        default_factory=_utcnow,
+        sa_column=Column(DateTime(timezone=False), nullable=False),
+    )
+
+
+
+# ---------------------------------------------------------------------------
+# Dojo-wide settings (single-row config store)
+# ---------------------------------------------------------------------------
+class DojoSetting(SQLModel, table=True):
+    """Simple key/value settings store — one row per setting.
+
+    Values are JSON so we can store scalars, lists, or dicts as needed. Used
+    by auto-deactivation (`auto_deactivate_*`), the incrementing username
+    counter, and future dojo-wide preferences.
+    """
+    __tablename__ = "dojo_settings"
+
+    key: str = Field(primary_key=True, max_length=64)
+    value: dict = Field(default_factory=dict, sa_column=Column(JSON))
+    updated_at: datetime = Field(
+        default_factory=_utcnow,
+        sa_column=Column(DateTime(timezone=False), nullable=False),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Permission catalog customisations
+# ---------------------------------------------------------------------------
+class PermissionCatalogEntry(SQLModel, table=True):
+    """Admin-controlled additions/hides to the built-in permission catalog.
+
+    - `hidden=True` → permission is dropped from the Permissions panel UI.
+      Built-in permissions still work in the backend; they just stop showing.
+    - `custom=True` → this row was created via the UI as a bookkeeping tag.
+      The backend does not enforce these — they're record-keeping labels.
+    """
+    __tablename__ = "permission_catalog"
+
+    key: str = Field(primary_key=True, max_length=64)
+    description: Optional[str] = Field(default=None, max_length=255)
+    hidden: bool = Field(default=False)
+    custom: bool = Field(default=False)
+    created_by: Optional[str] = Field(default=None, max_length=36)
+    created_at: datetime = Field(
         default_factory=_utcnow,
         sa_column=Column(DateTime(timezone=False), nullable=False),
     )

@@ -139,55 +139,145 @@ export default function AttendancePanel() {
         </div>
       </div>
 
-      {/* Recent log */}
-      <div className="border border-[var(--dojo-border)] bg-[var(--dojo-card)]">
-        <div className="px-6 py-4 border-b border-[var(--dojo-border)] flex justify-between items-center">
-          <h2 className="font-serif text-2xl">{t("att.recent_signins")}</h2>
-          <span className="text-xs text-[var(--dojo-ink-soft)]">last 7 days · {recent.length}</span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[var(--dojo-paper-alt)] text-[10px] uppercase tracking-[0.2em] text-[var(--dojo-ink-soft)]">
-              <tr>
-                <th className="text-left px-6 py-3">{t("att.col_time")}</th>
-                <th className="text-left px-6 py-3">{t("att.col_member")}</th>
-                <th className="text-left px-6 py-3">{t("att.col_member_no")}</th>
-                <th className="text-left px-6 py-3">{t("att.col_belt")}</th>
-                <th className="text-left px-6 py-3">{t("att.col_method")}</th>
-                <th className="text-right px-6 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading && (
-                <tr><td colSpan={6} className="px-6 py-8 text-center text-[var(--dojo-ink-soft)]"><Loader2 className="inline animate-spin" /></td></tr>
-              )}
-              {!loading && recent.map((r) => (
-                <tr key={r.id} className="border-t border-[var(--dojo-border)]" data-testid={`attendance-row-${r.id}`}>
-                  <td className="px-6 py-3 text-[var(--dojo-ink-soft)]">{new Date(r.scanned_at).toLocaleString()}</td>
-                  <td className="px-6 py-3 font-medium">{r.user_name}</td>
-                  <td className="px-6 py-3 font-mono-accent text-xs">{r.member_number}</td>
-                  <td className="px-6 py-3 text-[var(--dojo-ink-soft)]">{r.belt_rank || "—"}</td>
-                  <td className="px-6 py-3">
-                    <span className="text-[10px] uppercase tracking-[0.2em] px-2 py-1 border border-[var(--dojo-green)] text-[var(--dojo-green)]">
-                      {r.method}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-right">
-                    <button onClick={() => removeRow(r.id)} className="text-[var(--dojo-hinomaru)] hover:text-[var(--dojo-hinomaru-dark)]" title="Delete record" data-testid={`attendance-delete-${r.id}`}>
-                      <Trash2 size={14} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {!loading && recent.length === 0 && (
-                <tr><td colSpan={6} className="px-6 py-8 text-center text-[var(--dojo-ink-soft)]">{t("att.no_signins")}</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Recent log — with search + pagination */}
+      <AttendanceLog recent={recent} loading={loading} onDelete={removeRow} t={t} />
 
       {popup && <ScannedProfileModal data={popup} onClose={() => setPopup(null)} />}
+    </div>
+  );
+}
+
+function AttendanceLog({ recent, loading, onDelete, t }) {
+  const [q, setQ] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
+
+  // Client-side filter — cheap for the ~thousand-record limit the backend
+  // returns. Move to the server if the log ever grows past that.
+  const filtered = recent.filter((r) => {
+    const ql = q.trim().toLowerCase();
+    if (ql) {
+      const hay = `${r.user_name || ""} ${r.member_number || ""} ${r.belt_rank || ""} ${r.role || ""}`.toLowerCase();
+      if (!hay.includes(ql)) return false;
+    }
+    if (dateFrom) {
+      if (new Date(r.scanned_at) < new Date(dateFrom + "T00:00:00")) return false;
+    }
+    if (dateTo) {
+      if (new Date(r.scanned_at) > new Date(dateTo + "T23:59:59")) return false;
+    }
+    return true;
+  });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const clampedPage = Math.min(page, totalPages);
+  const paged = filtered.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
+
+  // Reset to page 1 whenever the filter changes so we don't land on an
+  // empty page.
+  const resetPage = () => setPage(1);
+
+  return (
+    <div className="border border-[var(--dojo-border)] bg-[var(--dojo-card)]" data-testid="attendance-log">
+      <div className="px-6 py-4 border-b border-[var(--dojo-border)] flex flex-wrap justify-between items-center gap-3">
+        <div>
+          <h2 className="font-serif text-2xl">{t("att.recent_signins")}</h2>
+          <div className="text-xs text-[var(--dojo-ink-soft)]">{filtered.length} / {recent.length}</div>
+        </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => { setQ(e.target.value); resetPage(); }}
+            placeholder={t("att.search_placeholder")}
+            className="input h-9 text-sm"
+            data-testid="attendance-search-input"
+          />
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => { setDateFrom(e.target.value); resetPage(); }}
+            className="input h-9 text-sm"
+            data-testid="attendance-date-from"
+          />
+          <span className="text-xs text-[var(--dojo-ink-soft)]">→</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => { setDateTo(e.target.value); resetPage(); }}
+            className="input h-9 text-sm"
+            data-testid="attendance-date-to"
+          />
+          {(q || dateFrom || dateTo) && (
+            <button
+              type="button"
+              onClick={() => { setQ(""); setDateFrom(""); setDateTo(""); resetPage(); }}
+              className="text-[10px] uppercase tracking-[0.2em] px-2 py-1 border border-[var(--dojo-border)] hover:border-[var(--dojo-ink)]"
+              data-testid="attendance-clear-filters"
+            >{t("att.clear_filters")}</button>
+          )}
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-[var(--dojo-paper-alt)] text-[10px] uppercase tracking-[0.2em] text-[var(--dojo-ink-soft)]">
+            <tr>
+              <th className="text-left px-6 py-3">{t("att.col_time")}</th>
+              <th className="text-left px-6 py-3">{t("att.col_member")}</th>
+              <th className="text-left px-6 py-3">{t("att.col_member_no")}</th>
+              <th className="text-left px-6 py-3">{t("att.col_belt")}</th>
+              <th className="text-left px-6 py-3">{t("att.col_method")}</th>
+              <th className="text-right px-6 py-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr><td colSpan={6} className="px-6 py-8 text-center text-[var(--dojo-ink-soft)]"><Loader2 className="inline animate-spin" /></td></tr>
+            )}
+            {!loading && paged.map((r) => (
+              <tr key={r.id} className="border-t border-[var(--dojo-border)]" data-testid={`attendance-row-${r.id}`}>
+                <td className="px-6 py-3 text-[var(--dojo-ink-soft)]">{new Date(r.scanned_at).toLocaleString()}</td>
+                <td className="px-6 py-3 font-medium">{r.user_name}</td>
+                <td className="px-6 py-3 font-mono-accent text-xs">{r.member_number}</td>
+                <td className="px-6 py-3 text-[var(--dojo-ink-soft)]">{r.belt_rank || "—"}</td>
+                <td className="px-6 py-3">
+                  <span className="text-[10px] uppercase tracking-[0.2em] px-2 py-1 border border-[var(--dojo-green)] text-[var(--dojo-green)]">
+                    {r.method}
+                  </span>
+                </td>
+                <td className="px-6 py-3 text-right">
+                  <button onClick={() => onDelete(r.id)} className="text-[var(--dojo-hinomaru)] hover:text-[var(--dojo-hinomaru-dark)]" title="Delete record" data-testid={`attendance-delete-${r.id}`}>
+                    <Trash2 size={14} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {!loading && filtered.length === 0 && (
+              <tr><td colSpan={6} className="px-6 py-8 text-center text-[var(--dojo-ink-soft)]">{t("att.no_signins")}</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {totalPages > 1 && (
+        <div className="px-6 py-3 border-t border-[var(--dojo-border)] flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-[var(--dojo-ink-soft)]" data-testid="attendance-pagination">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={clampedPage <= 1}
+            className="px-3 py-1.5 border border-[var(--dojo-border)] hover:border-[var(--dojo-ink)] disabled:opacity-40"
+            data-testid="attendance-page-prev"
+          >← {t("att.prev")}</button>
+          <span data-testid="attendance-page-indicator">{clampedPage} / {totalPages}</span>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={clampedPage >= totalPages}
+            className="px-3 py-1.5 border border-[var(--dojo-border)] hover:border-[var(--dojo-ink)] disabled:opacity-40"
+            data-testid="attendance-page-next"
+          >{t("att.next")} →</button>
+        </div>
+      )}
     </div>
   );
 }

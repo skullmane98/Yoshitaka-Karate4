@@ -1,0 +1,53 @@
+{
+  "summary": "Iteration 7 tested all 6 new features. Backend pytest: 7/8 passed. Frontend: all new UI surfaces render with expected data-testids and integrations. Found ONE backend bug: PATCH /api/users silently drops the `deactivation_exempt` field because it is missing from the UserUpdateRequest pydantic model — the checkbox in the UserDrawer appears to save (shows 'Saved.') but the flag never round-trips. This defeats the whole per-user exempt feature.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "PATCH /api/users/{id}",
+        "issue": "`deactivation_exempt` is included in the PROFILE_FIELDS allow-list (server.py L806) but NOT declared on the UserUpdateRequest pydantic model (server.py L204-220). Pydantic silently drops it, so the value never reaches the DB. Frontend toggle at [data-testid=user-deactivation-exempt-toggle] therefore never persists. Fix: add `deactivation_exempt: Optional[bool] = None` to UserUpdateRequest AND remove the `v is not None` filter for boolean fields (or use exclude_unset alone) so `False` also persists.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Users → Edit → Profile → toggle Exempt → Save Changes",
+        "issue": "UI reports 'Saved.' but backend silently discards the field (see backend issue above). GET afterwards shows deactivation_exempt=false.",
+        "affected_selectors": ["[data-testid=user-deactivation-exempt-toggle]"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "UserDrawer → ID Card tab → Template <select>",
+        "issues": [
+          "Same React hydration warning noted in iteration_6 for Payments select is also present here on the ID Card template <select>. Dynamic wrapper injects <span data-ve-dynamic> as child of <option>. Non-fatal but noisy. Occurs from a build-time template tag, not something userland fixes with a single change."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration7.py",
+    "/app/test_reports/pytest/iteration7.xml"
+  ],
+  "action_items": [
+    "Add `deactivation_exempt: Optional[bool] = None` to UserUpdateRequest in /app/backend/server.py (around L204). Also ensure the update loop preserves boolean False (the current `v is not None` filter would still allow setting True but block re-setting to False across a rename to `exclude_none`-aware code — verify manually)."
+  ],
+  "critical_code_review_comments": [
+    "server.py is now 2237 lines — the auto-deactivate + permission-catalog blocks are fine but the file continues to grow. Consider extracting settings/*.py and permission_catalog/*.py routers.",
+    "The PROFILE_FIELDS/pydantic-model divergence is exactly the kind of bug that motivates single-source-of-truth (pydantic model derives the allow-list, not a hand-typed set).",
+    "PermissionsPanel.jsx cleanly implements 3-card layout with proper data-testids; nice."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration7.py (new)"
+  ],
+  "success_rate": {"backend": "87.5% (7/8)", "frontend": "100% of UI surfaces load; 1 integration broken due to backend bug"},
+  "test_credentials": "superadmin@yoshitaka.com / SuperAdmin2026!",
+  "seed_data_creation": "Test users created via POST /api/users were deleted in the same test. A `custom.ui_qa_<ts>` permission tag was created and deleted in the same UI test.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Verified: (a) auto-username yoshi-userNN backend + frontend placeholder + non-required; (b) auto-deactivate settings GET/PUT/RUN incl. metric validation & days=0 disabled note; (c) permission catalog custom CRUD (create/list/delete, 404 on missing) + built-in hide/unhide with shadow-row creation on PATCH; (d) frontend testids: auto-deactivate-card, custom-perms-card, perm-custom-*, perm-hide/unhide-*, attendance-search-input, attendance-date-from/to, user-deactivation-exempt-toggle, user-tab-idcard; (e) ID Card preview shows 'ISSUED · MAY 29, 2026' rendered from user.created_at via issuedLabel(); (f) full EN/ES tab-cycle regression — no runtime JS errors (only pre-existing hydration warning about <span> in <option>). ONE bug: PATCH /api/users ignores deactivation_exempt. After main agent fixes UserUpdateRequest, re-run pytest backend/tests/test_iteration7.py::TestUserExempt.",
+  "rca of the issue": "PATCH /api/users deactivation_exempt bug — Pydantic drops unknown fields at request boundary (default extra='ignore'). server.py L204 UserUpdateRequest defines every editable field except deactivation_exempt. When frontend sends {\"deactivation_exempt\": true}, payload.model_dump(exclude_unset=True) returns an empty dict for that key, so the field never enters the update loop. The PROFILE_FIELDS allow-list on L802-807 is dead code for this key. Fix: add the field to UserUpdateRequest. Reproduction: `curl -X PATCH .../api/users/<id> -d '{\"deactivation_exempt\":true}'` → response shows deactivation_exempt=false. Confirmed via pytest test_iteration7.py::TestUserExempt::test_patch_deactivation_exempt (FAILED)."
+}

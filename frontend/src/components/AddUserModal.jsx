@@ -41,7 +41,7 @@ export default function AddUserModal({ currentUser, onClose, onCreated }) {
     try {
       const payload = {
         ...draft,
-        username: draft.username.trim().toLowerCase(),
+        username: (draft.username || "").trim().toLowerCase() || null,
         email: draft.email.trim() || null,
       };
       const { data } = await api.post("/users", payload);
@@ -80,8 +80,8 @@ export default function AddUserModal({ currentUser, onClose, onCreated }) {
             <Section title="Account">
               <div className="grid md:grid-cols-2 gap-4">
                 <Field label="Full Name *"><input className="input" required value={draft.name} onChange={(e) => set("name", e.target.value)} data-testid="newuser-name" /></Field>
-                <Field label="Username *" hint="Required. The login they'll type at sign-in.">
-                  <input className="input" required minLength={2} value={draft.username} onChange={(e) => set("username", e.target.value.replace(/\s/g, "").toLowerCase())} data-testid="newuser-username" placeholder="e.g. johnsmith" />
+                <Field label="Username" hint="Optional. Leave blank to auto-generate the next yoshi-userNN slot.">
+                  <input className="input" minLength={2} value={draft.username} onChange={(e) => set("username", e.target.value.replace(/\s/g, "").toLowerCase())} data-testid="newuser-username" placeholder="Auto: yoshi-userNN" />
                 </Field>
               </div>
               <div className="grid md:grid-cols-2 gap-4">

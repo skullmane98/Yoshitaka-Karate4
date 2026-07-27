@@ -100,6 +100,10 @@ super_admin → admin → renshi → sensei → team_member → student
   - `UserDrawer` template dropdown now fetches from `/idcard-templates` so newly-created templates appear immediately
   - **[2026-02-29] follow-up:** added Card Background Image upload to the template editor (image preview + Remove button) so admins can attach a watermark per template; full-width row layout
   - Verified end-to-end via Playwright: create / duplicate / delete / live preview title + pill / bg image upload all working; built-in delete properly returns 400
+- **[2026-03-04] Bug fix — Add User "Input should be a valid string" + auto-deactivate "Not Found"**
+  - **Add User**: hardened `AddUserModal.submit()` payload builder — required strings (name/password/role) explicitly coerced to strings, optional strings trimmed to `null` when empty, plus a client-side `Full name is required.` guard. Prevents Pydantic 422 "Input should be a valid string" caused by stale drafts feeding `name: null`.
+  - **Auto-deactivate Save**: frontend now catches 404 responses on `PUT /api/settings/auto-deactivate` (typical when admin is testing on a VPS that hasn't been redeployed with the new endpoint) and shows a friendly "deploy the latest backend" hint instead of the raw "Not Found" toast.
+  - Verified by testing_agent iteration_9 → 100% pass on backend + frontend, no retest needed. Tab-cycling regression clean in EN + ES.
 - **[2026-03-04] Feature batch — auto-username, ID-Card auto-issued-date, deactivation exemption, auto-deactivation sweep, permission catalog admin, attendance search & pagination**
   - **Auto-username**: `POST /api/users` now accepts blank username; backend allocates `yoshi-userNN` from a persistent counter (`dojo_settings.auto_username_counter`). Never re-uses numbers even if the account is deleted. Frontend Add-User modal placeholder = "Auto: yoshi-userNN".
   - **ID Card issued date**: dropped the editable `issued_text` from DOM + PDF rendering. Both surfaces now display `Issued · <formatted join-date>` auto-derived from `user.created_at` via a shared `issuedLabel(user)` helper.

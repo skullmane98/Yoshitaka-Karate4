@@ -39,11 +39,36 @@ export default function AddUserModal({ currentUser, onClose, onCreated }) {
     e.preventDefault();
     setBusy(true); setMsg("");
     try {
-      const payload = {
-        ...draft,
-        username: (draft.username || "").trim().toLowerCase() || null,
-        email: draft.email.trim() || null,
+      // Build a normalised payload:
+      //   • required fields (name, password, role) are coerced to strings so
+      //     Pydantic can't fail on `null`;
+      //   • optional string fields are trimmed and sent as `null` if empty so
+      //     EmailStr/typed validators aren't handed `""`.
+      const clean = (v) => {
+        const s = (v ?? "").toString().trim();
+        return s === "" ? null : s;
       };
+      const payload = {
+        name: (draft.name ?? "").toString().trim(),
+        username: clean(draft.username)?.toLowerCase() ?? null,
+        email: clean(draft.email),
+        password: (draft.password ?? "").toString(),
+        role: draft.role || "student",
+        phone: clean(draft.phone),
+        belt_rank: clean(draft.belt_rank),
+        date_of_birth: clean(draft.date_of_birth),
+        address: clean(draft.address),
+        emergency_contact_name: clean(draft.emergency_contact_name),
+        emergency_contact_phone: clean(draft.emergency_contact_phone),
+        medical_notes: clean(draft.medical_notes),
+        notes: clean(draft.notes),
+        photo_url: draft.photo_url || null,
+      };
+      if (!payload.name) {
+        setMsg("Full name is required.");
+        setBusy(false);
+        return;
+      }
       const { data } = await api.post("/users", payload);
       // If admin tuned photo_size in the capture modal, persist it as a
       // per-user override on the freshly created account.

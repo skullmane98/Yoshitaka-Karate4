@@ -1,0 +1,19 @@
+{
+  "summary": "Verified both bug fixes end-to-end via backend curl + Playwright UI. (1) Auto-deactivate Save now succeeds — PUT /api/settings/auto-deactivate returns 200 with the new payload, GET returns the persisted value, and the UI shows the green 'Auto-deactivation settings saved' toast. Setting days back to 0 also persists after tab-cycling. (2) Add User with only Name + Password (all optional fields blank) creates the user successfully; blank Name now surfaces the friendly 'Full name is required.' guard instead of leaking Pydantic's raw 'Input should be a valid string'; invalid email surfaces a readable email error. Full tab-cycling regression (Overview→Users→Payments→Attendance→Notify→Blog→CMS→Permissions) in both EN and ES completed with no runtime/console errors and no pageerror.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Login endpoint field naming inconsistency: /api/auth/login expects JSON key 'email' but the UI accepts email OR username OR member_number. Renaming request field to 'identifier' would align server contract with UI copy 'Username, Email, or Member #'. Non-blocking; behaviour is correct.",
+    "The Permissions panel's permission rows are hard-coded in English (e.g. 'View all users', 'Delete users') even in ES mode. If i18n is desired for these labels, key them into i18n.js like the tab labels."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "superadmin@yoshitaka.com / SuperAdmin2026!",
+  "seed_data_creation": "Created and deleted TEST_QA_User_A (id e81eba53-30b4-42cc-924d-932b2b1ca191) via UI + API cleanup.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Login form POSTs to /api/auth/login with body key 'email' (accepts username/email/member_no). Login button testid = login-submit-btn (NOT the first submit button on page — nav-mobile-toggle is also type=submit). Password field in AddUserModal testid = newuser-pw (type='text' by design, masking handled elsewhere). AddUserModal has client-side 'Full name is required.' guard rendered in the modal footer area. Auto-deactivate testids: auto-deactivate-days, auto-deactivate-metric, auto-deactivate-save, auto-deactivate-run.",
+  "rca of the issue": "Both bugs were user-reported and pre-fixed by main agent before this iteration; retest confirms fixes. (1) 'Not Found' on auto-deactivate save was a stale-production-deploy issue on the user's VPS — the endpoint exists in preview and works. Frontend now catches 404 specifically and shows a deployment hint. (2) 'Input should be a valid string' happened when frontend spread a stale draft object containing name=null. Fix: AddUserModal.submit() now explicitly normalises payload (required strings coerced, optional strings trimmed→null-if-empty) plus a client-side 'Full name is required.' guard. Verified: curl-reproducing name:null still returns Pydantic 422 (backend correctly rejects null names), but the UI can no longer produce that payload."
+}

@@ -99,7 +99,16 @@ export default function PermissionsPanel() {
     try {
       await api.put("/settings/auto-deactivate", autoCfg);
       toast.success(t("perm.autodeact_saved"));
-    } catch (e) { toast.error(formatApiError(e)); }
+    } catch (e) {
+      if (e?.response?.status === 404) {
+        // Almost always means the backend hasn't been deployed with the
+        // new auto-deactivate endpoint yet. Guide the admin instead of
+        // just showing the raw "Not Found" toast.
+        toast.error(t("perm.autodeact_not_deployed"));
+      } else {
+        toast.error(formatApiError(e));
+      }
+    }
     finally { setAutoBusy(false); }
   };
 
@@ -109,7 +118,10 @@ export default function PermissionsPanel() {
     try {
       const { data } = await api.post("/settings/auto-deactivate/run");
       toast.success(t("perm.autodeact_ran").replace("{n}", data.deactivated ?? 0));
-    } catch (e) { toast.error(formatApiError(e)); }
+    } catch (e) {
+      if (e?.response?.status === 404) toast.error(t("perm.autodeact_not_deployed"));
+      else toast.error(formatApiError(e));
+    }
     finally { setAutoBusy(false); }
   };
 

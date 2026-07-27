@@ -218,6 +218,7 @@ class UserUpdateRequest(BaseModel):
     photo_url: Optional[str] = None
     idcard_template: Optional[str] = None
     idcard_overrides: Optional[dict] = None
+    deactivation_exempt: Optional[bool] = None
 
 
 class UserCreateRequest(BaseModel):

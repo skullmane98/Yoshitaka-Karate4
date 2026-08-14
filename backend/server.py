@@ -231,7 +231,11 @@ class UserCreateRequest(BaseModel):
     name: str
     username: Optional[str] = None
     email: Optional[EmailStr] = None
-    password: str = Field(min_length=6)
+    # Password is optional — when omitted, the account is created with an
+    # empty password_hash and cannot log in. Only staff (admin/super_admin)
+    # accounts are expected to have credentials; student/team accounts are
+    # roster-only until an admin explicitly resets their password.
+    password: Optional[str] = Field(default=None, min_length=6)
     role: Role = "student"
     phone: Optional[str] = None
     belt_rank: Optional[str] = None
@@ -618,7 +622,7 @@ async def login(
     session: AsyncSession = Depends(get_session),
 ):
     user = await _get_user_by_login(session, payload.email)
-    if not user or not verify_password(payload.password, user.password_hash):
+    if not user or not user.password_hash or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid login or password")
     if not user.active:
         raise HTTPException(status_code=403, detail="Account disabled")
@@ -747,7 +751,7 @@ async def create_user_manual(
         id=str(uuid.uuid4()),
         email=email,
         username=username,
-        password_hash=hash_password(payload.password),
+        password_hash=hash_password(payload.password) if payload.password else "",
         name=payload.name,
         role=payload.role,
         phone=payload.phone,

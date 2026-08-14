@@ -156,6 +156,11 @@ super_admin → admin → renshi → sensei → team_member → student
   - Server logic: both creation endpoints validate uniqueness only when email is provided; JWT issuance handles `email=None` by encoding an empty string in the claim.
   - Frontend: `AddUserModal` flipped (Username `*` required, Email optional with placeholder `(optional)`); `UserDrawer` matches.
   - Verified: `POST /api/users` without email returns 200, login by username works for email-less users, missing username returns 422.
+- **[2026-02-14 update] Simplify Admin UI + password-less user creation**
+  - **Admin tabs pruned** (temporary, per operational request): only **Overview / Users / Attendance / Permissions** are visible for super_admin; **Overview / Students / Attendance / ID Card** for admin. Payments, Notify, Blog, CMS tabs commented out in the TABS array in `AdminDashboard.jsx` (panels + routes still fully wired underneath — re-enabling is just uncommenting the array entries).
+  - **Add User modal simplified**: removed Username input, Password input, and the green "Training" side-tab (`<AddUserTraining />` no longer imported/mounted). Only Full Name * + Email (optional) + Role + Phone + Belt + PII/photo fields remain.
+  - **Backend password-less user creation**: `UserCreateRequest.password` is now `Optional[str]`; `POST /api/users` writes an empty `password_hash` when no password is supplied. Only staff (admin/super_admin) accounts get credentials — student/team roster accounts cannot log in. `/api/auth/login` explicitly rejects empty-hash accounts (`if not user.password_hash: 401`) so blank-password rows can never be exploited.
+  - Verified end-to-end via curl: POST /api/users without username/password → 200 (username auto-assigned as `yoshi-user13`, password_hash blank); login attempts against the created account → 401 for both empty and non-empty passwords; screenshot confirmed tabs hidden and modal cleaned up.
 
 ## Backlog
 ### P1

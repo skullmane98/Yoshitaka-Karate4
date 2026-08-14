@@ -3,16 +3,18 @@ import api, { formatApiError } from "@/lib/api";
 import { X, UserPlus, Camera } from "lucide-react";
 import { BELT_NAMES } from "@/lib/belts";
 import PhotoCaptureModal from "@/components/PhotoCaptureModal";
-import AddUserTraining from "@/components/AddUserTraining";
 
 /**
  * Manual user-create modal. Replaces access-code registration for staff:
- * admins fill in info, set a starter password, click Create.
+ * admins fill in info, click Create. Username auto-generates (yoshi-userNN)
+ * and password is left blank — student/team accounts are roster-only and
+ * cannot log in. Only staff (admin/super_admin) accounts get credentials
+ * (assigned later via password reset).
  */
 export default function AddUserModal({ currentUser, onClose, onCreated }) {
   const isSuper = currentUser?.role === "super_admin";
   const [draft, setDraft] = useState({
-    name: "", email: "", username: "", password: "", role: "student",
+    name: "", email: "", role: "student",
     phone: "", belt_rank: "White",
     date_of_birth: "", address: "",
     emergency_contact_name: "", emergency_contact_phone: "",
@@ -50,9 +52,7 @@ export default function AddUserModal({ currentUser, onClose, onCreated }) {
       };
       const payload = {
         name: (draft.name ?? "").toString().trim(),
-        username: clean(draft.username)?.toLowerCase() ?? null,
         email: clean(draft.email),
-        password: (draft.password ?? "").toString(),
         role: draft.role || "student",
         phone: clean(draft.phone),
         belt_rank: clean(draft.belt_rank),
@@ -93,7 +93,6 @@ export default function AddUserModal({ currentUser, onClose, onCreated }) {
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="absolute inset-0 flex items-start justify-center p-6 overflow-y-auto">
         <form onSubmit={submit} className="relative bg-[var(--dojo-paper)] border border-[var(--dojo-border)] w-full max-w-3xl my-8">
-          <AddUserTraining />
           <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--dojo-border)]">
             <div>
               <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--dojo-ink-soft)]">Onboarding</div>
@@ -105,15 +104,9 @@ export default function AddUserModal({ currentUser, onClose, onCreated }) {
             <Section title="Account">
               <div className="grid md:grid-cols-2 gap-4">
                 <Field label="Full Name *"><input className="input" required value={draft.name} onChange={(e) => set("name", e.target.value)} data-testid="newuser-name" /></Field>
-                <Field label="Username" hint="Optional. Leave blank to auto-generate the next yoshi-userNN slot.">
-                  <input className="input" minLength={2} value={draft.username} onChange={(e) => set("username", e.target.value.replace(/\s/g, "").toLowerCase())} data-testid="newuser-username" placeholder="Auto: yoshi-userNN" />
-                </Field>
-              </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                <Field label="Email" hint="Optional. Useful for password resets and notifications.">
+                <Field label="Email" hint="Optional. Useful for notifications.">
                   <input className="input" type="email" value={draft.email} onChange={(e) => set("email", e.target.value)} data-testid="newuser-email" placeholder="(optional)" />
                 </Field>
-                <Field label="Starter Password *" hint="At least 6 chars. User can change later."><input className="input" type="text" required minLength={6} value={draft.password} onChange={(e) => set("password", e.target.value)} data-testid="newuser-pw" /></Field>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
                 <Field label="Role">

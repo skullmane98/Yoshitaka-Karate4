@@ -46,24 +46,28 @@ export default function AdminDashboard({ isSuper = false }) {
 
   useEffect(() => { reload(); }, []);
 
+  // NOTE: Several tabs (Payments, Notify, Blog, CMS, Students role-view)
+  // are temporarily hidden per operational request. The panels & routes
+  // are still fully wired below so re-enabling is just uncommenting these
+  // entries.
   const TABS = isSuper
     ? [
         { id: "overview", label: "Overview" },
         { id: "users", label: "Users" },
-        { id: "payments", label: "Payments" },
+        // { id: "payments", label: "Payments" },
         { id: "attendance", label: "Attendance" },
-        { id: "notify", label: "Notify" },
-        { id: "blog", label: "Blog" },
-        { id: "cms", label: "CMS" },
+        // { id: "notify", label: "Notify" },
+        // { id: "blog", label: "Blog" },
+        // { id: "cms", label: "CMS" },
         { id: "permissions", label: "Permissions" },
       ]
     : [
         { id: "overview", label: "Overview" },
         { id: "students", label: "Students" },
-        { id: "payments", label: "Payments" },
+        // { id: "payments", label: "Payments" },
         { id: "attendance", label: "Attendance" },
-        { id: "notify", label: "Notify" },
-        { id: "blog", label: "Blog" },
+        // { id: "notify", label: "Notify" },
+        // { id: "blog", label: "Blog" },
         { id: "idcard", label: "ID Card" },
       ];
 

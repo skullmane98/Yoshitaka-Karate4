@@ -33,11 +33,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
-# Load backend/.env (preview) — VPS uses systemd's EnvironmentFile so vars are
-# already in os.environ.
+# Load environment: try the VPS systemd env file first, then backend/.env
+# (preview / local dev). VPS uses `/etc/yoshitaka-api.env` (chmod 600); if the
+# script is run outside systemd context it won't have those vars in os.environ
+# yet, so we load them ourselves.
 try:
     from dotenv import load_dotenv
-    load_dotenv(ROOT / "backend" / ".env")
+    for candidate in ("/etc/yoshitaka-api.env", ROOT / "backend" / ".env"):
+        p = Path(candidate)
+        if p.exists():
+            load_dotenv(p, override=False)
+            print(f"[env]  loaded {p}")
+            break
 except ImportError:
     pass
 
